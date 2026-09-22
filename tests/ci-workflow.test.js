@@ -236,3 +236,22 @@ test('the candidate .depot tree contains only the Depot CI workflow', () => {
   // execute unpinned code in CI.
   assert.deepEqual(files.sort(), ['.depot/workflows/ci.yml']);
 });
+
+test('every eval step runs under --strict', () => {
+  // The evals grade FAIL and WARN separately, and --strict is what makes a WARN
+  // stop the build. Without it the warning tier is decorative: a check that
+  // softens from FAIL to WARN, or a new warning condition, keeps CI green
+  // forever. Asserted per copy so dropping the flag from one is a test failure
+  // rather than a silent loss of enforcement.
+  const evalScripts = ['eval', 'eval:code', 'eval:dashboard', 'eval:served'];
+  for (const workflow of workflows) {
+    for (const script of evalScripts) {
+      const pattern = new RegExp(`run:\\s*npm run ${script.replace(':', ':')}\\s+--\\s+--strict\\s*$`, 'm');
+      assert.match(
+        workflow.content,
+        pattern,
+        `${workflow.label}: "npm run ${script}" must be invoked with -- --strict`
+      );
+    }
+  }
+});

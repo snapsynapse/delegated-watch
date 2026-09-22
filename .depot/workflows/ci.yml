@@ -57,19 +57,19 @@ jobs:
         run: npm run validate
 
       - name: Evaluate dataset invariants
-        run: npm run eval
+        run: npm run eval -- --strict
 
       - name: Evaluate code honesty
-        run: npm run eval:code
+        run: npm run eval:code -- --strict
 
       - name: Build dashboard
         run: npm run build
 
       - name: Evaluate dashboard
-        run: npm run eval:dashboard
+        run: npm run eval:dashboard -- --strict
 
       - name: Evaluate served tree
-        run: npm run eval:served
+        run: npm run eval:served -- --strict
 
       - name: Export CSV
         run: npm run export:csv

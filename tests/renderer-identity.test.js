@@ -182,3 +182,22 @@ test("renderer identity: discovery metadata comes from site config, never the pa
   });
   assert.ok(!withBoth.includes("https://example.net/"));
 });
+
+test("renderer identity: no control ships a placeholder href", async () => {
+  // The publication CTAs are hidden until a config supplies their URLs, and
+  // they used to hold href="#" while waiting. Hidden is not absent: a fetcher
+  // reading raw HTML sees a link that goes nowhere, and an external agent-
+  // readiness scan counted both as dead CTAs on the live site. The activation
+  // path already sets .href from the config, so the placeholder bought nothing.
+  const page = await renderStaticDashboard({
+    dailyBurn,
+    profile,
+    observedIntervals,
+    publication: null
+  });
+
+  assert.ok(
+    !/href=(["'])#\1/.test(page),
+    'a control shipped href="#"; leave the attribute off and let activation set it'
+  );
+});

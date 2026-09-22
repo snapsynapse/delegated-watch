@@ -11,7 +11,10 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - CI moves to Depot CI, which executes `.depot/workflows/ci.yml` directly. The GitHub Actions copy at `.github/workflows/ci.yml` is retained as a `workflow_dispatch` fallback and no longer runs on push or pull request. Both copies drop the `macos-latest` matrix leg and verify on Linux across both Node versions, and both accept `workflow_dispatch` so a run can be fired by hand.
 - The CI workflow tests now assert against both copies rather than the GitHub one alone, and fail if their steps lists drift apart, if they diverge anywhere beyond their triggers and matrix legs, or if anything appears under `.depot/` besides the workflow itself.
 
+- CI runs every eval under `--strict`, so a WARN now fails the build instead of passing unread, and a test asserts the flag stays on each eval step in both workflow copies.
+
 ### Fixed
+- The publication CTAs shipped `href="#"` while hidden, which a raw-HTML fetcher reads as a link to nowhere; an external agent-readiness scan counted both as dead CTAs on the live site. The attribute is now absent until activation supplies a real URL, matching how the records link already worked.
 - The burn drivers list scrolls on its own but was not keyboard reachable, and the time-range panel carried an `aria-label` with no role. Found by a live axe-core scan on 2026-09-22; both are now asserted by the accessibility contract test.
 - Social card art carried EXIF and text metadata chunks, which the candidate verifier rejects for any published image.
 
