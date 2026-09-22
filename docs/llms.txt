@@ -57,7 +57,6 @@ Centralizing raw logs anywhere, including in the repository.
 
 ## Notes for agents
 
-- No `sitemap.xml`. The site is a single page; a sitemap would restate the
-  canonical URL and nothing else.
 - No `llms-full.txt`. This file is the comprehensive artifact.
+- `sitemap.xml` and `site.webmanifest` are served at the site root.
 - `docs/robots.txt` permits all major AI and SEO crawlers explicitly.

@@ -36,6 +36,65 @@ ${links}
     </footer>`;
 };
 
+// Discovery metadata (canonical URL, social cards, structured data) names a
+// domain, so like identity it is never hardcoded in src/index.html: it comes
+// from config/site.json through the build. A render without a site config
+// emits none of it, which keeps a page built for local viewing free of
+// absolute URLs it cannot honor.
+const SITE_TITLE = "Delegated.watch";
+const SITE_DESCRIPTION =
+  "Account-wide record of AI work delegated to models, across every provider, surface, and machine.";
+
+const buildSiteDiscovery = (site, publication) => {
+  if (!site?.domain || publication?.canonicalUrl) return "";
+  const origin = `https://${site.domain}`;
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_TITLE,
+      url: `${origin}/`,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: SITE_TITLE,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "macOS, Linux, Windows",
+      url: `${origin}/`,
+      license: "https://opensource.org/licenses/MIT",
+      description: SITE_DESCRIPTION
+    }
+  ];
+  const lines = [
+    `<link rel="canonical" href="${origin}/">`,
+    `<link rel="alternate" type="text/plain" href="${origin}/llms.txt" title="LLM-readable summary">`,
+    '<meta property="og:type" content="website">',
+    `<meta property="og:site_name" content="${SITE_TITLE}">`,
+    '<meta property="og:locale" content="en_US">',
+    `<meta property="og:url" content="${origin}/">`,
+    `<meta property="og:title" content="${SITE_TITLE}">`,
+    `<meta property="og:description" content="${SITE_DESCRIPTION}">`,
+    '<meta name="twitter:card" content="summary_large_image">',
+    `<meta name="twitter:title" content="${SITE_TITLE}">`,
+    `<meta name="twitter:description" content="${SITE_DESCRIPTION}">`,
+    ...structuredData.map((block) =>
+      [
+        '<script type="application/ld+json">',
+        JSON.stringify(block, null, 2),
+        "</script>"
+      ].join("\n")
+    )
+  ];
+  return lines
+    .join("\n")
+    .split("\n")
+    .map((line) => `    ${line}`)
+    .join("\n");
+};
+
 const DEMO_BANNER = '      <p class="demo-banner" role="note">This page renders synthetic demonstration data. Nothing here is a measured record.</p>';
 
 export async function renderStaticDashboard({
@@ -150,6 +209,10 @@ export async function renderStaticDashboard({
   }
 
   const page = html
+    .replace("    <!--SITE_DISCOVERY-->\n", () => {
+      const discovery = buildSiteDiscovery(site, publication);
+      return discovery ? `${discovery}\n` : "";
+    })
     .replace('<link rel="stylesheet" href="/src/styles.css">', () => `<style>\n${css}\n</style>`)
     .replace(
       '<script type="module" src="/src/app.js"></script>',

@@ -136,3 +136,46 @@ test("renderer site: only dataset and default_range reach the page", async () =>
   assert.ok(page.includes('window.__SITE__ = {"dataset":"synthetic","default_range":"all"};'));
   assert.ok(!page.includes("pages_verified"));
 });
+
+test("renderer identity: discovery metadata comes from site config, never the page source", async () => {
+  const withoutSite = await renderStaticDashboard({
+    dailyBurn,
+    profile,
+    observedIntervals
+  });
+
+  // No site config means no absolute URL the page cannot honor, and no marker
+  // left behind in the output.
+  assert.ok(!withoutSite.includes("<!--SITE_DISCOVERY-->"));
+  assert.ok(!/href="https:\/\/delegated\.watch/.test(withoutSite));
+  assert.ok(!/<script\b[^>]*type=["']application\/ld\+json["']/.test(withoutSite));
+
+  const withSite = await renderStaticDashboard({
+    dailyBurn,
+    profile,
+    observedIntervals,
+    site: { domain: "example.test" }
+  });
+
+  assert.ok(!withSite.includes("<!--SITE_DISCOVERY-->"));
+  assert.ok(withSite.includes('<link rel="canonical" href="https://example.test/">'));
+  assert.ok(withSite.includes('<meta property="og:url" content="https://example.test/">'));
+  assert.ok(withSite.includes('<link rel="alternate" type="text/plain" href="https://example.test/llms.txt"'));
+
+  const blocks = [...withSite.matchAll(
+    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  )].map((match) => JSON.parse(match[1]));
+  assert.deepEqual(blocks.map((block) => block["@type"]), ["WebSite", "SoftwareApplication"]);
+  assert.ok(blocks.every((block) => block.url === "https://example.test/"));
+
+  // A publication config already emits its own canonical and social meta; the
+  // site-driven set must not double up on it.
+  const withBoth = await renderStaticDashboard({
+    dailyBurn,
+    profile,
+    observedIntervals,
+    site: { domain: "example.test" },
+    publication: reservedPublication
+  });
+  assert.ok(!withBoth.includes("https://example.test/"));
+});
