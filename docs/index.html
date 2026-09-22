@@ -621,7 +621,7 @@ npm run dev</code></pre>
     <div class="faq">
       <details>
         <summary>Which surfaces can it actually read?</summary>
-        <p>Four states, not two. <strong>Exact</strong> where the surface exposes an authoritative token counter an extractor can read. <strong>Estimated</strong> where no counter exists but enough content survives to reconstruct one. <strong>Dates only</strong> where activity is evidenced but nothing supports a token figure, so the surface records a bound and never a row. <strong>Unrecoverable</strong> where nothing survives that any client can read, which is recorded as absence rather than as a zero. The full register, surface by surface, with the basis for each classification, is in <a href="https://github.com/snapsynapse/delegated-watch/blob/main/SURFACES.md" target="_blank" rel="noopener">SURFACES.md</a>.</p>
+        <p>Four states, not two. <strong>Exact</strong> where the surface exposes an authoritative token counter an extractor can read. <strong>Estimated</strong> where no counter exists but enough content survives to reconstruct one. <strong>Dates only</strong> where activity is evidenced but nothing supports a token figure, so the surface records a bound and never a row. <strong>Unrecoverable</strong> where nothing survives that any client can read, which is recorded as absence rather than as a zero. The full register, surface by surface, with the basis for each classification, is in <a href="https://github.com/snapsynapse/delegated-watch/blob/main/SURFACES.md" target="_blank" rel="noopener">SURFACES.md</a>. It puts the burden of proof where the evidence is: an exact token figure from a consumer subscription is the claim requiring evidence, not the default.</p>
       </details>
       <details>
         <summary>Which ones are permanently out of reach?</summary>
@@ -629,7 +629,7 @@ npm run dev</code></pre>
       </details>
       <details>
         <summary>How much does this release actually ship?</summary>
-        <p>One capture, for local inference through Ollama, plus documented dedupe conventions for several more. Every other source id the dashboard recognizes is exactly that, a label, with the repository asserting nothing about what that surface exposes. The register marks those rows Recognized, which means unassessed. Promoting one takes a verified dependency closure against the store it reads and a test proving an absent source reads as unavailable rather than as a measured zero.</p>
+        <p>One capture, for local inference through Ollama, plus documented dedupe conventions for several more. Beyond that the register grades every row by how strong the evidence behind it is. Reported means somebody read what a vendor publishes and nobody here has confirmed it against the product, so those rows carry a date; vendor reporting changes without announcing itself. Recognized is weaker still: the dashboard has a label and the repository asserts nothing. Promoting a row takes a verified dependency closure against the store it reads and a test proving an absent source reads as unavailable rather than as a measured zero. What is planned, and what has been ruled out permanently, is in <a href="https://github.com/snapsynapse/delegated-watch/blob/main/ROADMAP.md" target="_blank" rel="noopener">ROADMAP.md</a>.</p>
       </details>
       <details>
         <summary>Does any of my data leave the machine?</summary>
@@ -694,6 +694,7 @@ npm run dev</code></pre>
         <a href="/llms.txt">llms.txt</a>
         <a href="/demo/">Demo</a>
         <a href="/.well-known/assistant-guide.txt">Assistant guide</a>
+        <a href="https://github.com/snapsynapse/delegated-watch/blob/main/ROADMAP.md" target="_blank" rel="noopener">Roadmap</a>
         <a href="https://github.com/snapsynapse/delegated-watch/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
         <a href="https://github.com/snapsynapse/delegated-watch/commits/main/INTENT.md" target="_blank" rel="noopener">Revisions</a>
       </div>

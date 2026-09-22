@@ -76,6 +76,10 @@
         "href": "/.well-known/assistant-guide.txt"
       },
       {
+        "label": "Roadmap",
+        "href": "https://github.com/snapsynapse/delegated-watch/blob/main/ROADMAP.md"
+      },
+      {
         "label": "Changelog",
         "href": "https://github.com/snapsynapse/delegated-watch/blob/main/CHANGELOG.md"
       },

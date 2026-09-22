@@ -80,3 +80,30 @@ Documented conventions for extractors you write against this contract. Only the 
 | typesafe_api | SHA-256 of the canonical response | No request id is exposed, so byte-identical responses collapse to one receipt. |
 | ollama | one receipt per captured call | Each relayed request and response pair is its own receipt; nothing is pre-aggregated before capture. |
 | generic receipts | snapshot_key | Dominance rules apply: a higher token-and-call snapshot replaces a lower one, a lower one is rejected, and two snapshots that disagree in opposite directions fail the import closed. |
+## Known activity: surfaces you cannot count
+Some surfaces evidence that work happened without supporting a token figure. A consumer chat product reporting a quota or a message window, and nothing a client can read as a count, is the common case. Writing a guess into the dataset would break the first design invariant, and leaving the surface out entirely reports its absence as though nothing happened there.
+`config/known-activity.json` is the third option. It records a bound, never a row. Bounds reach the dashboard's freshness panel and never the totals, the charts, or any figure that adds up; `accounting` is what keeps the two apart, and the dashboard contract asserts the separation on every CI job.
+Entries are written by hand. No capture populates this file yet, and none is required: a bound is a fact about a date range, not a measurement, so recording one takes a person who knows when they started and last used the surface.
+```json
+{
+  "schema_version": 1,
+  "date_semantics": "First and latest known evidence of activity. These bounds do not imply continuous token coverage.",
+  "surfaces": [
+    {
+      "id": "chatgpt",
+      "label": "ChatGPT",
+      "provider": "openai",
+      "first_known": "2025-03-04",
+      "last_known": "2025-11-19",
+      "accounting": "dates_only"
+    }
+  ]
+}
+```
+Fields, all required:
+- `id`: source id in lowercase snake_case, matching the dashboard's label map where one exists. Sharing an id with a counted source is allowed and merges the bounds.
+- `label`: display name for the freshness panel.
+- `provider`: one of `openai`, `anthropic`, or `other`. `npm run eval:dashboard` rejects anything else.
+- `first_known` and `last_known`: `YYYY-MM-DD`, with `first_known` no later than `last_known`. Both are validated.
+- `accounting`: how the surface is counted. Use `dates_only` for a surface with no readable token counter.
+Three rules govern an entry. A bound is not coverage, so it never implies that the days between were observed. A bound is not additive, so it is never summed with anything. And a bound is evidence of activity, not of volume, so a surface recorded here stays absent from every token figure the record publishes. `SURFACES.md` classifies which surfaces belong here.
