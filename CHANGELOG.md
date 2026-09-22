@@ -7,6 +7,9 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - Social card art at `imgs/og.png` and `docs/imgs/og.png`, referenced from the page's OpenGraph, Twitter, and structured-data metadata.
 - Issue and pull request templates under `.github/`.
 
+### Changed
+- CI moves to Depot CI, which executes `.depot/workflows/ci.yml` directly. The GitHub Actions copy at `.github/workflows/ci.yml` is retained as a `workflow_dispatch` fallback and no longer runs on push or pull request. Both copies drop the `macos-latest` matrix leg and verify on Linux across both Node versions.
+
 ### Fixed
 - The burn drivers list scrolls on its own but was not keyboard reachable, and the time-range panel carried an `aria-label` with no role. Found by a live axe-core scan on 2026-09-22; both are now asserted by the accessibility contract test.
 - Social card art carried EXIF and text metadata chunks, which the candidate verifier rejects for any published image.

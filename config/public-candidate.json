@@ -112,7 +112,8 @@
     "docs/sitemap.xml": "candidate/docs/sitemap.xml",
     "docs/imgs/og.png": "candidate/docs/imgs/og.png",
     "imgs/og.png": "candidate/imgs/og.png",
-    "imgs/social-preview.png": "candidate/imgs/social-preview.png"
+    "imgs/social-preview.png": "candidate/imgs/social-preview.png",
+    ".depot/workflows/ci.yml": "candidate/.depot/workflows/ci.yml"
   },
   "overlay_globs": {
     "fixtures/receipts/*.jsonl": "candidate/fixtures/receipts/"
@@ -232,16 +233,17 @@
     "note": "Rows are schema-legal under strict validation: fidelity exact or estimated, drivers from the reviewed vocabulary, never sample. Every evidence string begins with the prefix so a synthetic row can never be mistaken for a measured one. The private dataset is passed to verify --private-data and any (date, source, tokens) triple that also appears there fails."
   },
   "pinned": {
+    ".depot/workflows/ci.yml": "5003f11301c8c0ec4f71d13f545140e97e95aedac7c43da4b20f85d8cc4d1640",
     ".github/FUNDING.yml": "c32c1cb87ba598703c9c593e4d5b51a6245d8f8b48594cf49f941d2c95a31571",
     ".github/ISSUE_TEMPLATE/bug_report.md": "3fda039a1bf79296e0875cfc0a10b23663dd337b4d6f75c97ea624d63c71c0f5",
     ".github/ISSUE_TEMPLATE/config.yml": "a915bf26d62163c37255877feba27da558a48685e5c32edeb5390b4e1624e0ed",
     ".github/ISSUE_TEMPLATE/feature_request.md": "b25a9a119e16ac3df3397e8ab1b297f7d7b80ac4df5ea50e49889de284258ff9",
     ".github/PULL_REQUEST_TEMPLATE.md": "422e6091d26401be094d4afe914fe6980ce3636d495159567bdb893fdc7f02cb",
-    ".github/workflows/ci.yml": "6d3620d462402a8e45204d69d671b9829dab2e9cf5570468e6eac124b5b0b61e",
+    ".github/workflows/ci.yml": "d365c84a283a331caa26c41e6c78dd1dad3b72d0ecc8b6c09d893f556fd0d98e",
     ".gitignore": "dbfde6d16da30b04b4604ed07f301034fba16da76dcec235841d2a0d68b2b444",
     ".node-version": "55075b5ec4e8b31936cbbc282b8829116d1fd48f2f2f1856dee592a6650700ce",
     "ATTRIBUTION.md": "1a8a261895e3b9543aaa7e3a60d3a3445000feecd10d6aaec4193ab7bd82a484",
-    "CHANGELOG.md": "767c8dd26895815c23cee24ef7fbebbbe9dc617448d9d46b817962581f5fbdba",
+    "CHANGELOG.md": "6012cb374e0c1b01eb4f74445c1aa0425da5359db00afd5222ffa1b5288bf279",
     "config/claude-reconciliation.json": "c28d136d6dcc6892e9e4931096a1b66b8c2dca032e3ee29221c5d7a9e7a327e1",
     "config/known-activity.json": "a4ef448cf04ce3505117fb9e82b4d6aad37eb495923dad692c7dc071467e112a",
     "config/observed-intervals.json": "cd2d8ffbd8309d4748385f0bb0fbdbd5766a524b02fcea4f911eeadf23db03b3",
