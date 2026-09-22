@@ -32,6 +32,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - The publication CTAs shipped `href="#"` while hidden, which a raw-HTML fetcher reads as a link to nowhere; an external agent-readiness scan counted both as dead CTAs on the live site. The attribute is now absent until activation supplies a real URL, matching how the records link already worked.
 - The burn drivers list scrolls on its own but was not keyboard reachable, and the time-range panel carried an `aria-label` with no role. Found by a live axe-core scan on 2026-09-22; both are now asserted by the accessibility contract test.
 - Social card art carried EXIF and text metadata chunks, which the candidate verifier rejects for any published image.
+- The CI build-reproducibility step compared one fresh build against another, so both sides were freshly built and always agreed while a committed page could stay a build behind. It now compares the committed bytes against a build first, then builds a second time for reproducibility. A config change consumed by only one of the two pages is the drift this missed.
 - `verify:candidate --self` reported every git-ignored working-tree path as a file outside the inventory. A path git ignores and does not track cannot reach a published candidate, so it is now excluded from the walk and the count of excluded paths is reported; a tracked file stays in scope even where an ignore rule would match it.
 
 ## [0.1.0] - 2026-09-22

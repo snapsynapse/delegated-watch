@@ -66,8 +66,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Both built pages, not just the home page: the dashboard is the one
-          # that inlines the dataset, so it is the one that can drift.
+          # Two failures, one check. Comparing a build against the committed
+          # bytes catches a page that is merely stale, which comparing a build
+          # against another build inside this job never can: both sides would be
+          # freshly built and agree while the committed page stayed a build
+          # behind. Building twice then catches non-reproducibility on top.
+          # A config change that only one of the two pages consumed is the exact
+          # drift this is here for.
           hash_pages() {
             if command -v sha256sum >/dev/null 2>&1; then
               sha256sum docs/index.html docs/demo/index.html | awk '{print $1}'
@@ -76,18 +81,27 @@ jobs:
             fi
           }
 
-          before="$(hash_pages)"
+          committed="$(hash_pages)"
           npm run build
-          after="$(hash_pages)"
+          first="$(hash_pages)"
 
-          if [ "$before" != "$after" ]; then
-            echo "Build is not reproducible:"
-            printf 'before:\n%s\nafter:\n%s\n' "$before" "$after"
+          if [ "$committed" != "$first" ]; then
+            echo "A committed page is not what the build produces. Run npm run build and commit the result."
+            git --no-pager diff --stat -- docs/
             exit 1
           fi
 
-          echo "Build reproducible at:"
-          echo "$after"
+          npm run build
+          second="$(hash_pages)"
+
+          if [ "$first" != "$second" ]; then
+            echo "Build is not reproducible:"
+            printf 'first:\n%s\nsecond:\n%s\n' "$first" "$second"
+            exit 1
+          fi
+
+          echo "Committed pages match a fresh build, and the build is reproducible:"
+          echo "$second"
 
       - name: Verify public candidate (self)
         run: npm run verify:candidate -- --self
