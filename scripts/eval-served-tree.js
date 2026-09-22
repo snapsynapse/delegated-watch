@@ -71,6 +71,80 @@ const cname = await readFile(join(SERVED_DIR, "CNAME"), "utf8").catch(() => "");
 check("CNAME matches configured domain", cname.trim() === config.domain ? "ok" : "FAIL",
   cname.trim() === config.domain ? "" : `CNAME "${cname.trim()}" vs config "${config.domain}"`);
 
+// Link integrity across the served HTML. The footer routes are hand-maintained
+// and the page is the only thing most visitors, and every crawler, actually
+// fetches, so a link that resolves to nothing is a defect the dataset evals
+// cannot see.
+//
+// Only real href attributes count. data-href holds a URL the page activates
+// later, and a naive /href="/ match treats those as live links and reports
+// targets missing that were never meant to exist yet.
+const HREF = /(?<![-\w])href\s*=\s*"([^"]*)"/g;
+const servedHtml = servedFiles.filter((file) => file.endsWith(".html"));
+const linkFindings = [];
+
+for (const file of servedHtml) {
+  const html = await readFile(file, "utf8").catch(() => null);
+  if (html === null) {
+    linkFindings.push(`${file}: unreadable`);
+    continue;
+  }
+  const ids = new Set([...html.matchAll(/\bid\s*=\s*"([^"]+)"/g)].map((match) => match[1]));
+  for (const [, href] of html.matchAll(HREF)) {
+    if (/^(mailto:|tel:)/i.test(href)) continue;
+    if (href === "") {
+      linkFindings.push(`${file}: empty href`);
+      continue;
+    }
+    if (href.startsWith("#")) {
+      // href="#" is a control that looks like a link and goes nowhere. A raw-HTML
+      // reader cannot tell it is inert, whatever the page does at runtime.
+      const fragment = href.slice(1);
+      if (fragment === "") linkFindings.push(`${file}: placeholder href="#"`);
+      else if (!ids.has(fragment)) linkFindings.push(`${file}: #${fragment} matches no id`);
+      continue;
+    }
+    if (/^https?:\/\//i.test(href)) continue;
+    if (href.startsWith("//")) {
+      linkFindings.push(`${file}: protocol-relative ${href}`);
+      continue;
+    }
+    const withoutQuery = href.split(/[?#]/)[0];
+    const target = withoutQuery.startsWith("/")
+      ? join(SERVED_DIR, withoutQuery)
+      : join(file, "..", withoutQuery);
+    const resolved = target.endsWith("/") || withoutQuery === "/" ? join(target, "index.html") : target;
+    const exists = servedFiles.includes(resolved) || servedFiles.includes(join(resolved, "index.html"));
+    if (!exists) linkFindings.push(`${file}: ${href} resolves to no served file`);
+  }
+}
+
+check("every served link resolves", linkFindings.length ? "FAIL" : "ok",
+  linkFindings.length ? linkFindings.slice(0, 6).join("; ") : `${servedHtml.length} html files`);
+
+// One canonical spelling of the site's own URL. Mixed http/https or www/bare
+// forms split crawler and agent attribution between origins that are the same
+// site, and the sitemap is what a crawler trusts over the page.
+const urlFindings = [];
+const domain = config.domain;
+for (const file of servedFiles.filter((f) => /\.(html|txt|xml|json|webmanifest)$/.test(f))) {
+  const text = await readFile(file, "utf8").catch(() => null);
+  if (text === null) continue;
+  for (const match of text.matchAll(new RegExp(`(https?://)(www\\.)?${domain.replace(/\./g, "\\.")}`, "gi"))) {
+    if (match[1].toLowerCase() !== "https://") urlFindings.push(`${file}: ${match[0]} is not https`);
+    if (match[2]) urlFindings.push(`${file}: ${match[0]} uses www`);
+  }
+}
+
+check("own-domain URLs are https and bare", urlFindings.length ? "FAIL" : "ok",
+  urlFindings.length ? urlFindings.slice(0, 6).join("; ") : `canonical form https://${domain}`);
+
+const sitemap = await readFile(join(SERVED_DIR, "sitemap.xml"), "utf8").catch(() => "");
+const locs = [...sitemap.matchAll(/<loc>([^<]*)<\/loc>/g)].map((match) => match[1].trim());
+const strayLocs = locs.filter((loc) => !loc.startsWith(`https://${domain}/`));
+check("sitemap lists only canonical-origin URLs", sitemap && !strayLocs.length ? "ok" : sitemap ? "FAIL" : "WARN",
+  !sitemap ? "no sitemap.xml" : strayLocs.length ? strayLocs.slice(0, 4).join("; ") : `${locs.length} url(s)`);
+
 // Distinctive strings drawn from the real dataset. If any appears in the served
 // tree while pre-launch, data has leaked.
 const rows = JSON.parse(await readFile(DATA_FILE, "utf8"));
