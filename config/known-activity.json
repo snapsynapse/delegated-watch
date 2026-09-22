@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "date_semantics": "First and latest known evidence of activity. These bounds do not imply continuous token coverage. Empty here because the bundled dataset is synthetic; a real deployment records dates-only surfaces it cannot count in tokens (for example a chat surface with no exact per-message counter).",
+  "surfaces": []
+}

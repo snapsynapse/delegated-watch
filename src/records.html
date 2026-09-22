@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recent AI usage records</title>
+    <meta name="description" content="The latest 30 recovered AI usage records, with empty source columns omitted.">
+    <link rel="canonical" href="">
+    <link rel="stylesheet" href="/src/styles.css">
+  </head>
+  <body>
+    <main class="shell records-shell">
+      <nav class="records-nav" aria-label="AI usage navigation">
+        <a href="../">← Back to AI usage overview</a>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+          <span aria-hidden="true" id="themeIcon">☾</span>
+          <span id="themeLabel">Dark</span>
+        </button>
+      </nav>
+      <header class="records-hero">
+        <p class="eyebrow">Daily detail</p>
+        <h1>Recent AI usage records</h1>
+        <p class="lede">The latest 30 active days in the recovered record. Source columns with no activity in this window are omitted.</p>
+        <div id="recordsSummary" class="records-summary"></div>
+      </header>
+      <section class="panel panel-full" aria-labelledby="recordsTitle">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Table</p>
+            <h2 id="recordsTitle">Latest active days</h2>
+          </div>
+          <span>7-day calendar average</span>
+        </div>
+        <div class="table-wrap records-table-wrap" role="region" aria-label="Latest active days table. Use arrow keys to scroll." tabindex="0">
+          <table>
+            <thead><tr id="recordsHeader"></tr></thead>
+            <tbody id="recordsRows"></tbody>
+          </table>
+        </div>
+        <p class="table-note">Scroll horizontally to inspect every active source. Each average uses seven calendar days ending on its row date. Missing days are unknown, not zero, so incomplete windows are unavailable and show their observed-day count.</p>
+      </section>
+    </main>
+    <script type="module" src="/src/records.js"></script>
+  </body>
+</html>

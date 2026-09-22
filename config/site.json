@@ -1,0 +1,22 @@
+{
+  "domain": "delegated.watch",
+  "build_output": "docs/index.html",
+  "posture": "live",
+  "postures": {
+    "pre-launch": "docs/ serves a data-free placeholder. The built dashboard goes to docs2B/. eval:served asserts no dataset content reaches docs/.",
+    "live": "docs/ serves the built dashboard. eval:served relaxes the data assertion and instead requires that a public-mode decision is recorded below."
+  },
+  "public_mode": "synthetic",
+  "public_mode_options": [
+    "absolute",
+    "rounded",
+    "indexed",
+    "synthetic"
+  ],
+  "dataset": "synthetic",
+  "note": "public_mode \"synthetic\" means the served page carries invented demonstration data (see config/public-candidate.json's synthetic_dataset block) and no personal record of anyone's actual usage. Moving posture to \"live\" requires public_mode to be set, because going live publishes whatever docs/ contains; here it always has been synthetic.",
+  "pages_enabled": true,
+  "pages_verified": null,
+  "default_range": "all",
+  "note_default_range": "The page opens on the whole record rather than the trailing year, because the synthetic rows sit in a fixed past year. Remove this key or set it to 365 for a live record."
+}

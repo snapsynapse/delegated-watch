@@ -1,0 +1,11 @@
+{
+  "mode": "unset",
+  "decided_on": null,
+  "note": "Whether Anthropic Admin Usage API records (claude_api) represent traffic already counted by the transcript extractors (claude_code, claude_cowork).",
+  "modes": {
+    "unset": "No decision recorded. A Claude API extractor writes to scratch/reconcile/ and the importer never sees those receipts. Run npm run reconcile:claude.",
+    "additive": "API usage is separate traffic. Receipts are written to scratch/receipts/ and imported as the claude_api source.",
+    "overlapping": "API usage duplicates transcript-derived requests. Receipts stay quarantined in scratch/reconcile/ and are excluded from totals; use them as a reconciliation oracle only."
+  },
+  "evidence": null
+}

@@ -1,0 +1,4 @@
+{
+  "note": "A settled entry pins a source entry's committed figure as the last complete measurement, because the raw store that produced it no longer holds the evidence -- for example a provider app reinstall that deleted local logs. Importers drop incoming receipts for a settled (date, source) pair, so re-derivation from a depleted store can never lower a good measurement. Each entry pins the exact tokens and calls it expects, so a mismatch fails closed for review rather than being silently accepted. It is reversible: delete an entry and ordinary import behaviour returns immediately, which is the right move if the raw evidence is ever recovered from a backup. Distinct from config/source-entry-exclusions.json, which removes an entry from the record entirely; settling retains and freezes it instead. Starts empty here because no real extraction has ever run against this template.",
+  "entries": []
+}

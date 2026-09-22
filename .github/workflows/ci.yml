@@ -1,0 +1,93 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - "24.x"
+          - "26.x"
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Check runtime
+        run: npm run check:runtime
+
+      - name: Run tests
+        run: npm test
+
+      - name: Validate dataset
+        run: npm run validate
+
+      - name: Evaluate dataset invariants
+        run: npm run eval
+
+      - name: Evaluate code honesty
+        run: npm run eval:code
+
+      - name: Build dashboard
+        run: npm run build
+
+      - name: Evaluate dashboard
+        run: npm run eval:dashboard
+
+      - name: Evaluate served tree
+        run: npm run eval:served
+
+      - name: Export CSV
+        run: npm run export:csv
+
+      - name: Import demo data
+        run: npm run demo:import
+
+      - name: Check build reproducibility
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          hash_index() {
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum docs/index.html | awk '{print $1}'
+            else
+              shasum -a 256 docs/index.html | awk '{print $1}'
+            fi
+          }
+
+          before="$(hash_index)"
+          npm run build
+          after="$(hash_index)"
+
+          if [ "$before" != "$after" ]; then
+            echo "Build is not reproducible: $before != $after"
+            exit 1
+          fi
+
+          echo "Build reproducible at $after"
+
+      - name: Verify public candidate (self)
+        run: npm run verify:candidate -- --self

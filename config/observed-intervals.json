@@ -1,0 +1,66 @@
+{
+  "note": "Synthetic observed intervals generated with the demonstration dataset. Each source is declared covered from its first synthetic row to its last; nothing here describes a real store.",
+  "timezone": "UTC",
+  "sources": {
+    "claude_chat": {
+      "observed": [
+        {
+          "from": "2025-01-02",
+          "to": "2025-12-30",
+          "status": "covered",
+          "evidence": "synthetic: generated with the dataset"
+        }
+      ]
+    },
+    "claude_code": {
+      "observed": [
+        {
+          "from": "2025-01-07",
+          "to": "2025-12-29",
+          "status": "covered",
+          "evidence": "synthetic: generated with the dataset"
+        }
+      ]
+    },
+    "codex": {
+      "observed": [
+        {
+          "from": "2025-01-02",
+          "to": "2025-12-23",
+          "status": "covered",
+          "evidence": "synthetic: generated with the dataset"
+        }
+      ]
+    },
+    "openai_api": {
+      "observed": [
+        {
+          "from": "2025-01-09",
+          "to": "2025-12-31",
+          "status": "covered",
+          "evidence": "synthetic: generated with the dataset"
+        }
+      ]
+    },
+    "perplexity_api": {
+      "observed": [
+        {
+          "from": "2025-01-07",
+          "to": "2025-12-30",
+          "status": "covered",
+          "evidence": "synthetic: generated with the dataset"
+        }
+      ]
+    },
+    "qwen_local": {
+      "observed": [
+        {
+          "from": "2025-01-02",
+          "to": "2025-12-31",
+          "status": "covered",
+          "evidence": "synthetic: generated with the dataset"
+        }
+      ]
+    }
+  }
+}

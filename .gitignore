@@ -1,0 +1,23 @@
+# Runtime and transient paths. Anchored to the repository root so that shipped
+# fixtures under fixtures/receipts/ are never mistaken for the receipt inbox.
+node_modules/
+dist/
+build/
+/scratch/
+/receipts/
+/raw/
+.DS_Store
+.env
+.env.*
+!.env.example
+.vercel
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/
+.claude/
+.playwright-mcp/
+handoffs/
+working/

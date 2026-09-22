@@ -1,0 +1,33 @@
+{
+  "name": "delegated-watch",
+  "version": "0.1.0",
+  "description": "A local-first, static-site record of tokens delegated to AI models, aggregated to one scrubbed row per day per source.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.18.0 <25 || >=26 <27"
+  },
+  "scripts": {
+    "apply:exclusions": "node scripts/apply-source-entry-exclusions.js",
+    "assemble:candidate": "node scripts/assemble-public-candidate.js",
+    "build": "node scripts/build.js",
+    "check:runtime": "node scripts/check-runtime.js",
+    "coverage": "node scripts/coverage-report.js",
+    "demo:data": "node scripts/synthetic-dataset.js",
+    "demo:import": "node scripts/demo-import.js",
+    "dev": "node scripts/dev-server.js",
+    "eval": "node scripts/eval-dataset.js",
+    "eval:code": "node scripts/eval-code-honesty.js",
+    "eval:dashboard": "node scripts/eval-dashboard.js",
+    "eval:served": "node scripts/eval-served-tree.js",
+    "export:csv": "node scripts/export-csv.js",
+    "import": "node scripts/import-daily-burn.js",
+    "manifest": "node scripts/build-evidence-manifest.js",
+    "ollama:capture": "node scripts/ollama-capture.mjs",
+    "privacy:receipts": "node scripts/privacy-check-receipts.js",
+    "reconcile:claude": "node scripts/reconcile-claude.js",
+    "test": "npm run check:runtime && node --test tests/*.test.js",
+    "validate": "node scripts/validate-data.js",
+    "verify:candidate": "node scripts/verify-public-candidate.js"
+  }
+}

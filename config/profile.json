@@ -1,0 +1,16 @@
+{
+  "timezone": "UTC",
+  "window_start": "2025-01-01",
+  "github_username": null,
+  "origin": null,
+  "machine_alias": null,
+  "finalize_after_days": 30,
+  "notes": {
+    "timezone": "Day-grouping basis for every source. UTC matches how provider usage APIs bucket their own data, so a provider's daily bucket maps to exactly one local day and a full-history fetch costs a handful of requests instead of hundreds. It also removes DST as a class of day-boundary bug.",
+    "window_start": "2025-01-01 because the bundled sample dataset is synthetic and covers calendar year 2025. Set this to whatever date your own recovery effort should start from; it has no relationship to when any provider or model existed.",
+    "github_username": "Optional GitHub username for adjacent activity context (contribution counts shown alongside token totals, never folded into them). Leave null to disable that panel.",
+    "origin": "Stable identity for one (machine, profile) pair, used to attribute receipts when more than one machine or user profile contributes evidence. Left null until first extraction; extractors then derive and pin it, because a hostname can change while the underlying store identity does not.",
+    "machine_alias": "Stable scrubbed machine identity used in snapshot keys. Left null until first extraction, then pinned the same way as origin: never rederive it after a hostname change, or one historical store will look like two machines.",
+    "finalize_after_days": "Provider usage reads stop at this many days back. Older days are treated as final: their evidence cannot change, so re-reading them only samples the provider's own aggregation quality. A full rebuild is still reachable with a --backfill flag where an extractor supports it."
+  }
+}

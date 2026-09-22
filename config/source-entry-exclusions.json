@@ -1,0 +1,4 @@
+{
+  "note": "Exact source-entry fingerprints intentionally excluded from the recovered record -- for example a duplicated row left behind by a day-boundary or timezone migration. Importers remove only an exact (date, source, tokens, calls) match and fail closed if a retained entry at the same date and source has different counters, so this file can never silently discard something it does not exactly describe. Starts empty here because no real extraction has ever run against this template.",
+  "entries": []
+}
