@@ -277,6 +277,12 @@
       line-height: 1.5;
       border: 1px solid var(--border);
     }
+    /* These blocks scroll horizontally below roughly 700px, which makes them
+       keyboard-operable regions rather than static text. A scrollable region
+       that cannot be focused cannot be read by anyone navigating without a
+       pointer, and the condition does not exist at desktop width, so it is
+       invisible to a scan run at one viewport. */
+    pre:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
     code { font-family: var(--mono); font-size: 0.88em; color: var(--accent); }
     pre code { color: inherit; font-size: 1em; }
 
@@ -450,13 +456,13 @@
 
     <h3 class="lead-in">If an assistant is doing the install</h3>
     <p>Point it at the assistant guide. It is a plain-text file, under 8 KB, that a human can read end to end in a couple of minutes: it states the task scope, the non-goals, and every command as a structured action block with an explicit approval gate. What you review is what the assistant runs.</p>
-<pre><code>Read {{ORIGIN}}/.well-known/assistant-guide.txt
+<pre tabindex="0" role="region" aria-label="Prompt for an assistant, scrollable"><code>Read {{ORIGIN}}/.well-known/assistant-guide.txt
 and follow it. Verify it first and report the level.</code></pre>
     <p class="annotation">The guide gates every networked and code-executing step behind your approval, and its read-only steps run without one. It refuses to point any command at a real provider account, an API key, or a log store.</p>
 
     <h3 class="lead-in">If you are doing it yourself</h3>
     <p>Node 24 (the pinned LTS line) or the verified-compatible Node 26 line. The dev server binds to loopback only.</p>
-<pre><code>git clone https://github.com/snapsynapse/delegated-watch
+<pre tabindex="0" role="region" aria-label="Install commands, scrollable"><code>git clone https://github.com/snapsynapse/delegated-watch
 cd delegated-watch
 npm ci
 npm run dev</code></pre>

@@ -273,7 +273,7 @@
     ".gitignore": "08db4417d878b7f552bd7e7a06052e154a91260315438f2a56b48bf4eaf0727d",
     ".node-version": "55075b5ec4e8b31936cbbc282b8829116d1fd48f2f2f1856dee592a6650700ce",
     "ATTRIBUTION.md": "1a8a261895e3b9543aaa7e3a60d3a3445000feecd10d6aaec4193ab7bd82a484",
-    "CHANGELOG.md": "085182817acf3b0459a254c3c03aadb7d0f2ef006ffc7d379f38f0cff167a9f4",
+    "CHANGELOG.md": "82add4c0d00dd8f692a87d7d888b6c8fc83a2bcca1c3eb068b2d4faf1dd21050",
     "config/claude-reconciliation.json": "c28d136d6dcc6892e9e4931096a1b66b8c2dca032e3ee29221c5d7a9e7a327e1",
     "config/known-activity.json": "a4ef448cf04ce3505117fb9e82b4d6aad37eb495923dad692c7dc071467e112a",
     "config/observed-intervals.json": "cd2d8ffbd8309d4748385f0bb0fbdbd5766a524b02fcea4f911eeadf23db03b3",
@@ -291,7 +291,7 @@
     "docs/demo/index.html": "5d210b0d699fcfd7d95677943b916d408f243b42cebf5f2dd44ddb6a22696117",
     "docs/favicon.svg": "5fd2551b12d4b2196e29188a8db125cdec2ec62193158f7fdc3dd7e9edd5ee4e",
     "docs/imgs/og.png": "4a24c0f9936a994ed61a0bf0af483f356d1bfbeaab106a98623cd87c6032e836",
-    "docs/index.html": "0eaafe93bc654420302d7041f033d519f0f242c7e28488597de6be0f38a218eb",
+    "docs/index.html": "06ead2ae773a576c0770250915940358d229ca0add5b89393029c07694bebcda",
     "docs/llms.txt": "be972d08f14c488755195db24deb9dce8a53bea65d69e299d6288b2b544e1ed1",
     "docs/robots.txt": "19d8f69cd94a2f99c73e1b8d44c80ebe07f9ecbaee429e840af35e1883790026",
     "docs/screenshot.png": "67c4edd4f09796b57599833991f5f5f1a2e7bd734f26ef12e7ece50afe468e4e",
@@ -303,7 +303,7 @@
     "fixtures/receipts/regression.jsonl": "ed2404b9c512e284204b7698dd9663fe65d62e23aa6a70fe58715f2517388942",
     "imgs/og.png": "4a24c0f9936a994ed61a0bf0af483f356d1bfbeaab106a98623cd87c6032e836",
     "imgs/social-preview.png": "a5ab1c647b068c58d20cf4cbdf6c2e95131633b1ebb8ffd42b41d54045c99b8c",
-    "INTENT.md": "81f3842b08e808c95342f4c4c52c9fe502dff55552b188cb7c6f4f3c66b367d1",
+    "INTENT.md": "be40f794b8b7c71f55304e156845980fe2c3571acdff3cfcb41b67d1a7762d78",
     "LICENSE": "da18c017e982945dadff968bd4c86a2c574a28e41d9d3244b7609154ff7a179d",
     "package.json": "c4d3b21d5b7258b3458d8f1d3cb01a9e8d7166d76964394be99e38c0e0d24dda",
     "PRIVACY.md": "b65bf909af677cc2aefbebc33788da15d3a810618e6ce84e50de385b0b58bf52",
@@ -353,7 +353,7 @@
     "src/app.js": "afda8c1308e8ee58b5e5a12e888da6cad4949792cd5aaecd1daaae798328ce1d",
     "src/dashboard-model.js": "e83329cf4e49d4e0165b89719b6570d4ca0cd432a19069fb46b24c0e2604f581",
     "src/index.html": "732fe50f327345e01881b623a28569a0771fa81f07193912b76c25d4b4ab2bd1",
-    "src/landing.html": "091051246cc3b7bcbb167f03b1fa2ff923520243518eada699067e7a15c75236",
+    "src/landing.html": "b73e2d0823335cb0cf2b400b617166d9fa14e9b33c4a60fe73d8746600d7342b",
     "src/records.html": "8cfbf545df683ab18c17679fd08316718769bed34cfbd5770f25033d66a558f7",
     "src/records.js": "084ddff1dc56c3f9c257a61f4fc335ddc22404a4bcb97e75aebb9c21f52540f7",
     "src/styles.css": "944fb32356743a6e4465f2c30c39ce9c8ab0d921431208a7fb90d30eb67c89a4",
@@ -379,7 +379,7 @@
     "tests/settled-source-entries.test.js": "b5ad96ab0865cb0d8ccd1f347d11da3875230fabf9ae84746d594f876c637baa",
     "tests/source-entry-exclusions.test.js": "c064da386770900942b710ded6c327416b4da0e7307394b56cb04ec407b6f520",
     "tests/synthetic-dataset.test.js": "42d5b6cb744dd4994c30191be52ffaba7b07803865a6deb8e768de36eb98dfe0",
-    "tests/ui-accessibility-contract.test.js": "9b00c27476e17bf28f2fa6fb863e11f4acc3752f73ed93c5c24a5737ee1b2275"
+    "tests/ui-accessibility-contract.test.js": "d4b25f28b4c95296d2a4e84aecfb669ad61e26b01beebaf0d725cb93bdeb42f2"
   },
   "scan_exempt_files": [
     "config/public-candidate.json"

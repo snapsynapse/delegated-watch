@@ -86,3 +86,25 @@ test("configured day-boundary copy stays truthful for UTC and regional profiles"
     assert.doesNotMatch(copy, /matching how providers bucket|western evening|following cell/);
   }
 });
+
+// The landing page's code blocks scroll horizontally below roughly 700px, which
+// makes them keyboard-operable regions at phone and small-tablet widths and
+// static text at desktop width. A scan run at one viewport cannot see the
+// condition at all, which is how this shipped: the desktop axe run reported zero
+// violations because the blocks did not scroll there. The contract asserts the
+// treatment unconditionally, because the source is what can be checked cheaply.
+test("landing code blocks are keyboard reachable and named", async () => {
+  const landing = await source("src/landing.html");
+  const blocks = [...landing.matchAll(/<pre\b([^>]*)>/g)].map(([, attrs]) => attrs);
+  assert.ok(blocks.length > 0, "no <pre> blocks found in src/landing.html");
+  for (const attrs of blocks) {
+    assert.match(attrs, /tabindex="0"/, `a <pre> scrolls on a phone but is not focusable: ${attrs.trim()}`);
+    assert.match(attrs, /role="region"/, `a <pre> is a scrollable region without the role: ${attrs.trim()}`);
+    assert.match(attrs, /aria-label="[^"]{8,}"/, `a <pre> region has no accessible name: ${attrs.trim()}`);
+  }
+  assert.match(
+    landing,
+    /pre:focus-visible\s*\{[^}]*outline:/,
+    "focusable <pre> blocks need a visible focus ring; the link and button rules do not cover them"
+  );
+});
