@@ -1,6 +1,7 @@
 # Delegated.watch
 A local-first record of the work you delegate to AI models, counted in tokens, that refuses to lower a committed number without a stated reason and is honest about what it cannot see.
 ![Dashboard rendering synthetic demonstration data](docs/screenshot.png)
+The site is at [delegated.watch](https://delegated.watch/); the dashboard above runs at [delegated.watch/demo/](https://delegated.watch/demo/) over synthetic demonstration data.
 Clone the repository, install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line, and run the dashboard. It opens on 127.0.0.1.
 Literal
 ```bash
@@ -26,7 +27,7 @@ A chain of receipts, one deterministic importer, one JSON dataset, and one stati
 - Local inference that is not routed through a capture. A model run directly, through an app, or through a third-party client never passes through a wrapper that reads its counters, so the call leaves no trace here.
 - Deleted or rotated logs. Once a transcript or session log is removed by a retention policy or a reinstall, the counters it held cannot be recovered from anywhere else.
 ## How data flows
-Receipt JSONL, written by an extractor or a capture tool, is merged by `npm run import` under the gates described in `DATA_CONTRACT.md`. The result is `public/data/daily-burn.json`, the one dataset file. `npm run build` bakes it into `docs/index.html`, a self-contained page that renders straight from disk.
+Receipt JSONL, written by an extractor or a capture tool, is merged by `npm run import` under the gates described in `DATA_CONTRACT.md`. The result is `public/data/daily-burn.json`, the one dataset file. `npm run build` bakes it into `docs/demo/index.html`, a self-contained page that renders straight from disk, and renders the home page at `docs/index.html` from `src/landing.html`. Neither served page is hand-edited, and every public URL either one names comes from `config/site.json`.
 The dataset shipped with this candidate is synthetic demonstration data, not anyone's real usage. Regenerate it with `npm run demo:data`, and walk the same importer gates a real receipt would face with `npm run demo:import`.
 ## Running it on your own record
 Write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. The one reference capture in this release is for local inference through Ollama: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
@@ -39,7 +40,9 @@ Provider-specific extractors, for hosted chat products, IDE extensions, or organ
 Every command below is documented at the top of its script.
 - `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
 - `npm run assemble:candidate`: assemble a public candidate tree from the producer and overlay file lists.
-- `npm run build`: build the static dashboard page from the current dataset.
+- `npm run build`: build both served pages, the home page and the dashboard.
+- `npm run build:demo`: build only the static dashboard page from the current dataset.
+- `npm run build:landing`: build only the home page from `src/landing.html` and `config/site.json`.
 - `npm run check:runtime`: verify the running Node version is supported.
 - `npm run coverage`: report real-versus-missing days against the recovery window.
 - `npm run demo:data`: regenerate the synthetic demonstration dataset shipped with this candidate.

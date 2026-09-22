@@ -1,5 +1,11 @@
-// Local dashboard preview. It serves exactly the generated dashboard, rebuilding
-// it for each document request so the browser and shipped artifact share bytes.
+// Local site preview. It serves exactly the generated pages, rebuilding them
+// for each document request so the browser and the shipped artifacts share
+// bytes. Nothing else in the tree is reachable.
+//
+// Routes follow config/site.json, so local paths match the served ones: the
+// dashboard answers at demo_path and, when that is not "/", the home page
+// answers at "/". A config without demo_path keeps the historical single-route
+// behaviour, where the dashboard is the only page and it answers at "/".
 //
 // Usage:
 //   node scripts/dev-server.js     (PORT and HOST respected; loopback only)
@@ -19,12 +25,16 @@ const host = process.env.HOST || "127.0.0.1";
 // docs2B/ in the private checkout and docs/ in the public repository. A missing
 // site.json means the historical default; any other read failure surfaces.
 const DEFAULT_BUILD_OUTPUT = "docs2B/index.html";
-const buildOutput = await readFile(join(root, "config/site.json"), "utf8").then(
-  (text) => JSON.parse(text).build_output ?? DEFAULT_BUILD_OUTPUT,
-  (error) => { if (error.code === "ENOENT") return DEFAULT_BUILD_OUTPUT; throw error; }
+const siteConfig = await readFile(join(root, "config/site.json"), "utf8").then(
+  (text) => JSON.parse(text),
+  (error) => { if (error.code === "ENOENT") return {}; throw error; }
 );
+const buildOutput = siteConfig.build_output ?? DEFAULT_BUILD_OUTPUT;
+const demoPath = siteConfig.demo_path ?? "/";
 const BUILT = join(root, buildOutput);
 const BUILD_DIR = dirname(BUILT);
+const LANDING = join(root, "docs/index.html");
+const LANDING_DIR = dirname(LANDING);
 const supportedHosts = new Map([
   ["127.0.0.1", "127.0.0.1"],
   ["::1", "[::1]"]
@@ -47,16 +57,18 @@ const requestHost = (value) => {
   }
 };
 
-const rebuild = async () => {
+const rebuild = async (script) => {
   const started = Date.now();
-  await run(process.execPath, [join(root, "scripts", "build.js")], { cwd: root });
+  await run(process.execPath, [join(root, "scripts", script)], { cwd: root });
   return Date.now() - started;
 };
 
-const assertSafeBuildDirectory = async () => {
+// A build directory that is a symlink points the read somewhere nobody
+// reviewed, so it is refused rather than followed.
+const assertSafeDirectory = async (directory) => {
   let metadata;
   try {
-    metadata = await lstat(BUILD_DIR);
+    metadata = await lstat(directory);
   } catch (error) {
     if (error?.code === "ENOENT") return;
     throw error;
@@ -66,19 +78,33 @@ const assertSafeBuildDirectory = async () => {
   }
 };
 
-const readDashboard = async () => {
-  await assertSafeBuildDirectory();
-  const metadata = await lstat(BUILT);
+const assertSafeBuildDirectory = () => assertSafeDirectory(BUILD_DIR);
+
+const readBuilt = async (file, directory) => {
+  await assertSafeDirectory(directory);
+  const metadata = await lstat(file);
   if (!metadata.isFile() || metadata.isSymbolicLink()) {
     throw new Error("dashboard artifact is not a regular file");
   }
-  const handle = await open(BUILT, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+  const handle = await open(file, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
   try {
     return await handle.readFile();
   } finally {
     await handle.close();
   }
 };
+
+// One route table, derived from the config rather than written twice, so a
+// path the server answers is a path the site actually has.
+const routes = new Map();
+const addRoute = (path, route) => {
+  routes.set(path, route);
+  routes.set(path.endsWith("/") ? `${path}index.html` : `${path}/index.html`, route);
+};
+if (demoPath !== "/") {
+  addRoute("/", { script: "build-landing.js", file: LANDING, directory: LANDING_DIR });
+}
+addRoute(demoPath, { script: "build.js", file: BUILT, directory: BUILD_DIR });
 
 const server = createServer(async (request, response) => {
   const hostHeader = requestHost(request.headers.host);
@@ -101,16 +127,17 @@ const server = createServer(async (request, response) => {
     response.end("Invalid request target.");
     return;
   }
-  if (url.pathname !== "/" && url.pathname !== "/index.html") {
+  const route = routes.get(url.pathname);
+  if (!route) {
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
     response.end("Not found.");
     return;
   }
 
   try {
-    await assertSafeBuildDirectory();
-    const ms = await rebuild();
-    const page = await readDashboard();
+    await assertSafeDirectory(route.directory);
+    const ms = await rebuild(route.script);
+    const page = await readBuilt(route.file, route.directory);
     console.log(`rebuilt in ${ms}ms → ${url.pathname}`);
     response.writeHead(200, {
       "content-type": "text/html; charset=utf-8",
@@ -134,5 +161,5 @@ server.listen(port, host, () => {
   const address = server.address();
   const listeningPort = typeof address === "object" && address ? address.port : port;
   console.log(`Delegated.watch dev server on http://${expectedHost}:${listeningPort}`);
-  console.log("Serving only the generated dashboard; every document request rebuilds it.");
+  console.log(`Serving only the generated pages (${[...new Set(routes.keys())].filter((path) => !path.endsWith("index.html")).join(", ")}); every document request rebuilds one.`);
 });

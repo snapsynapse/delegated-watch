@@ -17,6 +17,7 @@ __pycache__/
 venv/
 .vscode/
 .idea/
+.agents/
 .claude/
 .playwright-mcp/
 handoffs/

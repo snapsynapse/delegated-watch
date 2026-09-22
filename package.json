@@ -10,7 +10,9 @@
   "scripts": {
     "apply:exclusions": "node scripts/apply-source-entry-exclusions.js",
     "assemble:candidate": "node scripts/assemble-public-candidate.js",
-    "build": "node scripts/build.js",
+    "build": "node scripts/build-landing.js && node scripts/build.js",
+    "build:demo": "node scripts/build.js",
+    "build:landing": "node scripts/build-landing.js",
     "check:runtime": "node scripts/check-runtime.js",
     "coverage": "node scripts/coverage-report.js",
     "demo:data": "node scripts/synthetic-dataset.js",

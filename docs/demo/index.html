@@ -1,0 +1,3422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delegated.watch demo dashboard</title>
+    <meta name="description" content="Account-wide record of AI work delegated to models, across every provider, surface, and machine.">
+    <meta name="theme-color" content="#151515">
+    <meta name="color-scheme" content="dark light">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="keywords" content="token usage, AI usage tracking, local-first, delegated work, inference receipts, provenance">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="mask-icon" href="/favicon.svg" color="#78b9f2">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="canonical" href="https://delegated.watch/demo/">
+    <link rel="alternate" type="text/plain" href="https://delegated.watch/llms.txt" title="LLM-readable summary">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Delegated.watch">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://delegated.watch/demo/">
+    <meta property="og:title" content="Delegated.watch demo dashboard">
+    <meta property="og:description" content="The Delegated.watch dashboard rendering synthetic demonstration data: daily token usage by source, with exact counters kept distinct from estimates and unrecovered days kept visible as unknown.">
+    <meta property="og:image" content="https://delegated.watch/imgs/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="The Delegated.watch wordmark beside a calendar heatmap of blue cells at varying intensity, with scattered dark cells where no record exists.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Delegated.watch demo dashboard">
+    <meta name="twitter:description" content="The Delegated.watch dashboard rendering synthetic demonstration data: daily token usage by source, with exact counters kept distinct from estimates and unrecovered days kept visible as unknown.">
+    <meta name="twitter:image" content="https://delegated.watch/imgs/og.png">
+    <meta name="twitter:image:alt" content="The Delegated.watch wordmark beside a calendar heatmap of blue cells at varying intensity, with scattered dark cells where no record exists.">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "Delegated.watch demo dashboard",
+      "url": "https://delegated.watch/demo/",
+      "description": "The Delegated.watch dashboard rendering synthetic demonstration data: daily token usage by source, with exact counters kept distinct from estimates and unrecovered days kept visible as unknown.",
+      "image": "https://delegated.watch/imgs/og.png",
+      "inLanguage": "en",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Delegated.watch",
+        "url": "https://delegated.watch/"
+      }
+    }
+    </script>
+    <style>
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #151515;
+  --panel: #191919;
+  --panel-2: #202020;
+  --ink: #f3f3f3;
+  --muted: #a2a2a2;
+  --line: #292929;
+  --cyan: #78b9f2;
+  --green: #4f7ea3;
+  --amber: #f2c36b;
+  --rose: #f17c8a;
+  --body-bg: #151515;
+  --panel-shadow: 0 16px 44px rgba(0, 0, 0, 0.14);
+  /* Cool-blue activity ramp sampled from the supplied reference. */
+  --heat-0: #202020;
+  --heat-1: #293b4a;
+  --heat-2: #35536a;
+  --heat-3: #4f7ea3;
+  --heat-4: #78b9f2;
+  --heat-line: rgba(255, 255, 255, 0.035);
+  --heat-missing: rgba(255, 255, 255, 0.16);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f7f8;
+  --panel: #ffffff;
+  --panel-2: #f0f3f5;
+  --ink: #181a1d;
+  --muted: #626c74;
+  --line: #e1e5e8;
+  --cyan: #2f6f9f;
+  --green: #4f7ea3;
+  --amber: #9a6700;
+  --rose: #b3324a;
+  --body-bg: #f6f7f8;
+  --panel-shadow: 0 14px 36px rgba(24, 33, 42, 0.075);
+  --heat-0: #e9edf0;
+  --heat-1: #c9dbe8;
+  --heat-2: #91b9d5;
+  --heat-3: #568db4;
+  --heat-4: #2f6f9f;
+  --heat-line: rgba(27, 31, 36, 0.08);
+  --heat-missing: rgba(27, 31, 36, 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--body-bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  font: inherit;
+}
+
+.personal-site-nav {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px max(24px, calc((100% - 1480px) / 2));
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--body-bg) 92%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.personal-site-title {
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.personal-site-nav ul {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personal-site-nav a:not(.personal-site-title) {
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.personal-site-nav a:hover,
+.personal-site-nav a:focus-visible,
+.personal-site-nav a[aria-current="page"] {
+  border-bottom-color: var(--cyan);
+  color: var(--cyan);
+  outline: none;
+}
+
+.personal-site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 32px;
+  width: min(1480px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 24px 0 36px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.personal-site-footer p {
+  margin: 0;
+}
+
+.personal-site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.personal-site-footer a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.personal-site-footer a:hover,
+.personal-site-footer a:focus-visible {
+  color: var(--cyan);
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.shell {
+  width: min(1480px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  grid-template-rows: auto auto;
+  align-items: end;
+  column-gap: 24px;
+  row-gap: 10px;
+  min-height: 220px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero > :first-child {
+  grid-row: 1 / 3;
+}
+
+.hero-controls,
+.range-panel {
+  grid-column: 2;
+}
+
+.hero-controls {
+  grid-row: 1;
+}
+
+.range-panel {
+  grid-row: 2;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  max-width: 780px;
+  font-size: clamp(2.4rem, 8vw, 5.7rem);
+  line-height: 0.92;
+}
+
+h2 {
+  font-size: 1.08rem;
+}
+
+.lede {
+  max-width: 650px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.range-panel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+  width: min(420px, 100%);
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.range-button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.range-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.range-button.active,
+.range-button:hover {
+  color: var(--bg);
+  background: var(--cyan);
+}
+
+.publication-scope {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(320px, 2fr) auto;
+  align-items: center;
+  gap: 20px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cyan) 5%, var(--panel));
+}
+
+.publication-scope .eyebrow {
+  margin-bottom: 4px;
+}
+
+.publication-scope p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.publication-scope a {
+  color: var(--cyan);
+  font-size: 0.82rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.demo-banner {
+  margin: 0 0 18px;
+  padding: 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--amber) 12%, var(--panel));
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.25fr) repeat(3, minmax(150px, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.filter-heading {
+  align-self: center;
+}
+
+.filter-heading .eyebrow {
+  margin-bottom: 4px;
+}
+
+.filter-bar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.filter-bar select,
+.filter-reset {
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--panel-2);
+}
+
+.filter-bar select {
+  width: 100%;
+  padding: 0 34px 0 11px;
+}
+
+.filter-reset {
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.filter-bar select:hover,
+.filter-bar select:focus-visible,
+.filter-reset:hover,
+.filter-reset:focus-visible {
+  border-color: var(--cyan);
+  outline: none;
+}
+
+.filter-status {
+  grid-column: 2 / -1;
+  min-height: 18px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.metric-grid,
+.dashboard-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(5, 1fr);
+  margin: 18px 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--panel-shadow);
+}
+
+.metric {
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 124px;
+  padding: 18px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+
+.metric + .metric {
+  border-left: 1px solid var(--line);
+}
+
+.metric span,
+.metric small,
+.panel-head span {
+  color: var(--muted);
+}
+
+.metric strong {
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  line-height: 1.2;
+}
+
+.trust strong {
+  color: var(--amber);
+}
+
+.dashboard-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Each panel takes its own height. Stretching was fine when the two panels in
+     a row were similar lengths, but the source legend grew from 7 entries to 11
+     while the driver panel shrank to a single line, leaving roughly 1,100px of
+     empty card beside it. */
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 18px;
+}
+
+.panel-wide,
+.panel-full {
+  grid-column: 1 / -1;
+}
+
+.panel-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* GitHub-style contribution calendar: week columns, weekday rows. */
+.heatmap {
+  --heat-cell: 15px;
+  --heat-gap: 3px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    ".        months"
+    "weekdays grid";
+  gap: 4px 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.heatmap:focus-visible,
+.drivers:focus-visible,
+.table-wrap:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.heat-months {
+  grid-area: months;
+  display: grid;
+  gap: var(--heat-gap);
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.heat-months span {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.heat-weekdays {
+  grid-area: weekdays;
+  display: grid;
+  grid-template-rows: repeat(7, var(--heat-cell));
+  gap: var(--heat-gap);
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.heat-weekdays span:nth-child(1) { grid-row: 2; }
+.heat-weekdays span:nth-child(2) { grid-row: 4; }
+.heat-weekdays span:nth-child(3) { grid-row: 6; }
+
+.heat-grid {
+  grid-area: grid;
+  display: grid;
+  grid-template-rows: repeat(7, var(--heat-cell));
+  grid-auto-flow: column;
+  gap: var(--heat-gap);
+  /* Stretch, so the calendar reaches the edge of the card. It falls back to
+     scrolling on the parent once cells hit their minimum size. */
+  justify-content: stretch;
+}
+
+/* GitHub dark-mode contribution palette. */
+.heat-cell {
+  width: var(--heat-cell);
+  height: var(--heat-cell);
+  border: 1px solid var(--heat-line);
+  border-radius: 4px;
+  background: var(--heat-0);
+  cursor: help;
+}
+
+/* Padding cells that square off the first and last weeks. */
+.heat-blank {
+  border-color: transparent;
+  background: transparent;
+  cursor: default;
+}
+
+/* A day inside the range with no recovered usage record. Distinct from a
+   measured zero, per the unknown-is-not-zero rule in INTENT.md. */
+.heat-missing {
+  border-style: dashed;
+  border-color: var(--heat-missing);
+  background: transparent;
+}
+
+.i1 { background: var(--heat-1); }
+.i2 { background: var(--heat-2); }
+.i3 { background: var(--heat-3); }
+.i4 { background: var(--heat-4); }
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.legend i {
+  width: 22px;
+  height: 10px;
+  border: 1px solid var(--heat-line);
+  border-radius: 99px;
+}
+
+.legend-gap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 18px;
+}
+
+.l-missing {
+  border-style: dashed;
+  border-color: var(--heat-missing);
+  background: transparent;
+}
+
+.l0 { background: var(--heat-0); }
+.l1 { background: var(--heat-1); }
+.l2 { background: var(--heat-2); }
+.l3 { background: var(--heat-3); }
+.l4 { background: var(--heat-4); }
+
+.trend-chart {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.axis {
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+/* Gridlines sit at powers of ten, so they are the scale rather than decoration
+   and must stay readable without competing with the series. */
+.grid-line {
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+.axis-label {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.axis-label-y { text-anchor: end; }
+.axis-label-x { text-anchor: middle; }
+
+.axis-title {
+  fill: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.axis-title-x { text-anchor: end; }
+
+.trend-line {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trend-dot {
+  fill: var(--green);
+}
+
+.peak-dot {
+  fill: var(--amber);
+  stroke: #fff4c9;
+  stroke-width: 2;
+}
+
+.peak-label {
+  fill: var(--amber);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.drivers,
+.sources,
+.scale-list {
+  display: grid;
+  gap: 14px;
+}
+
+.driver-row,
+.source-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.driver-row div,
+.source-row div,
+.scale-list div {
+  display: grid;
+  gap: 4px;
+}
+
+.driver-row span,
+.source-row span,
+.scale-list span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.driver-row i {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--cyan) var(--w), rgba(238, 248, 242, 0.08) var(--w));
+}
+
+.driver-row-boundary,
+.driver-row-pending {
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.driver-row-boundary i {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--muted) 72%, transparent) 0 5px,
+      color-mix(in srgb, var(--muted) 28%, transparent) 5px 10px
+    );
+  clip-path: inset(0 calc(100% - var(--w)) 0 0 round 99px);
+}
+
+.driver-row-pending i {
+  background: linear-gradient(
+    90deg,
+    var(--amber) var(--w),
+    rgba(238, 248, 242, 0.08) var(--w)
+  );
+}
+
+.driver-row .driver-state {
+  display: inline;
+  margin-left: 5px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scale-list div {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.scale-list strong {
+  color: var(--amber);
+  font-size: 1.6rem;
+}
+
+.pipeline-health {
+  display: grid;
+  gap: 16px;
+}
+
+.pipeline-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.pipeline-stat {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  background: var(--panel-2);
+}
+
+.pipeline-stat + .pipeline-stat {
+  border-left: 1px solid var(--line);
+}
+
+.pipeline-stat strong {
+  font-size: 1.25rem;
+}
+
+.pipeline-stat span,
+.freshness-row span,
+.pipeline-note,
+.coverage-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.freshness-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.freshness-list-filtered {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.freshness-column {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.freshness-row {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 9px;
+  row-gap: 5px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.freshness-row i {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  background: var(--muted);
+}
+
+.freshness-row.current i { background: var(--cyan); }
+.freshness-row.recent i { background: var(--green); }
+.freshness-row.older i { background: var(--amber); }
+.freshness-row strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.freshness-range {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.freshness-range b {
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.freshness-range em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.freshness-age {
+  grid-column: 2;
+}
+
+.pipeline-note,
+.coverage-note {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.coverage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.coverage-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coverage-legend i {
+  width: 24px;
+  height: 8px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+}
+
+.coverage-legend .covered,
+.coverage-segment.covered {
+  background: var(--cyan);
+}
+
+.coverage-legend .known-empty,
+.coverage-segment.known-empty {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--panel-2) 0,
+    var(--panel-2) 4px,
+    var(--muted) 4px,
+    var(--muted) 5px
+  );
+}
+
+.coverage-legend .unknown {
+  border-style: dashed;
+  background: transparent;
+}
+
+.coverage-map {
+  display: grid;
+  gap: 10px;
+}
+
+.hero-utility-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.resume-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--panel);
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.resume-cta:hover,
+.resume-cta:focus-visible {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  outline: none;
+}
+
+.coverage-axis {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(240px, 1fr) minmax(120px, auto);
+  gap: 12px;
+}
+
+.coverage-axis > div {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.coverage-axis b {
+  color: var(--cyan);
+  font-weight: 750;
+}
+
+.coverage-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(240px, 1fr) minmax(120px, auto);
+  align-items: center;
+  gap: 12px;
+}
+
+.coverage-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.coverage-label strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverage-label span,
+.coverage-summary {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.coverage-track {
+  position: relative;
+  height: 14px;
+  overflow: hidden;
+  border: 1px dashed var(--heat-missing);
+  border-radius: 99px;
+  background: transparent;
+}
+
+.coverage-segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+}
+
+.coverage-summary {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed var(--heat-missing);
+  border-radius: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  /* The receipts table is the longest thing on the page -- 30 rows at any range,
+     and every column widens as sources are added. Scrolling it in place keeps
+     the panel a fixed object instead of a 2,000px tail below everything else,
+     and the header stays put so a row read at the bottom is still readable. */
+  overflow-y: auto;
+  max-height: 520px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.table-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+}
+
+table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+td {
+  color: var(--ink);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.tag.exact {
+  color: var(--bg);
+  background: var(--cyan);
+}
+
+.tag.est {
+  color: #281604;
+  background: var(--amber);
+}
+
+.tag.estimated {
+  color: #281604;
+  background: var(--amber);
+}
+
+.tag.sample {
+  color: #260b10;
+  background: var(--rose);
+}
+
+:root[data-theme="light"] .tag.est,
+:root[data-theme="light"] .tag.estimated {
+  color: #000000;
+  background: #a66f00;
+}
+
+.calls {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 820px) {
+  .personal-site-nav {
+    position: static;
+    align-items: flex-start;
+    gap: 8px 20px;
+    padding: 14px 24px;
+  }
+
+  .personal-site-nav ul {
+    flex-basis: 100%;
+    gap: 4px 16px;
+  }
+
+  .shell {
+    width: min(100% - 24px, 1180px);
+    padding-top: 18px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    align-items: start;
+    min-height: 0;
+  }
+
+  .hero > :first-child,
+  .hero-controls,
+  .range-panel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .hero-controls {
+    align-items: flex-start;
+  }
+
+  .publication-scope {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .metric-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .filter-heading,
+  .filter-status {
+    grid-column: 1 / -1;
+  }
+
+  .pipeline-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pipeline-stat + .pipeline-stat {
+    border-left: 0;
+  }
+
+  .pipeline-stat:nth-child(even) {
+    border-left: 1px solid var(--line);
+  }
+
+  .pipeline-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+
+  .metric + .metric {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .panel-wide,
+  .panel-full {
+    grid-column: auto;
+  }
+}
+
+/* --- theme toggle --- */
+.hero-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.github-cta {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: min(340px, 100%);
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  background: var(--panel);
+  text-decoration: none;
+}
+
+.github-cta:hover {
+  border-color: var(--cyan);
+  transform: translateY(-1px);
+}
+
+.github-cta:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.github-cta svg {
+  width: 30px;
+  height: 30px;
+  fill: currentColor;
+}
+
+.github-cta span {
+  display: grid;
+  gap: 3px;
+}
+
+.github-cta strong {
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.github-cta small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+@media (min-width: 821px) {
+  :root[data-publication="personal-public"] .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(460px, 520px);
+  }
+
+  :root[data-publication="personal-public"] .github-cta {
+    width: 100%;
+  }
+
+  :root[data-publication="personal-public"] .github-cta small {
+    white-space: nowrap;
+  }
+
+  :root[data-publication="personal-public"] :is(.panel-cadence, .panel-scale) {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :root[data-publication="personal-public"] .cadence,
+  :root[data-publication="personal-public"] .scale-list {
+    flex: 1;
+  }
+
+  :root[data-publication="personal-public"] .scale-list {
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+  }
+
+  :root[data-publication="personal-public"] .weekdays {
+    flex: 1;
+    min-height: 132px;
+  }
+
+  :root[data-publication="personal-public"] .weekday {
+    height: 100%;
+  }
+
+  :root[data-publication="personal-public"] .weekday-bar {
+    flex: 1;
+    height: auto;
+  }
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.theme-toggle:hover { border-color: var(--cyan); }
+.theme-toggle:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* --- heatmap tooltip --- */
+.heat-tip {
+  position: absolute;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 300px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.heat-tip.visible { display: flex; }
+.heat-tip strong { font-size: 0.92rem; }
+.tip-total { color: var(--ink); font-size: 1.05rem; font-weight: 700; }
+.tip-driver, .tip-none { color: var(--muted); }
+.tip-src { display: flex; align-items: center; gap: 7px; color: var(--muted); }
+.tip-src i { width: 9px; height: 9px; border-radius: 2px; }
+.tip-src b { margin-left: auto; color: var(--ink); }
+.tip-why {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+/* --- compact distribution cards --- */
+.mix-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 22px;
+}
+
+.mix-layout > .sources,
+.mix-layout > .drivers {
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 14px;
+}
+
+.mix-layout .sources,
+.mix-layout .drivers {
+  gap: 7px;
+}
+
+.donut {
+  width: 100%;
+  height: auto;
+}
+
+.donut-large {
+  width: min(100%, 230px);
+  justify-self: center;
+}
+
+.donut-value { fill: var(--ink); font-size: 17px; font-weight: 700; }
+.donut-label { fill: var(--muted); font-size: 9px; }
+.swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+.mix-layout .source-row {
+  grid-template-columns: 10px minmax(0, 1fr) auto minmax(58px, auto);
+  gap: 8px;
+  min-height: 40px;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+}
+
+.mix-layout .source-row > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+}
+
+.mix-layout .source-row strong,
+.mix-layout .driver-row strong {
+  font-size: 0.84rem;
+}
+
+.mix-layout .source-row span,
+.mix-layout .driver-row span {
+  font-size: 0.74rem;
+}
+
+.mix-layout .source-row .tag {
+  min-height: 17px;
+  margin-left: 0;
+  padding: 0 5px;
+  font-size: 0.6rem;
+}
+
+.mix-layout .source-row > b,
+.mix-layout .driver-row > b {
+  min-width: 3ch;
+  text-align: right;
+}
+
+.mix-layout .driver-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-height: 42px;
+  padding: 3px 8px 11px 0;
+}
+
+.mix-layout .driver-row i {
+  height: 4px;
+}
+
+.mix-layout .driver-row-boundary,
+.mix-layout .driver-row-pending {
+  margin-top: 3px;
+  padding-top: 9px;
+}
+
+/* --- device & profile --- */
+.origins { display: flex; flex-direction: column; gap: 14px; }
+.origin-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.origin-head strong { font-size: 0.92rem; word-break: break-all; }
+.origin-bar { height: 8px; margin: 6px 0 4px; border-radius: 99px; background: var(--panel-2); overflow: hidden; }
+.origin-bar span { display: block; height: 100%; border-radius: 99px; }
+.origin-meta, .origin-note, .origin-empty { color: var(--muted); font-size: 0.78rem; }
+.origin-note { margin: 4px 0 0; padding-top: 10px; border-top: 1px solid var(--line); }
+
+.driver-empty, .driver-note { color: var(--muted); font-size: 0.78rem; }
+.driver-note { margin: 4px 0 0; padding-top: 10px; border-top: 1px solid var(--line); }
+.driver-empty { margin: 0; }
+.records-link-card {
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, var(--line));
+  border-radius: 14px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--cyan) 5%, var(--panel));
+  text-decoration: none;
+}
+
+.records-link-card:hover {
+  border-color: var(--cyan);
+}
+
+.records-link-card strong {
+  font-size: 1.05rem;
+}
+
+.records-link-card span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.records-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.records-nav a {
+  color: var(--cyan);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.records-hero {
+  display: grid;
+  gap: 14px;
+  padding: 64px 0 36px;
+}
+
+.records-hero .lede {
+  margin-top: 0;
+}
+
+.records-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.records-summary div {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+
+.records-summary div + div {
+  border-left: 1px solid var(--line);
+}
+
+.records-summary strong {
+  font-size: 1.15rem;
+}
+
+.records-summary span {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.records-table-wrap {
+  max-height: none;
+}
+
+.heat-note {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 620px) {
+  .personal-site-footer {
+    align-items: flex-start;
+    width: calc(100% - 24px);
+    padding-bottom: 28px;
+  }
+
+  .personal-site-footer nav {
+    flex-basis: 100%;
+  }
+
+  .mix-layout {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  .mix-layout > .donut {
+    width: min(100%, 220px);
+  }
+
+  .mix-layout > .sources,
+  .mix-layout > .drivers {
+    width: 100%;
+    max-height: 300px;
+  }
+
+  .filter-bar,
+  .pipeline-summary,
+  .freshness-list {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-heading,
+  .filter-status {
+    grid-column: auto;
+  }
+
+  .filter-reset {
+    width: 100%;
+  }
+
+  .pipeline-stat + .pipeline-stat,
+  .pipeline-stat:nth-child(even),
+  .pipeline-stat:nth-child(n + 3) {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .coverage-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .coverage-axis {
+    display: none;
+  }
+
+  .coverage-summary {
+    text-align: left;
+  }
+
+  .hero-controls,
+  .github-cta {
+    width: 100%;
+  }
+
+  .records-nav {
+    align-items: flex-start;
+  }
+
+  .records-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .records-summary div + div {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+
+/* --- cadence --- */
+.cadence { display: flex; flex-direction: column; gap: 16px; }
+.cadence-top { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cadence-top div { display: flex; flex-direction: column; gap: 2px; }
+.cadence-top strong { font-size: 1.5rem; }
+.cadence-top span, .cadence-note { color: var(--muted); font-size: 0.78rem; }
+.cadence-note { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); }
+
+.weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; }
+.weekday { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.weekday-bar {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 62px;
+  border-radius: 5px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.weekday-bar span { width: 100%; border-radius: 5px; background: var(--cyan); }
+.weekday small { color: var(--muted); font-size: 0.72rem; }
+
+/* --- histogram --- */
+.histogram { display: flex; flex-direction: column; gap: 14px; }
+.hist-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.hist-stats div { display: flex; flex-direction: column; gap: 2px; }
+.hist-stats strong { font-size: 1.5rem; }
+.hist-stats span { color: var(--muted); font-size: 0.78rem; }
+.hist-bars { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; align-items: end; height: 92px; }
+.hist-bar { display: flex; align-items: flex-end; height: 100%; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+.hist-bar span { width: 100%; background: var(--green); border-radius: 4px; }
+.hist-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.72rem; }
+:where([hidden]) {
+  display: none !important;
+}
+
+/* Routes off the page. Rendered only when config/site.json supplies links, and
+   never alongside a publication identity's own footer. */
+.site-footer {
+  width: min(1480px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 24px 0 36px;
+  border-top: 1px solid var(--line);
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.site-footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--cyan);
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer a:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+</style>
+  </head>
+  <body>
+    <main class="shell">
+      <p class="demo-banner" role="note">This page renders synthetic demonstration data. Nothing here is a measured record.</p>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Local usage surface</p>
+          <h1 id="page-title">Delegated.watch</h1>
+          <p class="lede">Daily AI usage across exact logs and labeled estimates, normalized into one scrubbed file.</p>
+        </div>
+        <div class="hero-controls">
+          <a id="githubCta" class="github-cta" target="_blank" rel="me noopener" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2.24c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.74-1.55-2.57-.29-5.27-1.29-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z"></path>
+            </svg>
+            <span>
+              <strong>See many of the results on my GitHub</strong>
+              <small id="githubCtaStats">Contribution lookup</small>
+            </span>
+          </a>
+          <div class="hero-utility-row">
+            <a id="resumeCta" class="resume-cta" data-publication-feature="resume" hidden>Résumé</a>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+              <span aria-hidden="true" id="themeIcon">☾</span>
+              <span id="themeLabel">Dark</span>
+            </button>
+          </div>
+        </div>
+        <!--
+          Sub-year ranges are deliberately absent: the rolling calendar makes
+          them redundant. "all" shows the history the trailing year hides.
+        -->
+        <div class="range-panel" role="group" aria-label="Time range">
+          <button class="range-button active" data-range="365" type="button" aria-pressed="true">1y</button>
+          <button class="range-button" data-range="all" type="button" aria-pressed="false">all</button>
+        </div>
+      </section>
+      <section id="publicationScope" class="publication-scope" aria-labelledby="publicationScopeTitle" hidden>
+        <div>
+          <p class="eyebrow">Scope</p>
+          <h2 id="publicationScopeTitle">Recovered record, not complete history</h2>
+        </div>
+        <p id="publicationScopeText"></p>
+        <a data-href="./publication-manifest.json" data-publication-feature="publicationManifestLink">View publication manifest</a>
+      </section>
+      <section class="filter-bar" aria-label="Dashboard filters">
+        <div class="filter-heading">
+          <p class="eyebrow">View</p>
+          <strong>Filter every measurement</strong>
+        </div>
+        <label>
+          <span>Source</span>
+          <select id="sourceFilter">
+            <option value="all">All sources</option>
+          </select>
+        </label>
+        <label>
+          <span>Fidelity</span>
+          <select id="fidelityFilter">
+            <option value="all">Exact + estimated</option>
+            <option value="exact">Exact only</option>
+            <option value="estimated">Estimated only</option>
+          </select>
+        </label>
+        <label data-publication-feature="origins">
+          <span>Origin</span>
+          <select id="originFilter">
+            <option value="all">All origins</option>
+          </select>
+        </label>
+        <button id="resetFilters" class="filter-reset" type="button">Reset</button>
+        <output id="filterStatus" class="filter-status" aria-live="polite">All evidence</output>
+      </section>
+      <section class="metric-grid" aria-label="Summary metrics">
+        <article class="metric">
+          <span>Recovered total</span>
+          <strong id="totalTokens">0</strong>
+          <small id="totalSplit">visible range</small>
+        </article>
+        <article class="metric">
+          <span>Peak day</span>
+          <strong id="peakDay">0</strong>
+          <small id="peakDriver">-</small>
+        </article>
+        <article class="metric">
+          <span>7d average</span>
+          <strong id="avgSeven">0</strong>
+          <small id="avgDelta">-</small>
+        </article>
+        <article class="metric trust">
+          <span>Evidence quality</span>
+          <strong id="exactShare">0% exact</strong>
+          <small id="coverageDays">0 / 0 days covered</small>
+        </article>
+        <article class="metric" data-publication-feature="githubMetric">
+          <span>GitHub</span>
+          <strong id="githubContributions">-</strong>
+          <small id="githubWindow">contribution lookup</small>
+        </article>
+      </section>
+      <section class="dashboard-grid">
+        <article class="panel panel-wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">01</p>
+              <h2>Daily burn heatmap</h2>
+            </div>
+            <span id="heatScale">quartile color scale</span>
+          </div>
+          <div id="heatmap" class="heatmap" role="region" aria-label="Daily token burn heatmap. Use arrow keys to scroll the calendar." tabindex="0"></div>
+          <div class="legend" aria-hidden="true">
+            <span>quiet</span>
+            <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i>
+            <span>spike</span>
+            <span class="legend-gap"><i class="l-missing"></i><span id="missingLegendLabel">no data recovered</span></span>
+          </div>
+          <p class="heat-note" id="heatNote"></p>
+        </article>
+        <article class="panel panel-wide">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">02</p>
+              <h2>Weekly trend</h2>
+            </div>
+            <span id="peakWeekLabel">peak labeled</span>
+          </div>
+          <svg id="trendChart" class="trend-chart" role="img" aria-label="Weekly token trend line"></svg>
+        </article>
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">03</p>
+              <h2>Burn drivers</h2>
+            </div>
+            <span>named work vs attribution boundary</span>
+          </div>
+          <div class="mix-layout driver-mix">
+            <svg id="driverDonut" class="donut donut-large" role="img" aria-label="Burn driver mix donut chart"></svg>
+            <div id="drivers" class="drivers" role="region" aria-label="Burn drivers list. Use arrow keys to scroll." tabindex="0"></div>
+          </div>
+        </article>
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">04</p>
+              <h2>Source mix</h2>
+            </div>
+          </div>
+          <div class="mix-layout donut-wrap">
+            <svg id="sourceDonut" class="donut donut-large" role="img" aria-label="Source mix donut chart"></svg>
+            <div id="sources" class="sources"></div>
+          </div>
+        </article>
+        <article class="panel" data-publication-feature="origins">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">05</p>
+              <h2>Device &amp; profile</h2>
+            </div>
+            <span>origin of evidence</span>
+          </div>
+          <div id="origins" class="origins"></div>
+        </article>
+        <article class="panel panel-cadence">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">06</p>
+              <h2>Cadence</h2>
+            </div>
+            <span>active vs elapsed</span>
+          </div>
+          <div id="cadence" class="cadence"></div>
+        </article>
+        <article class="panel" data-publication-feature="calls">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">07</p>
+              <h2>Request size</h2>
+            </div>
+            <span id="requestSizeNote">daily mean</span>
+          </div>
+          <div id="requestSize" class="histogram"></div>
+        </article>
+        <article class="panel panel-scale">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">08</p>
+              <h2>Scale equivalents</h2>
+            </div>
+            <span>approx math</span>
+          </div>
+          <div id="scaleEquivalents" class="scale-list"></div>
+        </article>
+        <article class="panel panel-full" data-publication-feature="records">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">09</p>
+              <h2 id="pipelineTitle">Evidence freshness</h2>
+            </div>
+            <span id="pipelineHeadline">latest retained evidence</span>
+          </div>
+          <div id="pipelineHealth" class="pipeline-health"></div>
+        </article>
+        <!-- Coverage timeline withheld pending a representation that does not conflate token coverage with activity evidence. -->
+        <article id="recordsPanel" class="panel panel-full">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">10</p>
+              <h2 id="receiptTitle">Moving-average receipts</h2>
+            </div>
+            <span id="receiptScope">last 30 visible rows</span>
+          </div>
+          <div class="table-wrap" data-publication-feature="recordsTable" role="region" aria-label="Recent daily records table. Use arrow keys to scroll." tabindex="0">
+            <table>
+              <thead>
+                <tr id="receiptHeader">
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>7d avg</th>
+                  <th>Driver</th>
+                  <th>Evidence</th>
+                </tr>
+              </thead>
+              <tbody id="receiptRows"></tbody>
+            </table>
+          </div>
+          <p class="table-note" data-publication-feature="recordsTable">Scroll horizontally to inspect every source.</p>
+          <a id="publicationRecordsLink" class="records-link-card" data-href="./records/" hidden>
+            <strong>Explore the recent daily records</strong>
+            <span>Open a dedicated table with only sources active during the latest 30 recorded days.</span>
+          </a>
+        </article>
+      </section>
+      <div id="heatTip" class="heat-tip" role="tooltip" aria-hidden="true"></div>
+    </main>
+
+    <footer class="site-footer">
+      <nav aria-label="Site">
+        <a href="/">Home</a>
+        <a href="https://github.com/snapsynapse/delegated-watch">Source</a>
+        <a href="https://github.com/snapsynapse/delegated-watch/blob/main/DATA_CONTRACT.md">Data contract</a>
+        <a href="https://github.com/snapsynapse/delegated-watch/blob/main/PRIVACY.md">Privacy</a>
+        <a href="https://github.com/snapsynapse/delegated-watch/issues">Report an issue</a>
+        <a href="/llms.txt">llms.txt</a>
+      </nav>
+    </footer>
+    <script>
+window.__DAILY_BURN__ = [{"date":"2025-01-02","timezone":"UTC","sources":{"qwen_local":{"tokens":4749,"fidelity":"estimated","by_origin":{"account/example-provider":4749}},"codex":{"tokens":36327,"fidelity":"exact","calls":3,"by_origin":{"machine/example":23613,"machine/example-laptop":12714}},"claude_chat":{"tokens":6200,"fidelity":"estimated","by_origin":{"account/example-provider":4030,"machine/example":2170}}},"total":47276,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-01-03","timezone":"UTC","sources":{"claude_chat":{"tokens":7221,"fidelity":"estimated","by_origin":{"account/example-provider":4694,"machine/example":2527}},"codex":{"tokens":1919,"fidelity":"exact","calls":31,"by_origin":{"machine/example":1919}}},"total":9140,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-01-07","timezone":"UTC","sources":{"perplexity_api":{"tokens":3405,"fidelity":"estimated","by_origin":{"account/example-provider":2213,"machine/example":1192}},"claude_code":{"tokens":20642,"fidelity":"exact","calls":1,"by_origin":{"machine/example":13417,"machine/example-laptop":7225}}},"total":24047,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-01-09","timezone":"UTC","sources":{"codex":{"tokens":14784,"fidelity":"exact","calls":12,"by_origin":{"machine/example":9610,"machine/example-laptop":5174}},"openai_api":{"tokens":2516,"fidelity":"exact","calls":39,"by_origin":{"machine/example":2516}}},"total":17300,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-01-10","timezone":"UTC","sources":{"claude_code":{"tokens":23348,"fidelity":"exact","calls":19,"by_origin":{"machine/example":15176,"machine/example-laptop":8172}},"openai_api":{"tokens":23172,"fidelity":"exact","calls":16,"by_origin":{"machine/example":15062,"machine/example-laptop":8110}},"perplexity_api":{"tokens":1920,"fidelity":"estimated","by_origin":{"account/example-provider":1248,"machine/example":672}}},"total":48440,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-01-15","timezone":"UTC","sources":{"openai_api":{"tokens":15499,"fidelity":"exact","calls":21,"by_origin":{"machine/example":10074,"machine/example-laptop":5425}},"perplexity_api":{"tokens":4766,"fidelity":"estimated","by_origin":{"account/example-provider":3098,"machine/example":1668}},"codex":{"tokens":11443,"fidelity":"exact","calls":21,"by_origin":{"machine/example":11443}}},"total":31708,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-01-16","timezone":"UTC","sources":{"perplexity_api":{"tokens":1274,"fidelity":"estimated","by_origin":{"account/example-provider":1274}},"claude_code":{"tokens":20275,"fidelity":"exact","calls":18,"by_origin":{"machine/example":20275}}},"total":21549,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-01-17","timezone":"UTC","sources":{"claude_code":{"tokens":8402,"fidelity":"exact","calls":12,"by_origin":{"machine/example":5461,"machine/example-laptop":2941}},"qwen_local":{"tokens":8711,"fidelity":"estimated","by_origin":{"account/example-provider":5662,"machine/example":3049}}},"total":17113,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-01-21","timezone":"UTC","sources":{"claude_chat":{"tokens":7862,"fidelity":"estimated","by_origin":{"account/example-provider":5110,"machine/example":2752}},"claude_code":{"tokens":2576,"fidelity":"exact","calls":27,"by_origin":{"machine/example":1674,"machine/example-laptop":902}}},"total":10438,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-01-22","timezone":"UTC","sources":{"claude_code":{"tokens":29145,"fidelity":"exact","calls":38,"by_origin":{"machine/example":29145}},"qwen_local":{"tokens":3625,"fidelity":"estimated","by_origin":{"account/example-provider":2356,"machine/example":1269}}},"total":32770,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-01-23","timezone":"UTC","sources":{"perplexity_api":{"tokens":8338,"fidelity":"estimated","by_origin":{"account/example-provider":5420,"machine/example":2918}}},"total":8338,"driver":"building:infra","evidence":"synthetic: representative infrastructure day"},{"date":"2025-01-25","timezone":"UTC","sources":{"codex":{"tokens":31575,"fidelity":"exact","calls":8,"by_origin":{"machine/example":20524,"machine/example-laptop":11051}},"claude_chat":{"tokens":5892,"fidelity":"estimated","by_origin":{"account/example-provider":3830,"machine/example":2062}},"perplexity_api":{"tokens":7135,"fidelity":"estimated","by_origin":{"account/example-provider":4638,"machine/example":2497}}},"total":44602,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-01-26","timezone":"UTC","sources":{"perplexity_api":{"tokens":3416,"fidelity":"estimated","by_origin":{"account/example-provider":3416}},"claude_chat":{"tokens":6563,"fidelity":"estimated","by_origin":{"account/example-provider":6563}}},"total":9979,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-01-27","timezone":"UTC","sources":{"qwen_local":{"tokens":3191,"fidelity":"estimated","by_origin":{"account/example-provider":2074,"machine/example":1117}}},"total":3191,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-01-29","timezone":"UTC","sources":{"claude_code":{"tokens":35071,"fidelity":"exact","calls":13,"by_origin":{"machine/example":22796,"machine/example-laptop":12275}}},"total":35071,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-01-30","timezone":"UTC","sources":{"openai_api":{"tokens":41350,"fidelity":"exact","calls":11,"by_origin":{"machine/example":26878,"machine/example-laptop":14472}},"claude_code":{"tokens":10982,"fidelity":"exact","calls":29,"by_origin":{"machine/example":7138,"machine/example-laptop":3844}}},"total":52332,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-01-31","timezone":"UTC","sources":{"codex":{"tokens":27534,"fidelity":"exact","calls":37,"by_origin":{"machine/example":17897,"machine/example-laptop":9637}}},"total":27534,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-02-01","timezone":"UTC","sources":{"codex":{"tokens":29664,"fidelity":"exact","calls":24,"by_origin":{"machine/example":19282,"machine/example-laptop":10382}},"claude_code":{"tokens":12717,"fidelity":"exact","calls":5,"by_origin":{"machine/example":8266,"machine/example-laptop":4451}},"openai_api":{"tokens":35966,"fidelity":"exact","calls":24,"by_origin":{"machine/example":23378,"machine/example-laptop":12588}}},"total":78347,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-02-04","timezone":"UTC","sources":{"codex":{"tokens":29273,"fidelity":"exact","calls":5,"by_origin":{"machine/example":19027,"machine/example-laptop":10246}},"qwen_local":{"tokens":3353,"fidelity":"estimated","by_origin":{"account/example-provider":3353}},"openai_api":{"tokens":30503,"fidelity":"exact","calls":34,"by_origin":{"machine/example":19827,"machine/example-laptop":10676}}},"total":63129,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-02-05","timezone":"UTC","sources":{"codex":{"tokens":7425,"fidelity":"exact","calls":18,"by_origin":{"machine/example":7425}}},"total":7425,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-02-06","timezone":"UTC","sources":{"claude_code":{"tokens":24903,"fidelity":"exact","calls":23,"by_origin":{"machine/example":24903}},"codex":{"tokens":21540,"fidelity":"exact","calls":23,"by_origin":{"machine/example":21540}},"openai_api":{"tokens":29027,"fidelity":"exact","calls":31,"by_origin":{"machine/example":18868,"machine/example-laptop":10159}}},"total":75470,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-02-07","timezone":"UTC","sources":{"claude_chat":{"tokens":718,"fidelity":"estimated","by_origin":{"account/example-provider":467,"machine/example":251}}},"total":718,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-02-08","timezone":"UTC","sources":{"perplexity_api":{"tokens":7613,"fidelity":"estimated","by_origin":{"account/example-provider":4948,"machine/example":2665}},"openai_api":{"tokens":15627,"fidelity":"exact","calls":34,"by_origin":{"machine/example":10158,"machine/example-laptop":5469}},"claude_chat":{"tokens":4992,"fidelity":"estimated","by_origin":{"account/example-provider":3245,"machine/example":1747}}},"total":28232,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-02-10","timezone":"UTC","sources":{"claude_chat":{"tokens":1412,"fidelity":"estimated","by_origin":{"account/example-provider":1412}},"claude_code":{"tokens":24866,"fidelity":"exact","calls":28,"by_origin":{"machine/example":16163,"machine/example-laptop":8703}}},"total":26278,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-02-11","timezone":"UTC","sources":{"openai_api":{"tokens":13603,"fidelity":"exact","calls":17,"by_origin":{"machine/example":8842,"machine/example-laptop":4761}},"perplexity_api":{"tokens":6515,"fidelity":"estimated","by_origin":{"account/example-provider":4235,"machine/example":2280}}},"total":20118,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-02-12","timezone":"UTC","sources":{"qwen_local":{"tokens":7717,"fidelity":"estimated","by_origin":{"account/example-provider":5016,"machine/example":2701}},"claude_chat":{"tokens":8097,"fidelity":"estimated","by_origin":{"account/example-provider":8097}}},"total":15814,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-02-13","timezone":"UTC","sources":{"codex":{"tokens":31732,"fidelity":"exact","calls":23,"by_origin":{"machine/example":31732}},"claude_code":{"tokens":40549,"fidelity":"exact","calls":38,"by_origin":{"machine/example":26357,"machine/example-laptop":14192}}},"total":72281,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-02-14","timezone":"UTC","sources":{"codex":{"tokens":31927,"fidelity":"exact","calls":9,"by_origin":{"machine/example":20753,"machine/example-laptop":11174}},"openai_api":{"tokens":8910,"fidelity":"exact","calls":34,"by_origin":{"machine/example":8910}},"claude_chat":{"tokens":6666,"fidelity":"estimated","by_origin":{"account/example-provider":4333,"machine/example":2333}}},"total":47503,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-02-16","timezone":"UTC","sources":{"qwen_local":{"tokens":917,"fidelity":"estimated","by_origin":{"account/example-provider":596,"machine/example":321}},"claude_code":{"tokens":15934,"fidelity":"exact","calls":3,"by_origin":{"machine/example":10357,"machine/example-laptop":5577}},"perplexity_api":{"tokens":8292,"fidelity":"estimated","by_origin":{"account/example-provider":8292}}},"total":25143,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-02-17","timezone":"UTC","sources":{"qwen_local":{"tokens":5849,"fidelity":"estimated","by_origin":{"account/example-provider":3802,"machine/example":2047}}},"total":5849,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-02-19","timezone":"UTC","sources":{"claude_chat":{"tokens":3391,"fidelity":"estimated","by_origin":{"account/example-provider":2204,"machine/example":1187}}},"total":3391,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-02-21","timezone":"UTC","sources":{"claude_code":{"tokens":11963,"fidelity":"exact","calls":38,"by_origin":{"machine/example":7776,"machine/example-laptop":4187}},"perplexity_api":{"tokens":5485,"fidelity":"estimated","by_origin":{"account/example-provider":5485}}},"total":17448,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-02-22","timezone":"UTC","sources":{"qwen_local":{"tokens":1034,"fidelity":"estimated","by_origin":{"account/example-provider":672,"machine/example":362}}},"total":1034,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-02-27","timezone":"UTC","sources":{"claude_chat":{"tokens":8855,"fidelity":"estimated","by_origin":{"account/example-provider":8855}},"perplexity_api":{"tokens":1026,"fidelity":"estimated","by_origin":{"account/example-provider":1026}}},"total":9881,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-03-01","timezone":"UTC","sources":{"codex":{"tokens":27105,"fidelity":"exact","calls":14,"by_origin":{"machine/example":17618,"machine/example-laptop":9487}},"claude_code":{"tokens":22831,"fidelity":"exact","calls":30,"by_origin":{"machine/example":14840,"machine/example-laptop":7991}}},"total":49936,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-03-04","timezone":"UTC","sources":{"claude_chat":{"tokens":5121,"fidelity":"estimated","by_origin":{"account/example-provider":3329,"machine/example":1792}}},"total":5121,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-03-05","timezone":"UTC","sources":{"claude_code":{"tokens":17676,"fidelity":"exact","calls":32,"by_origin":{"machine/example":17676}},"openai_api":{"tokens":2411,"fidelity":"exact","calls":25,"by_origin":{"machine/example":1567,"machine/example-laptop":844}},"claude_chat":{"tokens":8628,"fidelity":"estimated","by_origin":{"account/example-provider":5608,"machine/example":3020}}},"total":28715,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-03-07","timezone":"UTC","sources":{"codex":{"tokens":22025,"fidelity":"exact","calls":7,"by_origin":{"machine/example":14316,"machine/example-laptop":7709}},"perplexity_api":{"tokens":7770,"fidelity":"estimated","by_origin":{"account/example-provider":7770}}},"total":29795,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-03-08","timezone":"UTC","sources":{"codex":{"tokens":18877,"fidelity":"exact","calls":31,"by_origin":{"machine/example":12270,"machine/example-laptop":6607}}},"total":18877,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-03-09","timezone":"UTC","sources":{"openai_api":{"tokens":14397,"fidelity":"exact","calls":12,"by_origin":{"machine/example":14397}}},"total":14397,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-03-10","timezone":"UTC","sources":{"claude_code":{"tokens":5464,"fidelity":"exact","calls":1,"by_origin":{"machine/example":3552,"machine/example-laptop":1912}}},"total":5464,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-03-11","timezone":"UTC","sources":{"claude_chat":{"tokens":2941,"fidelity":"estimated","by_origin":{"account/example-provider":2941}},"perplexity_api":{"tokens":6111,"fidelity":"estimated","by_origin":{"account/example-provider":3972,"machine/example":2139}}},"total":9052,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-03-13","timezone":"UTC","sources":{"claude_code":{"tokens":10913,"fidelity":"exact","calls":1,"by_origin":{"machine/example":10913}},"openai_api":{"tokens":28457,"fidelity":"exact","calls":7,"by_origin":{"machine/example":28457}},"claude_chat":{"tokens":1416,"fidelity":"estimated","by_origin":{"account/example-provider":920,"machine/example":496}}},"total":40786,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-03-14","timezone":"UTC","sources":{"codex":{"tokens":32188,"fidelity":"exact","calls":2,"by_origin":{"machine/example":32188}},"qwen_local":{"tokens":565,"fidelity":"estimated","by_origin":{"account/example-provider":565}},"openai_api":{"tokens":22556,"fidelity":"exact","calls":38,"by_origin":{"machine/example":22556}}},"total":55309,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-03-15","timezone":"UTC","sources":{"openai_api":{"tokens":30477,"fidelity":"exact","calls":1,"by_origin":{"machine/example":19810,"machine/example-laptop":10667}},"codex":{"tokens":4498,"fidelity":"exact","calls":24,"by_origin":{"machine/example":2924,"machine/example-laptop":1574}},"claude_chat":{"tokens":2578,"fidelity":"estimated","by_origin":{"account/example-provider":1676,"machine/example":902}}},"total":37553,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-03-17","timezone":"UTC","sources":{"openai_api":{"tokens":12964,"fidelity":"exact","calls":11,"by_origin":{"machine/example":12964}},"codex":{"tokens":29359,"fidelity":"exact","calls":38,"by_origin":{"machine/example":19083,"machine/example-laptop":10276}},"claude_chat":{"tokens":5869,"fidelity":"estimated","by_origin":{"account/example-provider":5869}}},"total":48192,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-03-18","timezone":"UTC","sources":{"claude_code":{"tokens":13524,"fidelity":"exact","calls":10,"by_origin":{"machine/example":8791,"machine/example-laptop":4733}},"perplexity_api":{"tokens":3541,"fidelity":"estimated","by_origin":{"account/example-provider":3541}}},"total":17065,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-03-19","timezone":"UTC","sources":{"openai_api":{"tokens":20000,"fidelity":"exact","calls":12,"by_origin":{"machine/example":13000,"machine/example-laptop":7000}}},"total":20000,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-03-20","timezone":"UTC","sources":{"codex":{"tokens":14537,"fidelity":"exact","calls":38,"by_origin":{"machine/example":9449,"machine/example-laptop":5088}},"claude_chat":{"tokens":2944,"fidelity":"estimated","by_origin":{"account/example-provider":1914,"machine/example":1030}},"claude_code":{"tokens":7731,"fidelity":"exact","calls":7,"by_origin":{"machine/example":7731}}},"total":25212,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-03-21","timezone":"UTC","sources":{"qwen_local":{"tokens":7095,"fidelity":"estimated","by_origin":{"account/example-provider":4612,"machine/example":2483}},"codex":{"tokens":39692,"fidelity":"exact","calls":12,"by_origin":{"machine/example":25800,"machine/example-laptop":13892}}},"total":46787,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-03-23","timezone":"UTC","sources":{"claude_chat":{"tokens":728,"fidelity":"estimated","by_origin":{"account/example-provider":473,"machine/example":255}},"qwen_local":{"tokens":3041,"fidelity":"estimated","by_origin":{"account/example-provider":1977,"machine/example":1064}},"perplexity_api":{"tokens":5139,"fidelity":"estimated","by_origin":{"account/example-provider":3340,"machine/example":1799}}},"total":8908,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-03-25","timezone":"UTC","sources":{"codex":{"tokens":41926,"fidelity":"exact","calls":33,"by_origin":{"machine/example":41926}}},"total":41926,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-03-26","timezone":"UTC","sources":{"claude_code":{"tokens":15725,"fidelity":"exact","calls":6,"by_origin":{"machine/example":10221,"machine/example-laptop":5504}},"openai_api":{"tokens":15923,"fidelity":"exact","calls":22,"by_origin":{"machine/example":15923}}},"total":31648,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-03-28","timezone":"UTC","sources":{"qwen_local":{"tokens":3116,"fidelity":"estimated","by_origin":{"account/example-provider":2025,"machine/example":1091}},"perplexity_api":{"tokens":7849,"fidelity":"estimated","by_origin":{"account/example-provider":5102,"machine/example":2747}}},"total":10965,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-03-29","timezone":"UTC","sources":{"openai_api":{"tokens":19962,"fidelity":"exact","calls":7,"by_origin":{"machine/example":19962}},"claude_chat":{"tokens":5171,"fidelity":"estimated","by_origin":{"account/example-provider":3361,"machine/example":1810}},"claude_code":{"tokens":14068,"fidelity":"exact","calls":3,"by_origin":{"machine/example":9144,"machine/example-laptop":4924}}},"total":39201,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-04-02","timezone":"UTC","sources":{"claude_code":{"tokens":20338,"fidelity":"exact","calls":22,"by_origin":{"machine/example":20338}}},"total":20338,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-04-03","timezone":"UTC","sources":{"claude_chat":{"tokens":5578,"fidelity":"estimated","by_origin":{"account/example-provider":5578}},"qwen_local":{"tokens":7183,"fidelity":"estimated","by_origin":{"account/example-provider":4669,"machine/example":2514}}},"total":12761,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-04-04","timezone":"UTC","sources":{"perplexity_api":{"tokens":5675,"fidelity":"estimated","by_origin":{"account/example-provider":3689,"machine/example":1986}},"qwen_local":{"tokens":7997,"fidelity":"estimated","by_origin":{"account/example-provider":7997}}},"total":13672,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-04-05","timezone":"UTC","sources":{"claude_code":{"tokens":33636,"fidelity":"exact","calls":40,"by_origin":{"machine/example":21863,"machine/example-laptop":11773}},"claude_chat":{"tokens":5311,"fidelity":"estimated","by_origin":{"account/example-provider":5311}}},"total":38947,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-04-08","timezone":"UTC","sources":{"qwen_local":{"tokens":6935,"fidelity":"estimated","by_origin":{"account/example-provider":6935}},"codex":{"tokens":41397,"fidelity":"exact","calls":32,"by_origin":{"machine/example":41397}}},"total":48332,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-04-09","timezone":"UTC","sources":{"perplexity_api":{"tokens":5944,"fidelity":"estimated","by_origin":{"account/example-provider":3864,"machine/example":2080}}},"total":5944,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-04-11","timezone":"UTC","sources":{"openai_api":{"tokens":38345,"fidelity":"exact","calls":10,"by_origin":{"machine/example":38345}},"qwen_local":{"tokens":8396,"fidelity":"estimated","by_origin":{"account/example-provider":5457,"machine/example":2939}},"codex":{"tokens":39190,"fidelity":"exact","calls":27,"by_origin":{"machine/example":39190}}},"total":85931,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-04-12","timezone":"UTC","sources":{"claude_code":{"tokens":17410,"fidelity":"exact","calls":38,"by_origin":{"machine/example":11317,"machine/example-laptop":6093}}},"total":17410,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-04-15","timezone":"UTC","sources":{"claude_chat":{"tokens":8724,"fidelity":"estimated","by_origin":{"account/example-provider":8724}}},"total":8724,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-04-16","timezone":"UTC","sources":{"openai_api":{"tokens":41308,"fidelity":"exact","calls":25,"by_origin":{"machine/example":26850,"machine/example-laptop":14458}}},"total":41308,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-04-17","timezone":"UTC","sources":{"codex":{"tokens":28162,"fidelity":"exact","calls":7,"by_origin":{"machine/example":18305,"machine/example-laptop":9857}}},"total":28162,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-04-18","timezone":"UTC","sources":{"claude_chat":{"tokens":4323,"fidelity":"estimated","by_origin":{"account/example-provider":4323}},"claude_code":{"tokens":41132,"fidelity":"exact","calls":13,"by_origin":{"machine/example":41132}},"qwen_local":{"tokens":6641,"fidelity":"estimated","by_origin":{"account/example-provider":6641}}},"total":52096,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-04-20","timezone":"UTC","sources":{"codex":{"tokens":17595,"fidelity":"exact","calls":29,"by_origin":{"machine/example":11437,"machine/example-laptop":6158}},"openai_api":{"tokens":3297,"fidelity":"exact","calls":8,"by_origin":{"machine/example":3297}},"claude_code":{"tokens":29698,"fidelity":"exact","calls":1,"by_origin":{"machine/example":19304,"machine/example-laptop":10394}}},"total":50590,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-04-23","timezone":"UTC","sources":{"openai_api":{"tokens":40136,"fidelity":"exact","calls":25,"by_origin":{"machine/example":26088,"machine/example-laptop":14048}},"perplexity_api":{"tokens":8584,"fidelity":"estimated","by_origin":{"account/example-provider":8584}}},"total":48720,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-04-24","timezone":"UTC","sources":{"perplexity_api":{"tokens":8536,"fidelity":"estimated","by_origin":{"account/example-provider":5548,"machine/example":2988}},"claude_chat":{"tokens":1741,"fidelity":"estimated","by_origin":{"account/example-provider":1132,"machine/example":609}}},"total":10277,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-04-25","timezone":"UTC","sources":{"codex":{"tokens":35081,"fidelity":"exact","calls":14,"by_origin":{"machine/example":22803,"machine/example-laptop":12278}},"openai_api":{"tokens":41507,"fidelity":"exact","calls":18,"by_origin":{"machine/example":41507}}},"total":76588,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-04-26","timezone":"UTC","sources":{"claude_code":{"tokens":24725,"fidelity":"exact","calls":21,"by_origin":{"machine/example":16071,"machine/example-laptop":8654}}},"total":24725,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-04-28","timezone":"UTC","sources":{"perplexity_api":{"tokens":1003,"fidelity":"estimated","by_origin":{"account/example-provider":652,"machine/example":351}}},"total":1003,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-04-29","timezone":"UTC","sources":{"openai_api":{"tokens":17989,"fidelity":"exact","calls":6,"by_origin":{"machine/example":17989}},"codex":{"tokens":26962,"fidelity":"exact","calls":13,"by_origin":{"machine/example":26962}}},"total":44951,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-05-01","timezone":"UTC","sources":{"qwen_local":{"tokens":2650,"fidelity":"estimated","by_origin":{"account/example-provider":1723,"machine/example":927}},"openai_api":{"tokens":24505,"fidelity":"exact","calls":14,"by_origin":{"machine/example":24505}}},"total":27155,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-05-02","timezone":"UTC","sources":{"claude_chat":{"tokens":2487,"fidelity":"estimated","by_origin":{"account/example-provider":1617,"machine/example":870}}},"total":2487,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-05-03","timezone":"UTC","sources":{"openai_api":{"tokens":26255,"fidelity":"exact","calls":13,"by_origin":{"machine/example":26255}}},"total":26255,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-05-06","timezone":"UTC","sources":{"perplexity_api":{"tokens":3910,"fidelity":"estimated","by_origin":{"account/example-provider":3910}}},"total":3910,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-05-07","timezone":"UTC","sources":{"codex":{"tokens":16998,"fidelity":"exact","calls":10,"by_origin":{"machine/example":16998}},"claude_code":{"tokens":20378,"fidelity":"exact","calls":6,"by_origin":{"machine/example":20378}},"claude_chat":{"tokens":3270,"fidelity":"estimated","by_origin":{"account/example-provider":2126,"machine/example":1144}}},"total":40646,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-05-08","timezone":"UTC","sources":{"qwen_local":{"tokens":5337,"fidelity":"estimated","by_origin":{"account/example-provider":3469,"machine/example":1868}},"codex":{"tokens":2516,"fidelity":"exact","calls":20,"by_origin":{"machine/example":1635,"machine/example-laptop":881}}},"total":7853,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-05-09","timezone":"UTC","sources":{"qwen_local":{"tokens":3817,"fidelity":"estimated","by_origin":{"account/example-provider":2481,"machine/example":1336}},"claude_chat":{"tokens":358,"fidelity":"estimated","by_origin":{"account/example-provider":233,"machine/example":125}},"openai_api":{"tokens":32191,"fidelity":"exact","calls":15,"by_origin":{"machine/example":20924,"machine/example-laptop":11267}}},"total":36366,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-05-11","timezone":"UTC","sources":{"codex":{"tokens":9576,"fidelity":"exact","calls":31,"by_origin":{"machine/example":6224,"machine/example-laptop":3352}}},"total":9576,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-05-12","timezone":"UTC","sources":{"claude_code":{"tokens":33953,"fidelity":"exact","calls":36,"by_origin":{"machine/example":22069,"machine/example-laptop":11884}},"openai_api":{"tokens":12941,"fidelity":"exact","calls":3,"by_origin":{"machine/example":8412,"machine/example-laptop":4529}},"qwen_local":{"tokens":3701,"fidelity":"estimated","by_origin":{"account/example-provider":3701}}},"total":50595,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-05-13","timezone":"UTC","sources":{"qwen_local":{"tokens":5847,"fidelity":"estimated","by_origin":{"account/example-provider":5847}},"openai_api":{"tokens":39034,"fidelity":"exact","calls":11,"by_origin":{"machine/example":25372,"machine/example-laptop":13662}}},"total":44881,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-05-16","timezone":"UTC","sources":{"openai_api":{"tokens":16975,"fidelity":"exact","calls":12,"by_origin":{"machine/example":11034,"machine/example-laptop":5941}},"claude_code":{"tokens":34367,"fidelity":"exact","calls":18,"by_origin":{"machine/example":22339,"machine/example-laptop":12028}}},"total":51342,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-05-17","timezone":"UTC","sources":{"qwen_local":{"tokens":5745,"fidelity":"estimated","by_origin":{"account/example-provider":3734,"machine/example":2011}},"codex":{"tokens":30173,"fidelity":"exact","calls":8,"by_origin":{"machine/example":19612,"machine/example-laptop":10561}},"claude_chat":{"tokens":2577,"fidelity":"estimated","by_origin":{"account/example-provider":1675,"machine/example":902}}},"total":38495,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-05-18","timezone":"UTC","sources":{"perplexity_api":{"tokens":7274,"fidelity":"estimated","by_origin":{"account/example-provider":7274}},"qwen_local":{"tokens":6694,"fidelity":"estimated","by_origin":{"account/example-provider":4351,"machine/example":2343}},"claude_chat":{"tokens":8268,"fidelity":"estimated","by_origin":{"account/example-provider":5374,"machine/example":2894}}},"total":22236,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-05-19","timezone":"UTC","sources":{"openai_api":{"tokens":24219,"fidelity":"exact","calls":3,"by_origin":{"machine/example":24219}}},"total":24219,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-05-21","timezone":"UTC","sources":{"codex":{"tokens":37608,"fidelity":"exact","calls":9,"by_origin":{"machine/example":37608}},"claude_code":{"tokens":14149,"fidelity":"exact","calls":36,"by_origin":{"machine/example":14149}},"qwen_local":{"tokens":3401,"fidelity":"estimated","by_origin":{"account/example-provider":2211,"machine/example":1190}}},"total":55158,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-05-22","timezone":"UTC","sources":{"openai_api":{"tokens":25720,"fidelity":"exact","calls":17,"by_origin":{"machine/example":16718,"machine/example-laptop":9002}}},"total":25720,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-05-23","timezone":"UTC","sources":{"openai_api":{"tokens":9323,"fidelity":"exact","calls":26,"by_origin":{"machine/example":6060,"machine/example-laptop":3263}},"claude_chat":{"tokens":5525,"fidelity":"estimated","by_origin":{"account/example-provider":5525}},"qwen_local":{"tokens":858,"fidelity":"estimated","by_origin":{"account/example-provider":858}}},"total":15706,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-05-25","timezone":"UTC","sources":{"openai_api":{"tokens":1915,"fidelity":"exact","calls":26,"by_origin":{"machine/example":1245,"machine/example-laptop":670}},"claude_chat":{"tokens":7216,"fidelity":"estimated","by_origin":{"account/example-provider":7216}},"codex":{"tokens":40278,"fidelity":"exact","calls":1,"by_origin":{"machine/example":26181,"machine/example-laptop":14097}}},"total":49409,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-05-26","timezone":"UTC","sources":{"openai_api":{"tokens":25982,"fidelity":"exact","calls":7,"by_origin":{"machine/example":25982}},"claude_chat":{"tokens":2441,"fidelity":"estimated","by_origin":{"account/example-provider":2441}}},"total":28423,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-05-28","timezone":"UTC","sources":{"claude_code":{"tokens":3094,"fidelity":"exact","calls":25,"by_origin":{"machine/example":2011,"machine/example-laptop":1083}},"qwen_local":{"tokens":8511,"fidelity":"estimated","by_origin":{"account/example-provider":5532,"machine/example":2979}}},"total":11605,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-05-30","timezone":"UTC","sources":{"claude_chat":{"tokens":7470,"fidelity":"estimated","by_origin":{"account/example-provider":7470}}},"total":7470,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-05-31","timezone":"UTC","sources":{"claude_code":{"tokens":24732,"fidelity":"exact","calls":12,"by_origin":{"machine/example":16076,"machine/example-laptop":8656}},"openai_api":{"tokens":16847,"fidelity":"exact","calls":13,"by_origin":{"machine/example":16847}}},"total":41579,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-06-01","timezone":"UTC","sources":{"openai_api":{"tokens":9836,"fidelity":"exact","calls":3,"by_origin":{"machine/example":6393,"machine/example-laptop":3443}},"claude_chat":{"tokens":5354,"fidelity":"estimated","by_origin":{"account/example-provider":3480,"machine/example":1874}}},"total":15190,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-06-02","timezone":"UTC","sources":{"qwen_local":{"tokens":5436,"fidelity":"estimated","by_origin":{"account/example-provider":3533,"machine/example":1903}}},"total":5436,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-06-03","timezone":"UTC","sources":{"codex":{"tokens":14196,"fidelity":"exact","calls":31,"by_origin":{"machine/example":14196}}},"total":14196,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-06-04","timezone":"UTC","sources":{"openai_api":{"tokens":22745,"fidelity":"exact","calls":35,"by_origin":{"machine/example":22745}}},"total":22745,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-06-06","timezone":"UTC","sources":{"codex":{"tokens":12586,"fidelity":"exact","calls":7,"by_origin":{"machine/example":12586}},"openai_api":{"tokens":24122,"fidelity":"exact","calls":26,"by_origin":{"machine/example":24122}},"perplexity_api":{"tokens":1787,"fidelity":"estimated","by_origin":{"account/example-provider":1162,"machine/example":625}}},"total":38495,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-06-11","timezone":"UTC","sources":{"qwen_local":{"tokens":5292,"fidelity":"estimated","by_origin":{"account/example-provider":3440,"machine/example":1852}},"perplexity_api":{"tokens":7267,"fidelity":"estimated","by_origin":{"account/example-provider":4724,"machine/example":2543}}},"total":12559,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-06-12","timezone":"UTC","sources":{"codex":{"tokens":28971,"fidelity":"exact","calls":26,"by_origin":{"machine/example":18831,"machine/example-laptop":10140}}},"total":28971,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-06-15","timezone":"UTC","sources":{"perplexity_api":{"tokens":1652,"fidelity":"estimated","by_origin":{"account/example-provider":1652}}},"total":1652,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-06-16","timezone":"UTC","sources":{"codex":{"tokens":2523,"fidelity":"exact","calls":20,"by_origin":{"machine/example":1640,"machine/example-laptop":883}}},"total":2523,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-06-18","timezone":"UTC","sources":{"perplexity_api":{"tokens":5346,"fidelity":"estimated","by_origin":{"account/example-provider":3475,"machine/example":1871}},"codex":{"tokens":14215,"fidelity":"exact","calls":34,"by_origin":{"machine/example":14215}}},"total":19561,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-06-19","timezone":"UTC","sources":{"openai_api":{"tokens":41194,"fidelity":"exact","calls":10,"by_origin":{"machine/example":41194}}},"total":41194,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-06-20","timezone":"UTC","sources":{"claude_code":{"tokens":32103,"fidelity":"exact","calls":5,"by_origin":{"machine/example":32103}}},"total":32103,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-06-21","timezone":"UTC","sources":{"qwen_local":{"tokens":2735,"fidelity":"estimated","by_origin":{"account/example-provider":1778,"machine/example":957}}},"total":2735,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-06-22","timezone":"UTC","sources":{"codex":{"tokens":2890,"fidelity":"exact","calls":12,"by_origin":{"machine/example":1879,"machine/example-laptop":1011}}},"total":2890,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-06-23","timezone":"UTC","sources":{"claude_chat":{"tokens":2351,"fidelity":"estimated","by_origin":{"account/example-provider":1528,"machine/example":823}},"perplexity_api":{"tokens":4366,"fidelity":"estimated","by_origin":{"account/example-provider":2838,"machine/example":1528}}},"total":6717,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-06-26","timezone":"UTC","sources":{"claude_chat":{"tokens":3929,"fidelity":"estimated","by_origin":{"account/example-provider":2554,"machine/example":1375}},"claude_code":{"tokens":25949,"fidelity":"exact","calls":25,"by_origin":{"machine/example":16867,"machine/example-laptop":9082}}},"total":29878,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-06-27","timezone":"UTC","sources":{"claude_code":{"tokens":7911,"fidelity":"exact","calls":27,"by_origin":{"machine/example":5142,"machine/example-laptop":2769}},"claude_chat":{"tokens":4748,"fidelity":"estimated","by_origin":{"account/example-provider":3086,"machine/example":1662}},"perplexity_api":{"tokens":3117,"fidelity":"estimated","by_origin":{"account/example-provider":2026,"machine/example":1091}}},"total":15776,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-06-29","timezone":"UTC","sources":{"claude_code":{"tokens":29438,"fidelity":"exact","calls":3,"by_origin":{"machine/example":29438}},"qwen_local":{"tokens":1820,"fidelity":"estimated","by_origin":{"account/example-provider":1183,"machine/example":637}},"perplexity_api":{"tokens":6624,"fidelity":"estimated","by_origin":{"account/example-provider":4306,"machine/example":2318}}},"total":37882,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-07-01","timezone":"UTC","sources":{"claude_chat":{"tokens":7342,"fidelity":"estimated","by_origin":{"account/example-provider":4772,"machine/example":2570}},"qwen_local":{"tokens":1921,"fidelity":"estimated","by_origin":{"account/example-provider":1249,"machine/example":672}}},"total":9263,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-07-02","timezone":"UTC","sources":{"claude_code":{"tokens":41750,"fidelity":"exact","calls":23,"by_origin":{"machine/example":41750}}},"total":41750,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-07-03","timezone":"UTC","sources":{"perplexity_api":{"tokens":2843,"fidelity":"estimated","by_origin":{"account/example-provider":2843}},"claude_code":{"tokens":16035,"fidelity":"exact","calls":20,"by_origin":{"machine/example":10423,"machine/example-laptop":5612}}},"total":18878,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-07-04","timezone":"UTC","sources":{"perplexity_api":{"tokens":6605,"fidelity":"estimated","by_origin":{"account/example-provider":6605}}},"total":6605,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-07-05","timezone":"UTC","sources":{"claude_chat":{"tokens":7787,"fidelity":"estimated","by_origin":{"account/example-provider":5062,"machine/example":2725}}},"total":7787,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-07-06","timezone":"UTC","sources":{"claude_code":{"tokens":5825,"fidelity":"exact","calls":34,"by_origin":{"machine/example":3786,"machine/example-laptop":2039}},"codex":{"tokens":8468,"fidelity":"exact","calls":23,"by_origin":{"machine/example":5504,"machine/example-laptop":2964}},"qwen_local":{"tokens":8238,"fidelity":"estimated","by_origin":{"account/example-provider":5355,"machine/example":2883}}},"total":22531,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-07-08","timezone":"UTC","sources":{"perplexity_api":{"tokens":5730,"fidelity":"estimated","by_origin":{"account/example-provider":3725,"machine/example":2005}}},"total":5730,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-07-09","timezone":"UTC","sources":{"codex":{"tokens":2626,"fidelity":"exact","calls":21,"by_origin":{"machine/example":1707,"machine/example-laptop":919}},"claude_code":{"tokens":4178,"fidelity":"exact","calls":29,"by_origin":{"machine/example":4178}},"perplexity_api":{"tokens":5328,"fidelity":"estimated","by_origin":{"account/example-provider":5328}}},"total":12132,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-07-10","timezone":"UTC","sources":{"perplexity_api":{"tokens":6406,"fidelity":"estimated","by_origin":{"account/example-provider":4164,"machine/example":2242}}},"total":6406,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-07-13","timezone":"UTC","sources":{"perplexity_api":{"tokens":6568,"fidelity":"estimated","by_origin":{"account/example-provider":4269,"machine/example":2299}},"claude_chat":{"tokens":7406,"fidelity":"estimated","by_origin":{"account/example-provider":4814,"machine/example":2592}},"openai_api":{"tokens":20932,"fidelity":"exact","calls":7,"by_origin":{"machine/example":13606,"machine/example-laptop":7326}}},"total":34906,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-07-15","timezone":"UTC","sources":{"claude_chat":{"tokens":2309,"fidelity":"estimated","by_origin":{"account/example-provider":2309}},"perplexity_api":{"tokens":2141,"fidelity":"estimated","by_origin":{"account/example-provider":1392,"machine/example":749}},"qwen_local":{"tokens":540,"fidelity":"estimated","by_origin":{"account/example-provider":351,"machine/example":189}}},"total":4990,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-07-17","timezone":"UTC","sources":{"perplexity_api":{"tokens":4557,"fidelity":"estimated","by_origin":{"account/example-provider":4557}},"claude_code":{"tokens":27561,"fidelity":"exact","calls":28,"by_origin":{"machine/example":17915,"machine/example-laptop":9646}}},"total":32118,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-07-19","timezone":"UTC","sources":{"perplexity_api":{"tokens":4387,"fidelity":"estimated","by_origin":{"account/example-provider":4387}},"claude_chat":{"tokens":6337,"fidelity":"estimated","by_origin":{"account/example-provider":4119,"machine/example":2218}},"claude_code":{"tokens":17724,"fidelity":"exact","calls":28,"by_origin":{"machine/example":11521,"machine/example-laptop":6203}}},"total":28448,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-07-20","timezone":"UTC","sources":{"claude_chat":{"tokens":6032,"fidelity":"estimated","by_origin":{"account/example-provider":6032}},"qwen_local":{"tokens":4477,"fidelity":"estimated","by_origin":{"account/example-provider":4477}},"claude_code":{"tokens":39792,"fidelity":"exact","calls":30,"by_origin":{"machine/example":25865,"machine/example-laptop":13927}}},"total":50301,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-07-22","timezone":"UTC","sources":{"qwen_local":{"tokens":3529,"fidelity":"estimated","by_origin":{"account/example-provider":2294,"machine/example":1235}}},"total":3529,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-07-23","timezone":"UTC","sources":{"openai_api":{"tokens":16212,"fidelity":"exact","calls":11,"by_origin":{"machine/example":10538,"machine/example-laptop":5674}},"qwen_local":{"tokens":7775,"fidelity":"estimated","by_origin":{"account/example-provider":7775}},"perplexity_api":{"tokens":5129,"fidelity":"estimated","by_origin":{"account/example-provider":5129}}},"total":29116,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-07-24","timezone":"UTC","sources":{"qwen_local":{"tokens":3923,"fidelity":"estimated","by_origin":{"account/example-provider":2550,"machine/example":1373}},"claude_chat":{"tokens":5705,"fidelity":"estimated","by_origin":{"account/example-provider":3708,"machine/example":1997}}},"total":9628,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-07-25","timezone":"UTC","sources":{"claude_code":{"tokens":30094,"fidelity":"exact","calls":3,"by_origin":{"machine/example":30094}}},"total":30094,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-07-26","timezone":"UTC","sources":{"claude_code":{"tokens":11523,"fidelity":"exact","calls":40,"by_origin":{"machine/example":11523}},"qwen_local":{"tokens":8510,"fidelity":"estimated","by_origin":{"account/example-provider":8510}}},"total":20033,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-07-29","timezone":"UTC","sources":{"claude_chat":{"tokens":7827,"fidelity":"estimated","by_origin":{"account/example-provider":7827}},"openai_api":{"tokens":38287,"fidelity":"exact","calls":10,"by_origin":{"machine/example":38287}},"codex":{"tokens":24901,"fidelity":"exact","calls":4,"by_origin":{"machine/example":16186,"machine/example-laptop":8715}}},"total":71015,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-08-02","timezone":"UTC","sources":{"qwen_local":{"tokens":6775,"fidelity":"estimated","by_origin":{"account/example-provider":6775}},"claude_chat":{"tokens":6172,"fidelity":"estimated","by_origin":{"account/example-provider":4012,"machine/example":2160}}},"total":12947,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-08-04","timezone":"UTC","sources":{"codex":{"tokens":6777,"fidelity":"exact","calls":4,"by_origin":{"machine/example":4405,"machine/example-laptop":2372}},"qwen_local":{"tokens":2175,"fidelity":"estimated","by_origin":{"account/example-provider":2175}}},"total":8952,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-08-08","timezone":"UTC","sources":{"codex":{"tokens":32256,"fidelity":"exact","calls":19,"by_origin":{"machine/example":20966,"machine/example-laptop":11290}},"openai_api":{"tokens":31236,"fidelity":"exact","calls":10,"by_origin":{"machine/example":31236}},"qwen_local":{"tokens":8997,"fidelity":"estimated","by_origin":{"account/example-provider":5848,"machine/example":3149}}},"total":72489,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-08-09","timezone":"UTC","sources":{"claude_chat":{"tokens":4410,"fidelity":"estimated","by_origin":{"account/example-provider":2867,"machine/example":1543}}},"total":4410,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-08-11","timezone":"UTC","sources":{"perplexity_api":{"tokens":5085,"fidelity":"estimated","by_origin":{"account/example-provider":3305,"machine/example":1780}},"claude_code":{"tokens":28950,"fidelity":"exact","calls":30,"by_origin":{"machine/example":18818,"machine/example-laptop":10132}}},"total":34035,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-08-12","timezone":"UTC","sources":{"claude_chat":{"tokens":5958,"fidelity":"estimated","by_origin":{"account/example-provider":3873,"machine/example":2085}},"perplexity_api":{"tokens":7758,"fidelity":"estimated","by_origin":{"account/example-provider":7758}}},"total":13716,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-08-13","timezone":"UTC","sources":{"claude_code":{"tokens":5427,"fidelity":"exact","calls":35,"by_origin":{"machine/example":3528,"machine/example-laptop":1899}}},"total":5427,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-08-15","timezone":"UTC","sources":{"openai_api":{"tokens":29418,"fidelity":"exact","calls":6,"by_origin":{"machine/example":19122,"machine/example-laptop":10296}},"qwen_local":{"tokens":6293,"fidelity":"estimated","by_origin":{"account/example-provider":4090,"machine/example":2203}},"claude_code":{"tokens":10867,"fidelity":"exact","calls":30,"by_origin":{"machine/example":7064,"machine/example-laptop":3803}}},"total":46578,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-08-16","timezone":"UTC","sources":{"claude_chat":{"tokens":4961,"fidelity":"estimated","by_origin":{"account/example-provider":3225,"machine/example":1736}},"codex":{"tokens":15137,"fidelity":"exact","calls":22,"by_origin":{"machine/example":9839,"machine/example-laptop":5298}},"qwen_local":{"tokens":4154,"fidelity":"estimated","by_origin":{"account/example-provider":2700,"machine/example":1454}}},"total":24252,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-08-19","timezone":"UTC","sources":{"claude_chat":{"tokens":6694,"fidelity":"estimated","by_origin":{"account/example-provider":6694}},"claude_code":{"tokens":35398,"fidelity":"exact","calls":9,"by_origin":{"machine/example":23009,"machine/example-laptop":12389}}},"total":42092,"driver":"building:infra","evidence":"synthetic: representative infrastructure day"},{"date":"2025-08-27","timezone":"UTC","sources":{"claude_chat":{"tokens":6128,"fidelity":"estimated","by_origin":{"account/example-provider":6128}}},"total":6128,"driver":"building:infra","evidence":"synthetic: representative infrastructure day"},{"date":"2025-08-28","timezone":"UTC","sources":{"claude_chat":{"tokens":5500,"fidelity":"estimated","by_origin":{"account/example-provider":3575,"machine/example":1925}},"qwen_local":{"tokens":4368,"fidelity":"estimated","by_origin":{"account/example-provider":2839,"machine/example":1529}},"perplexity_api":{"tokens":722,"fidelity":"estimated","by_origin":{"account/example-provider":469,"machine/example":253}}},"total":10590,"driver":"fixing:pipeline","evidence":"synthetic: representative pipeline-fixing day"},{"date":"2025-08-29","timezone":"UTC","sources":{"claude_chat":{"tokens":8075,"fidelity":"estimated","by_origin":{"account/example-provider":5249,"machine/example":2826}},"openai_api":{"tokens":30701,"fidelity":"exact","calls":1,"by_origin":{"machine/example":30701}}},"total":38776,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-08-31","timezone":"UTC","sources":{"claude_chat":{"tokens":531,"fidelity":"estimated","by_origin":{"account/example-provider":345,"machine/example":186}}},"total":531,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-09-01","timezone":"UTC","sources":{"qwen_local":{"tokens":8175,"fidelity":"estimated","by_origin":{"account/example-provider":5314,"machine/example":2861}},"perplexity_api":{"tokens":6214,"fidelity":"estimated","by_origin":{"account/example-provider":4039,"machine/example":2175}},"codex":{"tokens":37059,"fidelity":"exact","calls":16,"by_origin":{"machine/example":37059}}},"total":51448,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-09-03","timezone":"UTC","sources":{"perplexity_api":{"tokens":6631,"fidelity":"estimated","by_origin":{"account/example-provider":6631}},"qwen_local":{"tokens":7852,"fidelity":"estimated","by_origin":{"account/example-provider":7852}},"claude_chat":{"tokens":7594,"fidelity":"estimated","by_origin":{"account/example-provider":4936,"machine/example":2658}}},"total":22077,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-09-05","timezone":"UTC","sources":{"qwen_local":{"tokens":6939,"fidelity":"estimated","by_origin":{"account/example-provider":6939}}},"total":6939,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-09-06","timezone":"UTC","sources":{"qwen_local":{"tokens":3621,"fidelity":"estimated","by_origin":{"account/example-provider":3621}}},"total":3621,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-09-07","timezone":"UTC","sources":{"codex":{"tokens":28159,"fidelity":"exact","calls":7,"by_origin":{"machine/example":18303,"machine/example-laptop":9856}},"openai_api":{"tokens":5913,"fidelity":"exact","calls":16,"by_origin":{"machine/example":3843,"machine/example-laptop":2070}}},"total":34072,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-09-09","timezone":"UTC","sources":{"perplexity_api":{"tokens":4025,"fidelity":"estimated","by_origin":{"account/example-provider":4025}},"qwen_local":{"tokens":2808,"fidelity":"estimated","by_origin":{"account/example-provider":2808}},"claude_code":{"tokens":14607,"fidelity":"exact","calls":22,"by_origin":{"machine/example":14607}}},"total":21440,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-09-10","timezone":"UTC","sources":{"qwen_local":{"tokens":4336,"fidelity":"estimated","by_origin":{"account/example-provider":2818,"machine/example":1518}},"codex":{"tokens":29970,"fidelity":"exact","calls":1,"by_origin":{"machine/example":19481,"machine/example-laptop":10489}}},"total":34306,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-09-11","timezone":"UTC","sources":{"openai_api":{"tokens":38542,"fidelity":"exact","calls":13,"by_origin":{"machine/example":25052,"machine/example-laptop":13490}},"claude_code":{"tokens":20735,"fidelity":"exact","calls":39,"by_origin":{"machine/example":20735}},"qwen_local":{"tokens":3316,"fidelity":"estimated","by_origin":{"account/example-provider":3316}}},"total":62593,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-09-12","timezone":"UTC","sources":{"perplexity_api":{"tokens":4654,"fidelity":"estimated","by_origin":{"account/example-provider":4654}},"claude_code":{"tokens":24322,"fidelity":"exact","calls":16,"by_origin":{"machine/example":24322}}},"total":28976,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-09-14","timezone":"UTC","sources":{"qwen_local":{"tokens":3874,"fidelity":"estimated","by_origin":{"account/example-provider":3874}}},"total":3874,"driver":"building:infra","evidence":"synthetic: representative infrastructure day"},{"date":"2025-09-16","timezone":"UTC","sources":{"perplexity_api":{"tokens":3645,"fidelity":"estimated","by_origin":{"account/example-provider":2369,"machine/example":1276}},"openai_api":{"tokens":31145,"fidelity":"exact","calls":29,"by_origin":{"machine/example":31145}},"qwen_local":{"tokens":8113,"fidelity":"estimated","by_origin":{"account/example-provider":8113}}},"total":42903,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-09-17","timezone":"UTC","sources":{"openai_api":{"tokens":1803,"fidelity":"exact","calls":26,"by_origin":{"machine/example":1172,"machine/example-laptop":631}},"claude_code":{"tokens":3638,"fidelity":"exact","calls":4,"by_origin":{"machine/example":2365,"machine/example-laptop":1273}},"codex":{"tokens":41683,"fidelity":"exact","calls":6,"by_origin":{"machine/example":27094,"machine/example-laptop":14589}}},"total":47124,"driver":"career","evidence":"synthetic: representative career day"},{"date":"2025-09-18","timezone":"UTC","sources":{"codex":{"tokens":35122,"fidelity":"exact","calls":22,"by_origin":{"machine/example":22829,"machine/example-laptop":12293}}},"total":35122,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-09-20","timezone":"UTC","sources":{"claude_code":{"tokens":4396,"fidelity":"exact","calls":12,"by_origin":{"machine/example":2857,"machine/example-laptop":1539}},"claude_chat":{"tokens":2580,"fidelity":"estimated","by_origin":{"account/example-provider":2580}},"qwen_local":{"tokens":2452,"fidelity":"estimated","by_origin":{"account/example-provider":1594,"machine/example":858}}},"total":9428,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-09-23","timezone":"UTC","sources":{"perplexity_api":{"tokens":8678,"fidelity":"estimated","by_origin":{"account/example-provider":5641,"machine/example":3037}},"claude_chat":{"tokens":6469,"fidelity":"estimated","by_origin":{"account/example-provider":4205,"machine/example":2264}},"codex":{"tokens":29927,"fidelity":"exact","calls":36,"by_origin":{"machine/example":19453,"machine/example-laptop":10474}}},"total":45074,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-09-26","timezone":"UTC","sources":{"codex":{"tokens":25567,"fidelity":"exact","calls":40,"by_origin":{"machine/example":16619,"machine/example-laptop":8948}}},"total":25567,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-09-27","timezone":"UTC","sources":{"claude_code":{"tokens":20923,"fidelity":"exact","calls":26,"by_origin":{"machine/example":13600,"machine/example-laptop":7323}}},"total":20923,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-09-30","timezone":"UTC","sources":{"codex":{"tokens":26049,"fidelity":"exact","calls":3,"by_origin":{"machine/example":26049}}},"total":26049,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-10-01","timezone":"UTC","sources":{"claude_chat":{"tokens":8710,"fidelity":"estimated","by_origin":{"account/example-provider":5662,"machine/example":3048}},"qwen_local":{"tokens":3161,"fidelity":"estimated","by_origin":{"account/example-provider":3161}},"openai_api":{"tokens":29928,"fidelity":"exact","calls":38,"by_origin":{"machine/example":19453,"machine/example-laptop":10475}}},"total":41799,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-10-02","timezone":"UTC","sources":{"perplexity_api":{"tokens":1366,"fidelity":"estimated","by_origin":{"account/example-provider":1366}}},"total":1366,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-10-04","timezone":"UTC","sources":{"claude_chat":{"tokens":7046,"fidelity":"estimated","by_origin":{"account/example-provider":4580,"machine/example":2466}},"claude_code":{"tokens":37443,"fidelity":"exact","calls":10,"by_origin":{"machine/example":37443}}},"total":44489,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-10-06","timezone":"UTC","sources":{"codex":{"tokens":39473,"fidelity":"exact","calls":10,"by_origin":{"machine/example":39473}},"claude_chat":{"tokens":1292,"fidelity":"estimated","by_origin":{"account/example-provider":840,"machine/example":452}}},"total":40765,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-10-07","timezone":"UTC","sources":{"claude_chat":{"tokens":4955,"fidelity":"estimated","by_origin":{"account/example-provider":3221,"machine/example":1734}},"codex":{"tokens":20181,"fidelity":"exact","calls":6,"by_origin":{"machine/example":20181}},"claude_code":{"tokens":14087,"fidelity":"exact","calls":4,"by_origin":{"machine/example":9157,"machine/example-laptop":4930}}},"total":39223,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-10-09","timezone":"UTC","sources":{"codex":{"tokens":31274,"fidelity":"exact","calls":21,"by_origin":{"machine/example":31274}},"claude_chat":{"tokens":4654,"fidelity":"estimated","by_origin":{"account/example-provider":4654}}},"total":35928,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-10-10","timezone":"UTC","sources":{"openai_api":{"tokens":28385,"fidelity":"exact","calls":10,"by_origin":{"machine/example":28385}}},"total":28385,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-10-11","timezone":"UTC","sources":{"openai_api":{"tokens":21511,"fidelity":"exact","calls":20,"by_origin":{"machine/example":21511}}},"total":21511,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-10-13","timezone":"UTC","sources":{"qwen_local":{"tokens":3937,"fidelity":"estimated","by_origin":{"account/example-provider":3937}}},"total":3937,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-10-14","timezone":"UTC","sources":{"codex":{"tokens":37515,"fidelity":"exact","calls":4,"by_origin":{"machine/example":24385,"machine/example-laptop":13130}},"openai_api":{"tokens":38294,"fidelity":"exact","calls":2,"by_origin":{"machine/example":24891,"machine/example-laptop":13403}}},"total":75809,"driver":"maintenance:sync","evidence":"synthetic: representative sync-maintenance day"},{"date":"2025-10-15","timezone":"UTC","sources":{"qwen_local":{"tokens":6092,"fidelity":"estimated","by_origin":{"account/example-provider":6092}},"claude_chat":{"tokens":3935,"fidelity":"estimated","by_origin":{"account/example-provider":2558,"machine/example":1377}}},"total":10027,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-10-16","timezone":"UTC","sources":{"qwen_local":{"tokens":1788,"fidelity":"estimated","by_origin":{"account/example-provider":1162,"machine/example":626}},"claude_code":{"tokens":26987,"fidelity":"exact","calls":29,"by_origin":{"machine/example":26987}}},"total":28775,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-10-17","timezone":"UTC","sources":{"perplexity_api":{"tokens":7645,"fidelity":"estimated","by_origin":{"account/example-provider":4969,"machine/example":2676}},"codex":{"tokens":20347,"fidelity":"exact","calls":24,"by_origin":{"machine/example":20347}}},"total":27992,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-10-18","timezone":"UTC","sources":{"perplexity_api":{"tokens":808,"fidelity":"estimated","by_origin":{"account/example-provider":808}},"openai_api":{"tokens":28021,"fidelity":"exact","calls":27,"by_origin":{"machine/example":18214,"machine/example-laptop":9807}},"qwen_local":{"tokens":7233,"fidelity":"estimated","by_origin":{"account/example-provider":7233}}},"total":36062,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-10-19","timezone":"UTC","sources":{"openai_api":{"tokens":9954,"fidelity":"exact","calls":35,"by_origin":{"machine/example":6470,"machine/example-laptop":3484}},"claude_chat":{"tokens":8006,"fidelity":"estimated","by_origin":{"account/example-provider":5204,"machine/example":2802}},"claude_code":{"tokens":36473,"fidelity":"exact","calls":18,"by_origin":{"machine/example":36473}}},"total":54433,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-10-21","timezone":"UTC","sources":{"qwen_local":{"tokens":3844,"fidelity":"estimated","by_origin":{"account/example-provider":2499,"machine/example":1345}},"openai_api":{"tokens":28766,"fidelity":"exact","calls":31,"by_origin":{"machine/example":28766}}},"total":32610,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-10-22","timezone":"UTC","sources":{"qwen_local":{"tokens":5035,"fidelity":"estimated","by_origin":{"account/example-provider":5035}},"perplexity_api":{"tokens":6733,"fidelity":"estimated","by_origin":{"account/example-provider":4376,"machine/example":2357}}},"total":11768,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-10-23","timezone":"UTC","sources":{"perplexity_api":{"tokens":5018,"fidelity":"estimated","by_origin":{"account/example-provider":5018}}},"total":5018,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-10-26","timezone":"UTC","sources":{"claude_chat":{"tokens":3408,"fidelity":"estimated","by_origin":{"account/example-provider":3408}},"openai_api":{"tokens":22901,"fidelity":"exact","calls":11,"by_origin":{"machine/example":14886,"machine/example-laptop":8015}},"codex":{"tokens":40897,"fidelity":"exact","calls":7,"by_origin":{"machine/example":40897}}},"total":67206,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-10-29","timezone":"UTC","sources":{"openai_api":{"tokens":34869,"fidelity":"exact","calls":30,"by_origin":{"machine/example":34869}},"claude_chat":{"tokens":7947,"fidelity":"estimated","by_origin":{"account/example-provider":7947}},"codex":{"tokens":5076,"fidelity":"exact","calls":27,"by_origin":{"machine/example":3299,"machine/example-laptop":1777}}},"total":47892,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-10-31","timezone":"UTC","sources":{"qwen_local":{"tokens":3758,"fidelity":"estimated","by_origin":{"account/example-provider":3758}}},"total":3758,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-11-01","timezone":"UTC","sources":{"perplexity_api":{"tokens":4394,"fidelity":"estimated","by_origin":{"account/example-provider":4394}},"openai_api":{"tokens":2502,"fidelity":"exact","calls":15,"by_origin":{"machine/example":1626,"machine/example-laptop":876}},"claude_chat":{"tokens":4407,"fidelity":"estimated","by_origin":{"account/example-provider":2865,"machine/example":1542}}},"total":11303,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-11-02","timezone":"UTC","sources":{"claude_chat":{"tokens":4496,"fidelity":"estimated","by_origin":{"account/example-provider":2922,"machine/example":1574}}},"total":4496,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-11-05","timezone":"UTC","sources":{"claude_code":{"tokens":29107,"fidelity":"exact","calls":28,"by_origin":{"machine/example":18920,"machine/example-laptop":10187}},"openai_api":{"tokens":7919,"fidelity":"exact","calls":30,"by_origin":{"machine/example":5147,"machine/example-laptop":2772}},"codex":{"tokens":40471,"fidelity":"exact","calls":22,"by_origin":{"machine/example":40471}}},"total":77497,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-11-06","timezone":"UTC","sources":{"openai_api":{"tokens":2709,"fidelity":"exact","calls":1,"by_origin":{"machine/example":2709}},"claude_code":{"tokens":21203,"fidelity":"exact","calls":37,"by_origin":{"machine/example":21203}},"codex":{"tokens":40085,"fidelity":"exact","calls":31,"by_origin":{"machine/example":26055,"machine/example-laptop":14030}}},"total":63997,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-11-11","timezone":"UTC","sources":{"codex":{"tokens":25397,"fidelity":"exact","calls":21,"by_origin":{"machine/example":16508,"machine/example-laptop":8889}},"claude_code":{"tokens":12678,"fidelity":"exact","calls":13,"by_origin":{"machine/example":8241,"machine/example-laptop":4437}},"perplexity_api":{"tokens":3652,"fidelity":"estimated","by_origin":{"account/example-provider":2374,"machine/example":1278}}},"total":41727,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-11-12","timezone":"UTC","sources":{"qwen_local":{"tokens":2227,"fidelity":"estimated","by_origin":{"account/example-provider":1448,"machine/example":779}},"openai_api":{"tokens":37840,"fidelity":"exact","calls":16,"by_origin":{"machine/example":24596,"machine/example-laptop":13244}}},"total":40067,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-11-13","timezone":"UTC","sources":{"qwen_local":{"tokens":6725,"fidelity":"estimated","by_origin":{"account/example-provider":4371,"machine/example":2354}},"claude_code":{"tokens":30466,"fidelity":"exact","calls":12,"by_origin":{"machine/example":30466}},"claude_chat":{"tokens":5889,"fidelity":"estimated","by_origin":{"account/example-provider":5889}}},"total":43080,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-11-14","timezone":"UTC","sources":{"codex":{"tokens":33637,"fidelity":"exact","calls":28,"by_origin":{"machine/example":21864,"machine/example-laptop":11773}},"openai_api":{"tokens":12440,"fidelity":"exact","calls":15,"by_origin":{"machine/example":8086,"machine/example-laptop":4354}},"claude_chat":{"tokens":8203,"fidelity":"estimated","by_origin":{"account/example-provider":8203}}},"total":54280,"driver":"maintenance:hygiene","evidence":"synthetic: representative hygiene day"},{"date":"2025-11-17","timezone":"UTC","sources":{"claude_chat":{"tokens":7291,"fidelity":"estimated","by_origin":{"account/example-provider":4739,"machine/example":2552}},"perplexity_api":{"tokens":2219,"fidelity":"estimated","by_origin":{"account/example-provider":1442,"machine/example":777}},"openai_api":{"tokens":27569,"fidelity":"exact","calls":6,"by_origin":{"machine/example":27569}}},"total":37079,"driver":"building:feature","evidence":"synthetic: representative feature-building day"},{"date":"2025-11-19","timezone":"UTC","sources":{"codex":{"tokens":34746,"fidelity":"exact","calls":23,"by_origin":{"machine/example":34746}},"claude_chat":{"tokens":6150,"fidelity":"estimated","by_origin":{"account/example-provider":3998,"machine/example":2152}},"openai_api":{"tokens":12538,"fidelity":"exact","calls":11,"by_origin":{"machine/example":12538}}},"total":53434,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-11-21","timezone":"UTC","sources":{"openai_api":{"tokens":21356,"fidelity":"exact","calls":34,"by_origin":{"machine/example":13881,"machine/example-laptop":7475}},"claude_chat":{"tokens":7296,"fidelity":"estimated","by_origin":{"account/example-provider":7296}},"claude_code":{"tokens":34055,"fidelity":"exact","calls":39,"by_origin":{"machine/example":22136,"machine/example-laptop":11919}}},"total":62707,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-11-23","timezone":"UTC","sources":{"openai_api":{"tokens":1847,"fidelity":"exact","calls":35,"by_origin":{"machine/example":1201,"machine/example-laptop":646}},"claude_chat":{"tokens":6704,"fidelity":"estimated","by_origin":{"account/example-provider":6704}}},"total":8551,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-11-24","timezone":"UTC","sources":{"perplexity_api":{"tokens":2654,"fidelity":"estimated","by_origin":{"account/example-provider":2654}}},"total":2654,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-11-26","timezone":"UTC","sources":{"claude_chat":{"tokens":1744,"fidelity":"estimated","by_origin":{"account/example-provider":1134,"machine/example":610}},"qwen_local":{"tokens":8719,"fidelity":"estimated","by_origin":{"account/example-provider":5667,"machine/example":3052}}},"total":10463,"driver":"mixed","evidence":"synthetic: mixed activity, no single dominant driver"},{"date":"2025-11-27","timezone":"UTC","sources":{"qwen_local":{"tokens":4671,"fidelity":"estimated","by_origin":{"account/example-provider":3036,"machine/example":1635}},"claude_code":{"tokens":39179,"fidelity":"exact","calls":13,"by_origin":{"machine/example":39179}},"openai_api":{"tokens":21794,"fidelity":"exact","calls":19,"by_origin":{"machine/example":21794}}},"total":65644,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-11-28","timezone":"UTC","sources":{"qwen_local":{"tokens":2835,"fidelity":"estimated","by_origin":{"account/example-provider":1843,"machine/example":992}},"openai_api":{"tokens":33885,"fidelity":"exact","calls":14,"by_origin":{"machine/example":22025,"machine/example-laptop":11860}}},"total":36720,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-12-01","timezone":"UTC","sources":{"openai_api":{"tokens":25675,"fidelity":"exact","calls":5,"by_origin":{"machine/example":25675}},"claude_chat":{"tokens":1198,"fidelity":"estimated","by_origin":{"account/example-provider":1198}},"claude_code":{"tokens":22229,"fidelity":"exact","calls":15,"by_origin":{"machine/example":14449,"machine/example-laptop":7780}}},"total":49102,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-12-03","timezone":"UTC","sources":{"qwen_local":{"tokens":6565,"fidelity":"estimated","by_origin":{"account/example-provider":6565}},"codex":{"tokens":12937,"fidelity":"exact","calls":19,"by_origin":{"machine/example":8409,"machine/example-laptop":4528}}},"total":19502,"driver":"maintenance:docs","evidence":"synthetic: representative documentation day"},{"date":"2025-12-06","timezone":"UTC","sources":{"codex":{"tokens":20799,"fidelity":"exact","calls":37,"by_origin":{"machine/example":20799}},"openai_api":{"tokens":2638,"fidelity":"exact","calls":39,"by_origin":{"machine/example":2638}}},"total":23437,"driver":"unknown","evidence":"synthetic: no defensible driver recoverable from demo evidence"},{"date":"2025-12-08","timezone":"UTC","sources":{"claude_chat":{"tokens":1237,"fidelity":"estimated","by_origin":{"account/example-provider":804,"machine/example":433}},"claude_code":{"tokens":9864,"fidelity":"exact","calls":24,"by_origin":{"machine/example":6412,"machine/example-laptop":3452}}},"total":11101,"driver":"fixing:bug","evidence":"synthetic: representative bug-fixing day"},{"date":"2025-12-10","timezone":"UTC","sources":{"codex":{"tokens":20714,"fidelity":"exact","calls":5,"by_origin":{"machine/example":20714}},"openai_api":{"tokens":22066,"fidelity":"exact","calls":2,"by_origin":{"machine/example":22066}}},"total":42780,"driver":"fixing:security","evidence":"synthetic: representative security-fixing day"},{"date":"2025-12-12","timezone":"UTC","sources":{"codex":{"tokens":15133,"fidelity":"exact","calls":23,"by_origin":{"machine/example":9836,"machine/example-laptop":5297}},"qwen_local":{"tokens":6376,"fidelity":"estimated","by_origin":{"account/example-provider":4144,"machine/example":2232}},"openai_api":{"tokens":2684,"fidelity":"exact","calls":21,"by_origin":{"machine/example":2684}}},"total":24193,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-12-13","timezone":"UTC","sources":{"codex":{"tokens":39537,"fidelity":"exact","calls":31,"by_origin":{"machine/example":25699,"machine/example-laptop":13838}},"openai_api":{"tokens":31577,"fidelity":"exact","calls":19,"by_origin":{"machine/example":20525,"machine/example-laptop":11052}},"qwen_local":{"tokens":7810,"fidelity":"estimated","by_origin":{"account/example-provider":5077,"machine/example":2733}}},"total":78924,"driver":"writing","evidence":"synthetic: representative writing day"},{"date":"2025-12-16","timezone":"UTC","sources":{"qwen_local":{"tokens":1371,"fidelity":"estimated","by_origin":{"account/example-provider":891,"machine/example":480}},"claude_chat":{"tokens":6251,"fidelity":"estimated","by_origin":{"account/example-provider":4063,"machine/example":2188}},"codex":{"tokens":5893,"fidelity":"exact","calls":36,"by_origin":{"machine/example":5893}}},"total":13515,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-12-18","timezone":"UTC","sources":{"codex":{"tokens":30821,"fidelity":"exact","calls":5,"by_origin":{"machine/example":20034,"machine/example-laptop":10787}}},"total":30821,"driver":"building:content","evidence":"synthetic: representative content-building day"},{"date":"2025-12-19","timezone":"UTC","sources":{"codex":{"tokens":27845,"fidelity":"exact","calls":31,"by_origin":{"machine/example":18099,"machine/example-laptop":9746}}},"total":27845,"driver":"shipping","evidence":"synthetic: representative shipping day"},{"date":"2025-12-21","timezone":"UTC","sources":{"qwen_local":{"tokens":8642,"fidelity":"estimated","by_origin":{"account/example-provider":5617,"machine/example":3025}},"codex":{"tokens":26095,"fidelity":"exact","calls":26,"by_origin":{"machine/example":26095}},"perplexity_api":{"tokens":6976,"fidelity":"estimated","by_origin":{"account/example-provider":6976}}},"total":41713,"driver":"building:infra","evidence":"synthetic: representative infrastructure day"},{"date":"2025-12-22","timezone":"UTC","sources":{"openai_api":{"tokens":38136,"fidelity":"exact","calls":10,"by_origin":{"machine/example":38136}},"claude_chat":{"tokens":879,"fidelity":"estimated","by_origin":{"account/example-provider":879}},"claude_code":{"tokens":27687,"fidelity":"exact","calls":7,"by_origin":{"machine/example":17997,"machine/example-laptop":9690}}},"total":66702,"driver":"maintenance:deps","evidence":"synthetic: representative dependency day"},{"date":"2025-12-23","timezone":"UTC","sources":{"claude_code":{"tokens":22607,"fidelity":"exact","calls":3,"by_origin":{"machine/example":22607}},"codex":{"tokens":32248,"fidelity":"exact","calls":26,"by_origin":{"machine/example":32248}},"qwen_local":{"tokens":3662,"fidelity":"estimated","by_origin":{"account/example-provider":3662}}},"total":58517,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-12-25","timezone":"UTC","sources":{"qwen_local":{"tokens":8697,"fidelity":"estimated","by_origin":{"account/example-provider":5653,"machine/example":3044}}},"total":8697,"driver":"strategy","evidence":"synthetic: representative strategy day"},{"date":"2025-12-26","timezone":"UTC","sources":{"openai_api":{"tokens":11497,"fidelity":"exact","calls":26,"by_origin":{"machine/example":11497}}},"total":11497,"driver":"building:spec","evidence":"synthetic: representative spec-writing day"},{"date":"2025-12-29","timezone":"UTC","sources":{"claude_code":{"tokens":32070,"fidelity":"exact","calls":9,"by_origin":{"machine/example":32070}},"qwen_local":{"tokens":7014,"fidelity":"estimated","by_origin":{"account/example-provider":4559,"machine/example":2455}},"perplexity_api":{"tokens":854,"fidelity":"estimated","by_origin":{"account/example-provider":555,"machine/example":299}}},"total":39938,"driver":"fixing:data","evidence":"synthetic: representative data-fixing day"},{"date":"2025-12-30","timezone":"UTC","sources":{"perplexity_api":{"tokens":2026,"fidelity":"estimated","by_origin":{"account/example-provider":1317,"machine/example":709}},"claude_chat":{"tokens":1105,"fidelity":"estimated","by_origin":{"account/example-provider":1105}},"openai_api":{"tokens":23599,"fidelity":"exact","calls":11,"by_origin":{"machine/example":23599}}},"total":26730,"driver":"research","evidence":"synthetic: representative research day"},{"date":"2025-12-31","timezone":"UTC","sources":{"openai_api":{"tokens":5270,"fidelity":"exact","calls":37,"by_origin":{"machine/example":5270}},"qwen_local":{"tokens":8967,"fidelity":"estimated","by_origin":{"account/example-provider":5829,"machine/example":3138}}},"total":14237,"driver":"shipping","evidence":"synthetic: representative shipping day"}];
+window.__PROFILE__ = {"timezone":"UTC","windowStart":"2025-01-01"};
+window.__OBSERVED_INTERVALS__ = {"timezone":"UTC","sources":{"claude_chat":{"observed":[{"from":"2025-01-02","to":"2025-12-30","status":"covered"}]},"claude_code":{"observed":[{"from":"2025-01-07","to":"2025-12-29","status":"covered"}]},"codex":{"observed":[{"from":"2025-01-02","to":"2025-12-23","status":"covered"}]},"openai_api":{"observed":[{"from":"2025-01-09","to":"2025-12-31","status":"covered"}]},"perplexity_api":{"observed":[{"from":"2025-01-07","to":"2025-12-30","status":"covered"}]},"qwen_local":{"observed":[{"from":"2025-01-02","to":"2025-12-31","status":"covered"}]}}};
+window.__KNOWN_ACTIVITY__ = {"schema_version":1,"date_semantics":"First and latest known evidence of activity. These bounds do not imply continuous token coverage. Empty here because the bundled dataset is synthetic; a real deployment records dates-only surfaces it cannot count in tokens (for example a chat surface with no exact per-message counter).","surfaces":[]};
+window.__SITE__ = {"dataset":"synthetic","default_range":"all"};
+</script>
+<script type="module">
+const DASHBOARD_MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// Return the profile's calendar label for an instant, independent of the host zone.
+const dashboardCalendarDay = (timezone, now = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit"
+  }).format(now);
+
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&#39;");
+
+const calendarIsoDay = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+const addDays = (date, days) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const mondayFor = (date) => {
+  const monday = new Date(date);
+  const day = monday.getDay();
+  monday.setDate(monday.getDate() + (day === 0 ? -6 : 1 - day));
+  return monday;
+};
+
+const calendarWindow = (rows, end, offset) => {
+  const byDate = new Map(rows.map((row) => [row.date, row]));
+  const dates = Array.from({ length: 7 }, (_, index) => calendarIsoDay(addDays(end, -(offset + index))));
+  const observed = dates.map((date) => byDate.get(date)).filter(Boolean);
+  const total = observed.reduce((sum, row) => sum + Number(row.total || 0), 0);
+  return {
+    from: dates.at(-1),
+    through: dates[0],
+    observedDays: observed.length,
+    total,
+    complete: observed.length === 7,
+    average: observed.length === 7 ? Math.round(total / 7) : null
+  };
+};
+
+// The trailing average ends on the last day that has fully elapsed, never on
+// the day in progress. The importer holds back the current day on purpose, so
+// a window ending today is always one short and the average would never
+// resolve: not a coverage gap, an arithmetic impossibility. Ending a day
+// earlier makes it a true seven-day mean of seven measured days, at the cost
+// of lagging by the same day the cutoff rule already costs everywhere else.
+const lastElapsedDay = (end) => addDays(end, -1);
+
+// Recent summary windows are calendar windows ending at the displayed end date.
+// A missing day is unknown evidence, so incomplete windows never imply zero use.
+const summarizeCalendarWindows = (rows, end) => ({
+  recent: calendarWindow(rows, end, 0),
+  previous: calendarWindow(rows, end, 7)
+});
+
+// Include every calendar week in the displayed range. Weeks without recovered
+// rows are explicit gaps, allowing the renderer to leave the trend unbridged.
+const weeklySeries = (rows, start, end) => {
+  const totals = new Map();
+  for (const row of rows) {
+    const monday = calendarIsoDay(mondayFor(new Date(`${row.date}T12:00:00`)));
+    totals.set(monday, (totals.get(monday) || 0) + Number(row.total || 0));
+  }
+  const series = [];
+  for (let cursor = mondayFor(start); cursor <= end; cursor = addDays(cursor, 7)) {
+    const date = calendarIsoDay(cursor);
+    series.push({ date, total: totals.has(date) ? totals.get(date) : null });
+  }
+  return series;
+};
+
+const sourceTotal = (row) =>
+  Object.values(row.sources || {}).reduce(
+    (total, source) => total + Number(source.tokens || 0),
+    0
+  );
+
+const filtersAreActive = (filters) =>
+  Object.values(filters).some((value) => value !== "all");
+
+const filterDashboardRows = (rows, filters) =>
+  rows
+    .map((row) => {
+      const sources = Object.fromEntries(
+        Object.entries(row.sources || {}).flatMap(([source, entry]) => {
+          if (filters.source !== "all" && source !== filters.source) return [];
+          if (filters.fidelity !== "all" && entry.fidelity !== filters.fidelity) return [];
+
+          if (filters.origin === "all") return [[source, entry]];
+          const tokens = entry.by_origin?.[filters.origin];
+          if (!tokens) return [];
+
+          const originTotal = Object.values(entry.by_origin).reduce(
+            (total, value) => total + value,
+            0
+          );
+          const filteredEntry = {
+            ...entry,
+            tokens,
+            by_origin: { [filters.origin]: tokens }
+          };
+
+          // Calls are source-level. Keep them only when the selected origin
+          // represents the entire source entry; dividing them would invent
+          // request attribution that the daily schema does not retain.
+          if (tokens !== originTotal) delete filteredEntry.calls;
+          return [[source, filteredEntry]];
+        })
+      );
+      return { ...row, sources, total: sourceTotal({ sources }) };
+    })
+    .filter((row) => row.total > 0);
+
+const summarizeDashboardRows = (rows, start, end) => {
+  const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
+  const split = rows.reduce(
+    (totals, row) => {
+      for (const entry of Object.values(row.sources || {})) {
+        totals[entry.fidelity === "exact" ? "exact" : "estimated"] += Number(entry.tokens || 0);
+      }
+      return totals;
+    },
+    { exact: 0, estimated: 0 }
+  );
+  const peak = rows.length
+    ? rows.reduce((best, row) => (row.total > best.total ? row : best), rows[0])
+    : null;
+  const windows = summarizeCalendarWindows(rows, lastElapsedDay(end));
+
+  return {
+    total,
+    split,
+    peak,
+    recentAverage: windows.recent.average,
+    previousAverage: windows.previous.average,
+    recentWindow: windows.recent,
+    previousWindow: windows.previous,
+    deltaPercent: windows.recent.average !== null && windows.previous.average
+      ? Math.round(((windows.recent.average - windows.previous.average) / windows.previous.average) * 100)
+      : null,
+    exactPercent: total ? (split.exact / total) * 100 : null,
+    evidenceDays: rows.length,
+    elapsedDays: Math.max(1, Math.round((end - start) / DASHBOARD_MS_PER_DAY) + 1)
+  };
+};
+
+const summarizeDriverAttribution = (rows) => {
+  const groups = {};
+  let unknown = 0;
+  let unreviewed = 0;
+
+  for (const row of rows) {
+    const tokens = Number(row.total || 0);
+    if (!row.driver || row.driver === "unreviewed") {
+      unreviewed += tokens;
+    } else if (row.driver === "unknown") {
+      unknown += tokens;
+    } else {
+      groups[row.driver] = (groups[row.driver] || 0) + tokens;
+    }
+  }
+
+  const named = Object.values(groups).reduce(
+    (total, tokens) => total + tokens,
+    0
+  );
+  return {
+    total: named + unknown + unreviewed,
+    named,
+    unknown,
+    unreviewed,
+    groups
+  };
+};
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const state = {
+  // A site may open on "all" instead of the trailing year, which a demo whose
+  // synthetic rows sit in a fixed past year needs to be seen at all.
+  range: ["365", "all"].includes(window.__SITE__?.default_range) ? window.__SITE__.default_range : "365",
+  rows: [],
+  filters: {
+    source: "all",
+    fidelity: "all",
+    origin: "all"
+  }
+};
+
+const publicationFeature = (feature) =>
+  window.__PUBLICATION__?.features?.[feature] !== false;
+
+const applyPublicationView = () => {
+  const publication = window.__PUBLICATION__;
+  if (!publication) return;
+  document.documentElement.dataset.publication = publication.mode;
+  document.querySelectorAll("[data-publication-feature]").forEach((element) => {
+    const feature = element.dataset.publicationFeature;
+    const enabled = publicationFeature(feature);
+    element.hidden = !enabled;
+    if (enabled && element.dataset.href) element.href = element.dataset.href;
+  });
+  const recordsPanel = document.querySelector("#recordsPanel");
+  if (recordsPanel) {
+    recordsPanel.hidden = !publicationFeature("records") && !publicationFeature("recordsTable");
+  }
+  document.querySelectorAll(".dashboard-grid > article:not([hidden]) .eyebrow")
+    .forEach((label, index) => {
+      label.textContent = String(index + 1).padStart(2, "0");
+    });
+  const scope = document.querySelector("#publicationScope");
+  document.querySelector("#publicationScopeText").textContent = publication.scopeNote;
+  scope.hidden = false;
+  document.querySelector("#pipelineTitle").textContent = "Data freshness";
+  document.querySelector("#receiptTitle").textContent = "Recent daily records";
+  document.querySelector("#receiptScope").textContent = "last 30 active days";
+  const coverageTitle = document.querySelector("#coverageTitle");
+  if (coverageTitle) coverageTitle.textContent = "Coverage timeline";
+  const githubCta = document.querySelector("#githubCta");
+  if (publicationFeature("github")) {
+    githubCta.href = publication.githubProfileUrl;
+    githubCta.hidden = false;
+  }
+  const resumeCta = document.querySelector("#resumeCta");
+  if (publicationFeature("resume")) {
+    resumeCta.href = publication.resumeUrl;
+    resumeCta.hidden = false;
+  }
+  const recordsLink = document.querySelector("#publicationRecordsLink");
+  if (publicationFeature("records")) {
+    recordsLink.href = recordsLink.dataset.href;
+    recordsLink.hidden = false;
+  }
+};
+
+// Theme: explicit choice wins and persists. The private dashboard keeps its
+// dark default; the personal-public rendering opens light for a first visit.
+const THEME_KEY = "delegated-watch-theme";
+const applyTheme = (theme) => {
+  document.documentElement.dataset.theme = theme;
+  const dark = theme === "dark";
+  const toggle = document.querySelector("#themeToggle");
+  if (!toggle) return;
+  toggle.setAttribute("aria-pressed", String(!dark));
+  document.querySelector("#themeIcon").textContent = dark ? "\u263e" : "\u2600";
+  document.querySelector("#themeLabel").textContent = dark ? "Dark" : "Light";
+};
+const initTheme = () => {
+  const stored = localStorage.getItem(THEME_KEY);
+  applyTheme(stored ?? (window.__PUBLICATION__ ? "light" : "dark"));
+};
+
+const sourceLabels = {
+  chatgpt: "ChatGPT",
+  claude_api: "Claude API",
+  claude_chat: "Claude Chat",
+  claude_code: "Claude Code",
+  claude_cowork: "Claude Cowork",
+  claude_design: "Claude Design",
+  codex: "Codex",
+  deepseek_local: "DeepSeek local",
+  gemini: "Gemini",
+  gpt_oss: "GPT-OSS",
+  grok: "Grok",
+  llama_local: "Llama local",
+  kilo: "Kilo Code",
+  gemma_local: "Gemma local",
+  openai_api: "OpenAI API",
+  local_deepseek: "DeepSeek local",
+  local_gemma: "Gemma local",
+  local_llama: "Llama local",
+  perplexity: "Perplexity",
+  perplexity_api: "Perplexity API",
+  perplexity_chat: "Perplexity Chat",
+  qwen_local: "Qwen local",
+  snapdev: "Snapdev",
+  typesafe_api: "TypeSafe API",
+  local_qwen: "Qwen local"
+};
+
+const formatTokens = (value) => {
+  const tokens = Number(value);
+  if (!Number.isFinite(tokens)) return "unavailable";
+  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`;
+  if (tokens >= 1_000) return `${Math.round(tokens / 1_000)}K`;
+  return `${tokens}`;
+};
+const formatAxisTokens = (value) => formatTokens(value).replace(".0M", "M");
+
+const formatDate = (date) => new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric"
+}).format(new Date(`${date}T12:00:00`));
+
+const parseLocalDate = (date) => new Date(`${date}T12:00:00`);
+
+const sum = (rows, key = "total") => rows.reduce((acc, row) => acc + Number(row[key] || 0), 0);
+
+const labelSource = (source) => sourceLabels[source] || source
+  .split("_")
+  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+  .join(" ");
+
+const text = (value) => escapeHtml(value);
+const labelSourceHtml = (source) => text(labelSource(source));
+const fidelityClass = (value) => ["exact", "estimated", "sample"].includes(value)
+  ? value
+  : "estimated";
+
+const normalizeLegacyRow = (row) => {
+  if (row.sources) return row;
+  return {
+    date: row.date,
+    timezone: "America/Denver",
+    sources: {
+      codex: { tokens: row.codex_tokens || 0, fidelity: "exact" },
+      claude_code: { tokens: row.claude_code_tokens || 0, calls: row.claude_code_calls || 0, fidelity: "exact" },
+      claude_chat: { tokens: row.claude_chat_est || 0, fidelity: "estimated" },
+      chatgpt: { tokens: row.chatgpt_est || 0, fidelity: "estimated" }
+    },
+    total: row.total,
+    driver: row.driver,
+    evidence: row.evidence
+  };
+};
+
+const allSources = (rows) => [...new Set(rows.flatMap((row) => Object.keys(row.sources || {})))]
+  .sort((a, b) => labelSource(a).localeCompare(labelSource(b)));
+
+const movingAverage = (rows, endDate) =>
+  summarizeCalendarWindows(rows, parseLocalDate(endDate)).recent;
+
+const today = () => parseLocalDate(dashboardCalendarDay(window.__PROFILE__?.timezone || "UTC"));
+
+const configuredDayBoundaryCopy = (timezone) =>
+  `Days are grouped by the configured ${timezone || "UTC"} day boundary. ` +
+  "Provider reports can use different boundaries, so this dashboard does not infer when work belongs to another day.";
+
+// Fixed ranges roll back from today rather than from the last row that has
+// data, so a stalled extractor shows up as trailing gaps instead of silently
+// shortening the window.
+const getVisibleWindow = () => {
+  const sorted = [...state.rows].sort((a, b) => a.date.localeCompare(b.date));
+  if (state.range === "all") {
+    // "all" means the whole recovery window, not the span that happens to hold
+    // data. The earliest recovered day is 2025-05-02 and the window opens
+    // 2022-11-30; showing only the former would present 2.4 unexamined years as
+    // though they did not exist. They render as "no data recovered" -- unknown,
+    // which is the finding.
+    const opened = window.__PROFILE__?.windowStart;
+    const earliest = sorted[0]?.date;
+    const first = opened && (!earliest || opened < earliest)
+      ? opened : earliest || isoDay(today());
+    return { rows: sorted, start: parseLocalDate(first), end: today() };
+  }
+  const end = today();
+  const start = new Date(end);
+  start.setDate(start.getDate() - (Number(state.range) - 1));
+  const rows = sorted.filter((row) => {
+    const date = parseLocalDate(row.date);
+    return date >= start && date <= end;
+  });
+  return { rows, start, end };
+};
+
+const filtersActive = () => filtersAreActive(state.filters);
+
+// Quartile thresholds over the visible days that carry data. This is the
+// convention the contribution calendar actually uses, and the log scale that
+// stood here was the invention: anchored to the quietest day in the window, it
+// spread 4.9 decades across four shades and put 225 of 287 days in the top two.
+// The calendar read as nearly one colour. Quartiles give four equally populated
+// bands by construction, so a shade means "which quarter of your days was this"
+// -- a claim a reader can act on without knowing the range.
+const quartileCuts = (values) => {
+  const sorted = values.filter((value) => value > 0).sort((a, b) => a - b);
+  if (!sorted.length) return null;
+  const at = (fraction) => sorted[Math.min(sorted.length - 1, Math.floor(fraction * sorted.length))];
+  return { q1: at(0.25), q2: at(0.5), q3: at(0.75), max: sorted.at(-1), min: sorted[0] };
+};
+
+// Band edges for the tooltip, so a cell can say why it is the shade it is.
+const intensityBands = (cuts) => {
+  if (!cuts) return null;
+  return [
+    { level: 1, from: cuts.min, to: cuts.q1 },
+    { level: 2, from: cuts.q1 + 1, to: cuts.q2 },
+    { level: 3, from: cuts.q2 + 1, to: cuts.q3 },
+    { level: 4, from: cuts.q3 + 1, to: cuts.max }
+  ];
+};
+
+const getIntensity = (value, cuts) => {
+  if (!value || !cuts) return 0;
+  if (value <= cuts.q1) return 1;
+  if (value <= cuts.q2) return 2;
+  if (value <= cuts.q3) return 3;
+  return 4;
+};
+
+const renderSummary = (rows, start, end) => {
+  const {
+    total,
+    split,
+    peak,
+    recentAverage,
+    previousAverage,
+    recentWindow,
+    previousWindow,
+    deltaPercent,
+    exactPercent,
+    evidenceDays,
+    elapsedDays
+  } = summarizeDashboardRows(rows, start, end);
+
+  document.querySelector("#totalTokens").textContent = `${formatTokens(total)} tokens`;
+  // The headline mixes exact counters with chars/4 arithmetic over an export.
+  // Splitting it is what makes the number readable as a floor: the exact part is
+  // measured, the estimated part is a lower bound on work that reports no
+  // counters at all.
+  document.querySelector("#totalSplit").innerHTML = split.estimated
+    ? `${formatTokens(split.exact)} exact · <b>${formatTokens(split.estimated)} estimated</b>`
+    : `${formatTokens(split.exact)} exact`;
+  document.querySelector("#peakDay").textContent = peak ? `${formatTokens(peak.total)} ${formatDate(peak.date)}` : "No match";
+  // "unreviewed spike" reads as a kind of spike rather than an unlabelled one.
+  document.querySelector("#peakDriver").textContent = !peak
+    ? "adjust the filters"
+    : !peak.driver || peak.driver === "unreviewed"
+      ? "driver not yet reviewed"
+      : `${peak.driver} spike`;
+  document.querySelector("#avgSeven").textContent = recentAverage === null
+    ? "Unavailable"
+    : `${formatTokens(recentAverage)}`;
+  // The window is named, not implied. It ends on the last elapsed day rather
+  // than today, so a reader comparing the tile against the heatmap's final
+  // cell can see which seven days the mean covers.
+  const windowLabel = `${formatDate(recentWindow.from)}\u2013${formatDate(recentWindow.through)}`;
+  document.querySelector("#avgDelta").textContent = recentAverage === null || previousAverage === null
+    ? `${windowLabel}: recent ${recentWindow.observedDays}/7 and prior ${previousWindow.observedDays}/7 days observed; incomplete coverage`
+    : previousAverage
+    ? `${windowLabel} \u00b7 ${deltaPercent > 0 ? "+" : ""}${deltaPercent}% vs prior 7d`
+    : `${windowLabel} \u00b7 prior window has no measured tokens`;
+  if (exactPercent !== null) {
+    const exactLabel = Number.isInteger(exactPercent) ? exactPercent.toFixed(0) : exactPercent.toFixed(1);
+    document.querySelector("#exactShare").textContent = `${exactLabel}% exact`;
+  } else {
+    document.querySelector("#exactShare").textContent = "No evidence";
+  }
+  document.querySelector("#coverageDays").textContent = `${evidenceDays} / ${elapsedDays} days with evidence`;
+};
+
+const renderGithubSummary = (summary) => {
+  document.querySelector("#githubContributions").textContent = Number(summary.contributions || 0).toLocaleString();
+  document.querySelector("#githubWindow").textContent = `${summary.username}, ${summary.window.replace("_", " ")}`;
+  const ctaStats = document.querySelector("#githubCtaStats");
+  if (ctaStats) {
+    ctaStats.textContent =
+      `${Number(summary.contributions || 0).toLocaleString()} contributions in the year ending ${summary.as_of}`;
+  }
+};
+
+const isoDay = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Calendar grid in GitHub's shape: one column per week, seven weekday rows,
+// Sunday at the top. Every date in the span gets a cell, so days with no
+// recovered data stay visible as gaps instead of being silently skipped.
+const buildCalendar = (rows, first, last) => {
+  const byDate = new Map(rows.map((row) => [row.date, row]));
+  const start = new Date(first.getTime() - first.getDay() * MS_PER_DAY);
+  const end = new Date(last.getTime() + (6 - last.getDay()) * MS_PER_DAY);
+
+  // Step by calendar day and compare by date string. Adding 86,400,000ms from a
+  // noon anchor drifts an hour at each DST boundary, so over a multi-year span
+  // the cursor ends up an hour past the anchor and the final day tests as out of
+  // range -- which is how today's cell went missing once "all" widened to cover
+  // the whole recovery window.
+  const firstIso = isoDay(first);
+  const lastIso = isoDay(last);
+  const weeks = [];
+  const cursor = new Date(start);
+  const endIso = isoDay(end);
+  for (let date = isoDay(cursor); date <= endIso; date = isoDay(cursor)) {
+    if (cursor.getDay() === 0) weeks.push([]);
+    weeks.at(-1).push({
+      date,
+      inRange: date >= firstIso && date <= lastIso,
+      row: byDate.get(date) || null
+    });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return weeks;
+};
+
+const renderHeatmap = (rows, first, last) => {
+  const heatmap = document.querySelector("#heatmap");
+  if (!rows.length) {
+    heatmap.innerHTML = "";
+    return;
+  }
+  const totals = rows.map((row) => row.total).filter((total) => total > 0);
+  const max = Math.max(...totals, 1);
+  const min = Math.min(...totals, max);
+  const weeks = buildCalendar(rows, first, last);
+
+  // A month label sits above the first week that starts a new month. Labels
+  // closer than two columns would overlap, so keep the later one; a partial
+  // month in column zero yields to the full month that follows it.
+  const starts = weeks.reduce((acc, week, index) => {
+    const month = parseLocalDate(week[0].date).getMonth();
+    const previous = index === 0 ? null : parseLocalDate(weeks[index - 1][0].date).getMonth();
+    if (month !== previous) acc.push({ index, month });
+    return acc;
+  }, []);
+  const kept = starts.filter((start, index) => {
+    const next = starts[index + 1];
+    if (start.index === 0 && next && next.index <= 2) return false;
+    const previousKept = starts.slice(0, index).filter((other) => other.keep !== false).at(-1);
+    const spaced = !previousKept || start.index - previousKept.index >= 2;
+    start.keep = spaced;
+    return spaced;
+  });
+  const months = weeks.map((week, index) => {
+    const label = kept.find((start) => start.index === index);
+    return label ? MONTH_NAMES[label.month] : "";
+  });
+
+  // Cells are sized to fill the card rather than to a fixed guess, so the
+  // calendar spans the panel at any range. The fallback matters: the element is
+  // measured, and on first paint or in a hidden tab it measures zero, where a
+  // computed size of zero would render an invisible grid rather than a small
+  // one. Bounded at both ends -- below about 7px a cell stops being readable,
+  // above about 30px a short range turns into wall art -- and the container
+  // keeps overflow-x, so "all" scrolls once the floor is hit.
+  const HEAT_GAP = 3;
+  const HEAT_LABEL = 34;
+  const measured = heatmap.clientWidth || 0;
+  const available = Math.max(measured - HEAT_LABEL, 0);
+  const fitted = available
+    ? Math.floor(available / weeks.length) - HEAT_GAP
+    : 13;
+  const cellSize = Math.max(7, Math.min(30, fitted || 13));
+
+  const cuts = quartileCuts(rows.map((row) => row.total));
+  const bands = intensityBands(cuts);
+  const missingLabel = filtersActive() ? "no matching evidence" : "no data recovered";
+  const missingWhy = filtersActive()
+    ? "No evidence on this day matches the active source, fidelity, and origin filters."
+    : "Absent from the dataset; unknown, not a measured zero.";
+  document.querySelector("#missingLegendLabel").textContent = missingLabel;
+  const cell = ({ date, inRange, row }) => {
+    if (!inRange) return `<div class="heat-cell heat-blank" aria-hidden="true"></div>`;
+    if (!row) {
+      return `<div class="heat-cell heat-missing" role="listitem" data-date="${text(date)}" aria-label="${text(date)}, ${text(missingLabel)}"></div>`;
+    }
+    const intensity = getIntensity(row.total, cuts);
+    return `<div class="heat-cell i${intensity}" role="listitem" data-date="${text(date)}" aria-label="${text(date)}, ${Number(row.total || 0)} tokens, ${text(row.driver || "driver not reviewed")}"></div>`;
+  };
+
+  // Explaining the colour is the point: a shade is meaningless without the
+  // quartile scale that produced it.
+  const byDate = new Map(rows.map((row) => [row.date, row]));
+  const tipFor = (date) => {
+    const row = byDate.get(date);
+    const heading = `<strong>${text(date)}</strong>`;
+    if (!row) {
+      return `${heading}<span class="tip-none">${missingLabel}</span>
+        <span class="tip-why">${missingWhy}</span>`;
+    }
+    const level = getIntensity(row.total, cuts);
+    const band = bands?.find((entry) => entry.level === level);
+    const sources = Object.entries(row.sources)
+      .sort((a, b) => b[1].tokens - a[1].tokens)
+      .map(([source, entry]) => `<span class="tip-src"><i class="i${level > 0 ? level : 1}"></i>${labelSourceHtml(source)}<b>${formatTokens(entry.tokens)}</b></span>`)
+      .join("");
+    const why = band
+      ? `Level ${level} of 4 — the quietest to busiest quarter of days in this window; ${formatTokens(band.from)}–${formatTokens(band.to)} lands here.`
+      : `Level ${level} of 4.`;
+    return `${heading}
+      <span class="tip-total">${Number(row.total || 0).toLocaleString()} tokens</span>
+      <span class="tip-driver">${text(row.driver || "driver not reviewed")}</span>
+      ${sources}
+      <span class="tip-why">${why}</span>`;
+  };
+
+  const tip = document.querySelector("#heatTip");
+  const show = (event) => {
+    const target = event.target.closest(".heat-cell[data-date]");
+    if (!target) return;
+    tip.innerHTML = tipFor(target.dataset.date);
+    tip.setAttribute("aria-hidden", "false");
+    const box = target.getBoundingClientRect();
+    tip.style.visibility = "hidden";
+    tip.classList.add("visible");
+    const width = tip.offsetWidth;
+    const left = Math.min(Math.max(8, box.left + box.width / 2 - width / 2), window.innerWidth - width - 8);
+    tip.style.left = `${left + window.scrollX}px`;
+    tip.style.top = `${box.top + window.scrollY - tip.offsetHeight - 10}px`;
+    tip.style.visibility = "visible";
+  };
+  const hide = () => {
+    tip.classList.remove("visible");
+    tip.setAttribute("aria-hidden", "true");
+  };
+  heatmap.addEventListener("pointerover", show);
+  heatmap.addEventListener("pointerout", hide);
+  heatmap.addEventListener("focusin", show);
+  heatmap.addEventListener("focusout", hide);
+
+  // Naming the cut points turns the legend from a gradient into a readable
+  // scale: a reader can place their own day without hovering a cell.
+  const scaleNote = document.querySelector("#heatScale");
+  if (scaleNote) {
+    scaleNote.textContent = cuts
+      ? `quartiles · ${formatTokens(cuts.q1)} / ${formatTokens(cuts.q2)} / ${formatTokens(cuts.q3)}`
+      : "quartile color scale";
+  }
+
+  // Two things a reader cannot infer from the grid: the configured day boundary
+  // and that the window opens earlier than the data does. Both are load-bearing:
+  // the first makes the dashboard grouping explicit without assuming every
+  // provider uses it, and the second distinguishes "nothing happened" from
+  // "nothing was recovered".
+  const note = document.querySelector("#heatNote");
+  if (note) {
+    const zone = window.__PROFILE__?.timezone ?? rows[0]?.timezone ?? "UTC";
+    const opened = window.__PROFILE__?.windowStart;
+    // The earliest evidence is a fact about the dataset, not about the visible
+    // window. Reading it off `rows` made the 1y view claim the record began
+    // 2025-07-31, which is only where that window starts.
+    const earliest = [...state.rows].sort((a, b) => a.date.localeCompare(b.date))[0]?.date;
+    const gap =
+      opened && earliest && opened < earliest
+        ? ` The recovery window opens ${opened}; the earliest day with any evidence is ${earliest}, so everything before it is unknown rather than zero.`
+        : "";
+    note.textContent = `${configuredDayBoundaryCopy(zone)}${gap}`;
+  }
+
+  state.lastHeatmapArgs = [rows, first, last];
+  bindHeatmapResize(rows, first, last);
+  heatmap.style.setProperty("--heat-cell", `${cellSize}px`);
+  heatmap.innerHTML = `
+    <div class="heat-months" aria-hidden="true" style="grid-template-columns: repeat(${weeks.length}, var(--heat-cell))">
+      ${months.map((month) => `<span>${month}</span>`).join("")}
+    </div>
+    <div class="heat-weekdays" aria-hidden="true"><span>Mon</span><span>Wed</span><span>Fri</span></div>
+    <div class="heat-grid" role="list" aria-label="Daily token burn calendar" style="grid-template-columns: repeat(${weeks.length}, var(--heat-cell))">
+      ${weeks.map((week) => week.map(cell).join("")).join("")}
+    </div>`;
+};
+
+// The calendar is sized from a measurement, so it has to be re-measured when the
+// measurement changes. Without this a window resize leaves the grid at the width
+// it was built for.
+let heatmapResizeBound = false;
+const bindHeatmapResize = (rows, first, last) => {
+  if (heatmapResizeBound) return;
+  heatmapResizeBound = true;
+  let frame = null;
+  window.addEventListener("resize", () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => renderHeatmap(...(state.lastHeatmapArgs ?? [rows, first, last])));
+  });
+};
+
+let trendResizeBound = false;
+const bindTrendResize = () => {
+  if (trendResizeBound) return;
+  trendResizeBound = true;
+  let frame = null;
+  window.addEventListener("resize", () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => renderTrend(...(state.lastTrendArgs ?? [])));
+  });
+};
+
+const renderTrend = (rows, start, end) => {
+  const svg = document.querySelector("#trendChart");
+  state.lastTrendArgs = [rows, start, end];
+  bindTrendResize();
+  const weeks = weeklySeries(rows, start, end);
+  // The viewBox follows the card width, with a small mobile floor. This keeps
+  // the 300px plotting height useful on desktop and avoids the letterboxed
+  // empty space caused by forcing a wide desktop viewBox into a narrow screen.
+  const width = Math.max(360, Math.round(svg.clientWidth || 860));
+  const height = 300;
+  // Room on the left for token labels and below for dates. The axes carry
+  // values now, so the old uniform padding would have clipped both.
+  const padLeft = 62;
+  const padRight = 24;
+  const padTop = 34;
+  const padBottom = 44;
+  // Fixed public scale: 100 tokens through 100M tokens. A previous zero-based
+  // logarithmic transform spent three eighths of the plot below the first
+  // labelled 1K line, leaving the data compressed toward the top. Mapping the
+  // labelled log domain itself uses the card height honestly and keeps 100M as
+  // the stable ceiling across filters and ranges.
+  const minLog = 2;
+  const maxLog = 8;
+  const plotHeight = height - padTop - padBottom;
+  const x = (index) =>
+    weeks.length === 1
+      ? (padLeft + width - padRight) / 2
+      : padLeft + index * ((width - padLeft - padRight) / (weeks.length - 1));
+  const y = (total) => {
+    const log = Math.min(maxLog, Math.max(minLog, Math.log10(total || 1)));
+    return padTop + ((maxLog - log) / (maxLog - minLog)) * plotHeight;
+  };
+  const observedWeeks = weeks.filter((week) => week.total !== null);
+  const segments = [];
+  let segment = [];
+  weeks.forEach((week, index) => {
+    if (week.total === null) {
+      if (segment.length) segments.push(segment);
+      segment = [];
+      return;
+    }
+    segment.push({ week, index });
+  });
+  if (segment.length) segments.push(segment);
+  const peak = observedWeeks.reduce((best, week) => week.total > best.total ? week : best, observedWeeks[0]);
+  const peakIndex = weeks.indexOf(peak);
+  document.querySelector("#peakWeekLabel").textContent = peak
+    ? `peak week ${formatDate(peak.date)}`
+    : "no recovered weeks";
+
+  // The y axis is log, so evenly spaced ticks would be misread as a linear
+  // scale. Ticks are placed at powers of ten and labelled with the value they
+  // actually represent, which is the only honest way to show a log axis to a
+  // reader who did not choose it.
+  const decades = Array.from(
+    { length: maxLog - minLog + 1 },
+    (_, index) => 10 ** (minLog + index)
+  );
+  const yTicks = decades
+    .map(
+      (value) => `
+      <line x1="${padLeft}" y1="${y(value)}" x2="${width - padRight}" y2="${y(value)}" class="grid-line"></line>
+      <text x="${padLeft - 8}" y="${y(value) + 4}" class="axis-label axis-label-y">${formatAxisTokens(value)}</text>`
+    )
+    .join("");
+
+  // At most six date labels, evenly spaced, always including the first and last
+  // week. More than that and they collide at any range wider than a quarter.
+  const labelCount = Math.min(6, weeks.length);
+  const step = labelCount > 1 ? (weeks.length - 1) / (labelCount - 1) : 1;
+  const xTicks = Array.from({ length: labelCount }, (_, slot) => Math.round(slot * step))
+    .filter((index, slot, all) => all.indexOf(index) === slot)
+    .map(
+      (index) => `
+      <text x="${x(index)}" y="${height - padBottom + 18}" class="axis-label axis-label-x">${formatDate(weeks[index].date)}</text>`
+    )
+    .join("");
+
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.innerHTML = `
+    ${yTicks}
+    <line x1="${padLeft}" y1="${height - padBottom}" x2="${width - padRight}" y2="${height - padBottom}" class="axis"></line>
+    <line x1="${padLeft}" y1="${padTop}" x2="${padLeft}" y2="${height - padBottom}" class="axis"></line>
+    ${segments.map((part) => `<polyline points="${part.map(({ week, index }) => `${x(index)},${y(week.total)}`).join(" ")}" class="trend-line"></polyline>`).join("")}
+    ${observedWeeks.map((week) => {
+      const index = weeks.indexOf(week);
+      return `<circle cx="${x(index)}" cy="${y(week.total)}" r="${week === peak ? 5 : 3}" class="${week === peak ? "peak-dot" : "trend-dot"}"><title>${text(week.date)}: ${formatTokens(week.total)} tokens</title></circle>`;
+    }).join("")}
+    ${xTicks}
+    ${peak ? `<text x="${Math.min(width - padRight - 130, x(peakIndex) + 10)}" y="${Math.max(padTop - 6, y(peak.total) - 10)}" class="peak-label">Peak ${formatTokens(peak.total)}</text>` : ""}
+    <text x="${padLeft - 8}" y="${padTop - 18}" class="axis-title">tokens/week · logarithmic</text>
+    <text x="${width - padRight}" y="${height - 6}" class="axis-title axis-title-x">week beginning</text>
+  `;
+};
+
+const renderDrivers = (rows) => {
+  const drivers = document.querySelector("#drivers");
+  const donut = document.querySelector("#driverDonut");
+  const attribution = summarizeDriverAttribution(rows);
+  if (!attribution.named && !attribution.unknown) {
+    donut.innerHTML = "";
+    drivers.innerHTML =
+      `<p class="driver-empty">No day has been reviewed yet, so there is no driver mix to show. ` +
+      `${rows.length} days carry usage and await a label.</p>`;
+    return;
+  }
+  const ranked = Object.entries(attribution.groups).sort((a, b) => b[1] - a[1]);
+  const donutEntries = ranked.slice(0, 5);
+  const otherNamed = ranked.slice(5).reduce((total, [, value]) => total + value, 0);
+  if (otherNamed) donutEntries.push(["Other named work", otherNamed]);
+  if (attribution.unknown) donutEntries.push(["Unknown attribution", attribution.unknown]);
+  if (attribution.unreviewed) donutEntries.push(["Awaiting review", attribution.unreviewed]);
+  renderDonut(
+    donut,
+    donutSlices(donutEntries, attribution.total),
+    formatTokens(attribution.total),
+    `${ranked.length} driver labels`
+  );
+  const driverRows = ranked
+    .map(([driver, value]) => {
+      const pct = attribution.total
+        ? Math.round((value / attribution.total) * 100)
+        : 0;
+      return `
+        <div class="driver-row">
+          <div>
+            <strong>${text(driver)}</strong>
+            <span>${formatTokens(value)} tokens</span>
+          </div>
+          <b>${share(value, attribution.total)}</b>
+          <i style="--w:${pct}%"></i>
+        </div>`;
+    });
+  if (attribution.unknown) {
+    const pct = Math.round(
+      (attribution.unknown / (attribution.total || 1)) * 100
+    );
+    driverRows.push(`
+      <div class="driver-row driver-row-boundary">
+        <div>
+          <strong>Unknown attribution <span class="driver-state">reviewed</span></strong>
+          <span>${formatTokens(attribution.unknown)} tokens · insufficient evidence for a named driver</span>
+        </div>
+        <b>${share(attribution.unknown, attribution.total)}</b>
+        <i style="--w:${pct}%"></i>
+      </div>`);
+  }
+  if (attribution.unreviewed) {
+    const pct = Math.round(
+      (attribution.unreviewed / (attribution.total || 1)) * 100
+    );
+    driverRows.push(`
+      <div class="driver-row driver-row-pending">
+        <div>
+          <strong>Awaiting review</strong>
+          <span>${formatTokens(attribution.unreviewed)} tokens · no driver decision yet</span>
+        </div>
+        <b>${share(attribution.unreviewed, attribution.total)}</b>
+        <i style="--w:${pct}%"></i>
+      </div>`);
+  }
+  driverRows.push(
+    `<p class="driver-note">Attribution status: ${share(attribution.named, attribution.total)} named, ` +
+      `${share(attribution.unknown, attribution.total)} reviewed unknown` +
+      (attribution.unreviewed
+        ? `, ${share(attribution.unreviewed, attribution.total)} awaiting review.</p>`
+        : ".</p>")
+  );
+  drivers.innerHTML = driverRows.join("");
+};
+
+// Donut geometry. One shared helper so the source and origin charts stay
+// visually identical and only their data differs.
+const SERIES_COLORS = ["--cyan", "--green", "--amber", "--rose", "--heat-3", "--heat-1"];
+const donutSlices = (entries, total) => {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  let offset = 0;
+  return entries.map(([key, value], index) => {
+    const fraction = total ? value / total : 0;
+    const slice = {
+      key,
+      value,
+      fraction,
+      color: `var(${SERIES_COLORS[index % SERIES_COLORS.length]})`,
+      dash: `${fraction * circumference} ${circumference}`,
+      offset: -offset * circumference
+    };
+    offset += fraction;
+    return slice;
+  });
+};
+
+const renderDonut = (svg, slices, centerTop, centerSub) => {
+  svg.setAttribute("viewBox", "0 0 140 140");
+  svg.innerHTML = `
+    <g transform="translate(70,70) rotate(-90)">
+      <circle r="54" fill="none" stroke="var(--panel-2)" stroke-width="20"></circle>
+      ${slices.map((slice) => `
+        <circle r="54" fill="none" stroke="${slice.color}" stroke-width="20"
+          stroke-dasharray="${slice.dash}" stroke-dashoffset="${slice.offset}">
+          <title>${text(slice.key)}: ${Math.round(slice.fraction * 100)}%</title>
+        </circle>`).join("")}
+    </g>
+    <text x="70" y="66" text-anchor="middle" class="donut-value">${text(centerTop)}</text>
+    <text x="70" y="84" text-anchor="middle" class="donut-label">${text(centerSub)}</text>`;
+};
+
+// A source that rounds to zero still carries tokens. Printing "0%" beside a
+// real number reads as "none", so anything under half a percent is shown as
+// a bound instead. Four of the eleven sources now land there.
+const share = (value, total) => {
+  if (!total || !value) return "0%";
+  const pct = (value / total) * 100;
+  return pct < 0.5 ? "<1%" : `${Math.round(pct)}%`;
+};
+
+const renderSources = (rows) => {
+  const sources = document.querySelector("#sources");
+  const total = sum(rows);
+  const grouped = rows.reduce((acc, row) => {
+    Object.entries(row.sources || {}).forEach(([source, entry]) => {
+      acc[source] = acc[source] || { tokens: 0, exact: 0, estimated: 0, sample: 0, calls: 0 };
+      acc[source].tokens += entry.tokens || 0;
+      acc[source][entry.fidelity || "estimated"] += entry.tokens || 0;
+      acc[source].calls += Number(entry.calls || 0);
+    });
+    return acc;
+  }, {});
+  const ranked = Object.entries(grouped).sort((a, b) => b[1].tokens - a[1].tokens);
+  const slices = donutSlices(ranked.map(([key, value]) => [labelSource(key), value.tokens]), total);
+  const colorFor = new Map(ranked.map(([key], index) => [key, slices[index].color]));
+  renderDonut(document.querySelector("#sourceDonut"), slices, formatTokens(total), `${ranked.length} sources`);
+
+  sources.innerHTML = ranked
+    .map(([source, value]) => {
+      const pct = total ? Math.round((value.tokens / total) * 100) : 0;
+      const pctLabel = share(value.tokens, total);
+      const fidelity = ["exact", "estimated", "sample"]
+        .filter((key) => value[key] > 0)
+        .map((key) => `<span class="tag ${key}">${key}</span>`)
+        .join("");
+      return `
+        <div class="source-row">
+          <i class="swatch" style="background:${colorFor.get(source)}"></i>
+          <div>
+            <strong>${labelSourceHtml(source)}</strong>
+            <span>${formatTokens(value.tokens)} tokens${value.calls ? `, ${Number(value.calls)} calls` : ""}</span>
+          </div>
+          <b>${pctLabel}</b>
+          <div>${fidelity}</div>
+        </div>`;
+    }).join("");
+};
+
+// Where the evidence came from. A machine-local store is identified by the
+// (machine, profile) pair; provider-reported usage has no machine and is
+// account-scoped. Rows imported before origin tagging, whose source transcripts
+// have since been pruned, are shown as unattributed rather than folded into a
+// machine that may not have produced them.
+const renderOrigins = (rows) => {
+  const panel = document.querySelector("#origins");
+  if (!panel) return;
+  const totals = new Map();
+  let unattributed = 0;
+  for (const row of rows) {
+    for (const entry of Object.values(row.sources)) {
+      if (entry.by_origin) {
+        for (const [origin, tokens] of Object.entries(entry.by_origin)) {
+          totals.set(origin, (totals.get(origin) ?? 0) + tokens);
+        }
+      } else {
+        unattributed += entry.tokens;
+      }
+    }
+  }
+  if (unattributed) totals.set("unattributed", unattributed);
+
+  const ranked = [...totals.entries()].sort((a, b) => b[1] - a[1]);
+  const total = ranked.reduce((acc, [, value]) => acc + value, 0);
+  if (!ranked.length) {
+    panel.innerHTML = `<p class="origin-empty">No origin recorded yet. Receipts gain an origin on the next extraction.</p>`;
+    return;
+  }
+  // Two origin shapes reach this panel. Locally extracted receipts carry
+  // <machine>/<profile>; receipts tagged with --tag on another machine carry a
+  // bare host with no profile, because the extractor there knows the host and
+  // not which profile the importer will file it under. Counting only the
+  // slashed form said "1 machine/profile pair" while two machines were listed,
+  // and splitting it printed a literal "profile undefined".
+  const isMachine = (key) => key !== "unattributed" && !key.startsWith("account/");
+  const machines = ranked.filter(([key]) => isMachine(key)).length;
+  const describe = (key) => {
+    if (key === "unattributed") return "imported before origin tagging";
+    if (key.startsWith("account/")) return "provider-reported, no machine";
+    const [machine, profile] = key.split("/");
+    return profile ? `${machine} · profile ${profile}` : `${machine} · profile not recorded`;
+  };
+  panel.innerHTML = ranked.map(([key, value], index) => {
+    const pct = total ? Math.round((value / total) * 100) : 0;
+    const pctLabel = share(value, total);
+    const color = key === "unattributed" ? "var(--muted)" : `var(${SERIES_COLORS[index % SERIES_COLORS.length]})`;
+    return `
+      <div class="origin-row">
+        <div class="origin-head">
+          <strong>${text(key)}</strong>
+          <b>${pctLabel}</b>
+        </div>
+        <div class="origin-bar"><span style="width:${Math.max(pct, 1)}%;background:${color}"></span></div>
+        <span class="origin-meta">${formatTokens(value)} tokens · ${text(describe(key))}</span>
+      </div>`;
+  }).join("") + `<p class="origin-note">${machines} ${machines === 1 ? "machine" : "machines"} represented. Other profiles and devices are unknown, not zero.</p>`;
+};
+
+// Cadence: how often work is delegated at all, separate from how much. A day
+// absent from the dataset is unknown rather than idle, so "quiet" days are
+// counted as gaps in coverage, not as measured zeros.
+const renderCadence = (rows, start, end) => {
+  const panel = document.querySelector("#cadence");
+  if (!panel || !rows.length) return;
+  const elapsed = Math.round((end - start) / MS_PER_DAY) + 1;
+  const active = rows.length;
+  const pct = Math.round((active / elapsed) * 100);
+
+  const present = new Set(rows.map((row) => row.date));
+  let best = 0;
+  let current = 0;
+  let currentRun = 0;
+  for (let i = 0; i < elapsed; i += 1) {
+    const day = isoDay(new Date(start.getTime() + i * MS_PER_DAY));
+    if (present.has(day)) {
+      currentRun += 1;
+      best = Math.max(best, currentRun);
+    } else {
+      currentRun = 0;
+    }
+  }
+  current = currentRun;
+
+  const weekday = [0, 0, 0, 0, 0, 0, 0];
+  for (const row of rows) weekday[parseLocalDate(row.date).getDay()] += row.total;
+  const peakWeek = Math.max(...weekday, 1);
+  const names = ["S", "M", "T", "W", "T", "F", "S"];
+
+  panel.innerHTML = `
+    <div class="cadence-top">
+      <div><strong>${pct}%</strong><span>${active} of ${elapsed} days carry data</span></div>
+      <div><strong>${best}</strong><span>longest run</span></div>
+      <div><strong>${current}</strong><span>current run</span></div>
+    </div>
+    <div class="weekdays">
+      ${weekday.map((value, index) => `
+        <div class="weekday" title="${names[index]}: ${formatTokens(value)}">
+          <div class="weekday-bar"><span style="height:${Math.max((value / peakWeek) * 100, 2)}%"></span></div>
+          <small>${names[index]}</small>
+        </div>`).join("")}
+    </div>
+    <p class="cadence-note">${filtersActive()
+      ? "Days without matching evidence count as filter gaps, not as zero-usage days."
+      : "Days with no recovered evidence count as gaps, not as zero-usage days."}</p>`;
+};
+
+// Request size. The committed data holds a daily total and a daily call count,
+// so this is a distribution of DAILY MEANS, not of individual requests -- a day
+// mixing one huge call with many small ones shows as its average. Saying so
+// matters more than the chart.
+const renderRequestSize = (rows) => {
+  const panel = document.querySelector("#requestSize");
+  if (!panel) return;
+  const means = rows
+    .map((row) => {
+      const entries = Object.values(row.sources).filter((entry) => entry.calls);
+      const tokens = entries.reduce((acc, entry) => acc + entry.tokens, 0);
+      const calls = entries.reduce((acc, entry) => acc + entry.calls, 0);
+      return calls ? tokens / calls : null;
+    })
+    .filter((value) => value && value > 0);
+
+  if (means.length < 2) {
+    panel.innerHTML = `<p class="origin-empty">Not enough days with call counts to show a distribution.</p>`;
+    return;
+  }
+
+  // Log buckets: the range spans orders of magnitude, so linear bins would put
+  // everything in one column.
+  const lo = Math.log10(Math.min(...means));
+  const hi = Math.log10(Math.max(...means));
+  const BUCKETS = 8;
+  const step = (hi - lo) / BUCKETS || 1;
+  const bins = Array.from({ length: BUCKETS }, (_, index) => ({
+    from: 10 ** (lo + index * step),
+    to: 10 ** (lo + (index + 1) * step),
+    count: 0
+  }));
+  for (const mean of means) {
+    const index = Math.min(BUCKETS - 1, Math.floor((Math.log10(mean) - lo) / step));
+    bins[index].count += 1;
+  }
+  const peak = Math.max(...bins.map((bin) => bin.count), 1);
+  const sorted = [...means].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const overall = means.reduce((acc, value) => acc + value, 0) / means.length;
+
+  document.querySelector("#requestSizeNote").textContent = `${means.length} days`;
+  panel.innerHTML = `
+    <div class="hist-stats">
+      <div><strong>${formatTokens(Math.round(median))}</strong><span>median day</span></div>
+      <div><strong>${formatTokens(Math.round(overall))}</strong><span>mean day</span></div>
+    </div>
+    <div class="hist-bars">
+      ${bins.map((bin) => `
+        <div class="hist-bar" title="${formatTokens(Math.round(bin.from))}–${formatTokens(Math.round(bin.to))} per request: ${bin.count} days">
+          <span style="height:${(bin.count / peak) * 100}%"></span>
+        </div>`).join("")}
+    </div>
+    <div class="hist-axis"><span>${formatTokens(Math.round(bins[0].from))}</span><span>tokens per request</span><span>${formatTokens(Math.round(bins.at(-1).to))}</span></div>
+    <p class="cadence-note">Each day contributes its mean request size, not each request. Sources without call counts are excluded.</p>`;
+};
+
+const renderScale = (rows) => {
+  const total = sum(rows);
+  const prompts = Math.round(total / 1_500);
+  const books = (total / 90_000).toFixed(1);
+  const hours = (total / 11_000).toFixed(1);
+  document.querySelector("#scaleEquivalents").innerHTML = `
+    <div><strong>${prompts.toLocaleString()}</strong><span>rough medium prompts at 1,500 tokens each</span></div>
+    <div><strong>${books}</strong><span>short-book equivalents at 90,000 tokens each</span></div>
+    <div><strong>${hours}</strong><span>reading-hour equivalents at 11,000 tokens each</span></div>
+  `;
+};
+
+const optionLabel = (filter, value) => {
+  if (value === "all") return filter === "source"
+    ? "All sources"
+    : filter === "origin"
+      ? "All origins"
+      : "Exact + estimated";
+  if (filter === "source") return labelSource(value);
+  if (filter === "fidelity") return `${value.charAt(0).toUpperCase()}${value.slice(1)} only`;
+  return value;
+};
+
+const renderFilterStatus = (rows) => {
+  const selections = Object.entries(state.filters)
+    .filter(([, value]) => value !== "all")
+    .map(([filter, value]) => optionLabel(filter, value));
+  const prefix = selections.length ? selections.join(" · ") : "All evidence";
+  document.querySelector("#filterStatus").textContent =
+    `${prefix} · ${rows.length} days · ${formatTokens(sum(rows))} tokens`;
+};
+
+const populateFilters = () => {
+  const sourceSelect = document.querySelector("#sourceFilter");
+  const originSelect = document.querySelector("#originFilter");
+  const addOptions = (select, values, label) => {
+    for (const value of values) select.add(new Option(label(value), value));
+  };
+  addOptions(sourceSelect, allSources(state.rows), labelSource);
+  const origins = [...new Set(
+    state.rows.flatMap((row) =>
+      Object.values(row.sources || {}).flatMap((entry) => Object.keys(entry.by_origin || {}))
+    )
+  )].sort();
+  addOptions(originSelect, origins, (value) => value);
+};
+
+const ageInDays = (date) => Math.max(0, Math.round((today() - parseLocalDate(date)) / MS_PER_DAY));
+
+const ageLabel = (days) => days === 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
+
+const freshnessProvider = (source) => {
+  if (["chatgpt", "codex", "openai_api"].includes(source)) return "openai";
+  if (source.startsWith("claude_")) return "anthropic";
+  return "other";
+};
+
+const renderPipeline = () => {
+  const panel = document.querySelector("#pipelineHealth");
+  if (!panel) return;
+  const sourceDates = new Map();
+  for (const row of state.rows) {
+    for (const source of Object.keys(row.sources || {})) {
+      const current = sourceDates.get(source);
+      sourceDates.set(source, {
+        id: source,
+        label: labelSource(source),
+        provider: freshnessProvider(source),
+        firstKnown: current?.firstKnown ?? row.date,
+        lastKnown: row.date,
+        accounting: "daily_tokens"
+      });
+    }
+  }
+  for (const surface of window.__KNOWN_ACTIVITY__?.surfaces || []) {
+    const current = sourceDates.get(surface.id);
+    sourceDates.set(surface.id, {
+      id: surface.id,
+      label: surface.label,
+      provider: surface.provider,
+      firstKnown: current
+        ? [current.firstKnown, surface.first_known].filter(Boolean).sort()[0]
+        : surface.first_known,
+      lastKnown: current
+        ? [current.lastKnown, surface.last_known].filter(Boolean).sort().at(-1)
+        : surface.last_known,
+      accounting: surface.accounting
+    });
+  }
+  let ranked = [...sourceDates.values()].sort((a, b) => a.label.localeCompare(b.label));
+  if (state.filters.source !== "all") {
+    ranked = ranked.filter((entry) => entry.id === state.filters.source);
+  }
+  const latest = ranked.map((entry) => entry.lastKnown).filter(Boolean).sort().at(-1);
+  const manifest = window.__EVIDENCE_MANIFEST__;
+  const publicView = Boolean(window.__PUBLICATION__);
+  document.querySelector("#pipelineHeadline").textContent = latest
+    ? `latest ${publicView ? "data" : "evidence"} ${formatDate(latest)}`
+    : "no retained evidence";
+  const receiptStats = manifest
+    ? `<div class="pipeline-stat"><strong>${Number(manifest.receipts || 0).toLocaleString()}</strong><span>receipt records</span></div>
+      <div class="pipeline-stat"><strong>${Number(manifest.identified_requests || 0).toLocaleString()}</strong><span>identified requests</span></div>`
+    : "";
+  const freshnessGroups = [
+    ["openai", "OpenAI"],
+    ["anthropic", "Anthropic"],
+    ["other", "Other"]
+  ].map(([key, label]) => ({
+    key,
+    label,
+    entries: ranked.filter((entry) => entry.provider === key)
+  }));
+  const accountingLabel = {
+    daily_tokens: "daily tokens",
+    dates_only: "dates only",
+    included_in_snapdev: "included in Snapdev",
+    interval_lower_bound: "interval estimate"
+  };
+  const renderFreshnessRow = (entry) => {
+    const age = ageInDays(entry.lastKnown);
+    const status = age <= 1 ? "current" : age <= 7 ? "recent" : "older";
+    return `
+      <div class="freshness-row ${status}" title="${accountingLabel[entry.accounting] || "activity evidence"}">
+        <i aria-hidden="true"></i>
+        <strong>${text(entry.label)}</strong>
+        <span class="freshness-range">
+          <b>${text(entry.firstKnown)}</b>
+          <em aria-hidden="true">→</em>
+          <b>${text(entry.lastKnown)}</b>
+        </span>
+        <span class="freshness-age">${ageLabel(age)}${entry.accounting === "daily_tokens"
+          ? ""
+          : ` · ${accountingLabel[entry.accounting] || "activity evidence"}`}</span>
+      </div>`;
+  };
+  panel.innerHTML = `
+    <div class="pipeline-summary">
+      <div class="pipeline-stat"><strong>${text(latest ?? "-")}</strong><span>latest retained day</span></div>
+      <div class="pipeline-stat"><strong>${ranked.length}</strong><span>known surfaces</span></div>
+      ${receiptStats}
+    </div>
+    <div class="freshness-list${state.filters.source === "all" ? "" : " freshness-list-filtered"}">
+      ${freshnessGroups
+        .filter((group) => state.filters.source === "all" || group.entries.length)
+        .map((group) => `
+          <div class="freshness-column" role="group" aria-label="${text(group.label)} sources${group.entries.length ? "" : ": no known surfaces"}">
+            ${group.entries.map(renderFreshnessRow).join("")}
+          </div>`)
+        .join("")}
+    </div>
+    <p class="pipeline-note">${publicView
+      ? "Dates show first and latest known evidence, not continuous token coverage. Some named surfaces are included in another source total or support only an interval estimate."
+      : "Dates show first and latest known evidence, not extractor uptime or continuous token coverage. Hover a row for its accounting treatment."}</p>`;
+};
+
+const intervalPosition = (from, to, start, end) => {
+  const boundedFrom = new Date(Math.max(parseLocalDate(from).getTime(), start.getTime()));
+  const requestedEnd = to === "present" ? today() : parseLocalDate(to);
+  const boundedTo = new Date(Math.min(requestedEnd.getTime(), end.getTime()));
+  if (boundedTo < boundedFrom) return null;
+  const duration = end.getTime() - start.getTime() + MS_PER_DAY;
+  return {
+    left: ((boundedFrom - start) / duration) * 100,
+    width: Math.max(0.2, ((boundedTo - boundedFrom + MS_PER_DAY) / duration) * 100)
+  };
+};
+
+const renderCoverageMap = () => {
+  const panel = document.querySelector("#coverageMap");
+  if (!panel) return;
+  const observed = window.__OBSERVED_INTERVALS__?.sources || {};
+  const start = parseLocalDate(window.__PROFILE__?.windowStart || state.rows[0]?.date);
+  const end = today();
+  let sources = Object.keys(observed).sort((a, b) => labelSource(a).localeCompare(labelSource(b)));
+  if (state.filters.source !== "all") sources = sources.filter((source) => source === state.filters.source);
+
+  const windowStart = window.__PROFILE__?.windowStart || state.rows[0]?.date;
+  document.querySelector("#coverageWindowLabel").textContent = `${windowStart} \u2192 today`;
+  const axis = `
+    <div class="coverage-axis" aria-hidden="true">
+      <span></span>
+      <div><span>${text(windowStart)}</span><b>time \u2192</b><span>today</span></div>
+      <span></span>
+    </div>`;
+  panel.innerHTML = axis + sources.map((source) => {
+    const intervals = [...(observed[source]?.observed || [])].sort((a, b) => {
+      const priority = { unknown: 0, known_empty: 1, covered: 2 };
+      return (priority[a.status] ?? 0) - (priority[b.status] ?? 0);
+    });
+    const fidelities = new Set(
+      state.rows.flatMap((row) => row.sources?.[source]?.fidelity ? [row.sources[source].fidelity] : [])
+    );
+    const fidelity = fidelities.size > 1 ? "mixed fidelity" : fidelities.size ? `${[...fidelities][0]} counters` : "no retained rows";
+    const statuses = [...new Set(intervals.map((interval) => interval.status))]
+      .map((status) => status.replace("_", " "))
+      .join(" + ");
+    const segments = intervals.flatMap((interval) => {
+      const position = intervalPosition(interval.from, interval.to, start, end);
+      if (!position) return [];
+      const statusClass = ["unknown", "known_empty", "covered"].includes(interval.status)
+        ? interval.status.replace("_", "-")
+        : "unknown";
+      return [`
+        <span class="coverage-segment ${statusClass}"
+          style="left:${position.left}%;width:${position.width}%"
+          title="${text(interval.from)} to ${text(interval.to)}: ${text(interval.status.replace("_", " "))}"></span>`];
+    }).join("");
+    return `
+      <div class="coverage-row">
+        <div class="coverage-label">
+          <strong>${labelSourceHtml(source)}</strong>
+          <span>${text(fidelity)}</span>
+        </div>
+        <div class="coverage-track" aria-label="${labelSourceHtml(source)} coverage: ${text(statuses)}">${segments}</div>
+        <span class="coverage-summary">${text(statuses)}</span>
+      </div>`;
+  }).join("");
+};
+
+const renderNoMatches = () => {
+  const message = `<p class="empty-state">No evidence matches this filter combination in the selected range.</p>`;
+  document.querySelector("#heatmap").innerHTML = message;
+  document.querySelector("#trendChart").innerHTML = "";
+  document.querySelector("#drivers").innerHTML = message;
+  document.querySelector("#driverDonut").innerHTML = "";
+  document.querySelector("#sources").innerHTML = message;
+  document.querySelector("#sourceDonut").innerHTML = "";
+  document.querySelector("#origins").innerHTML = message;
+  document.querySelector("#cadence").innerHTML = message;
+  document.querySelector("#requestSize").innerHTML = message;
+  document.querySelector("#scaleEquivalents").innerHTML = message;
+  document.querySelector("#receiptHeader").innerHTML = "<th>Date</th><th>Total</th><th>7d avg</th>";
+  document.querySelector("#receiptRows").innerHTML = "";
+};
+
+const renderTable = (rows) => {
+  const tbody = document.querySelector("#receiptRows");
+  const sources = allSources(rows);
+  const showEvidence = publicationFeature("evidence");
+  document.querySelector("#receiptHeader").innerHTML = `
+    <th>Date</th>
+    <th>Total</th>
+    <th>7d avg</th>
+    ${sources.map((source) => `<th>${labelSourceHtml(source)}</th>`).join("")}
+    <th>Driver</th>
+    ${showEvidence ? "<th>Evidence</th>" : ""}
+  `;
+  tbody.innerHTML = rows.slice(-30).reverse().map((row) => {
+    const average = movingAverage(rows, row.date);
+    const sourceCells = sources.map((source) => {
+      const entry = row.sources[source];
+      if (!entry) return "<td>-</td>";
+      return `<td>${formatTokens(entry.tokens)} <span class="tag ${fidelityClass(entry.fidelity)}">${text(entry.fidelity)}</span>${entry.calls ? `<span class="calls">${Number(entry.calls)} calls</span>` : ""}</td>`;
+    }).join("");
+    return `
+      <tr>
+        <td>${text(row.date)}</td>
+        <td>${formatTokens(row.total)}</td>
+        <td>${average.average === null ? `unavailable (${average.observedDays}/7)` : formatTokens(average.average)}</td>
+        ${sourceCells}
+        <td>${text(row.driver || "unreviewed")}</td>
+        ${showEvidence ? `<td>${text(row.evidence)}</td>` : ""}
+      </tr>`;
+  }).join("");
+};
+
+const render = () => {
+  const { rows: windowRows, start, end } = getVisibleWindow();
+  const rows = filterDashboardRows(windowRows, state.filters);
+  renderFilterStatus(rows);
+  renderSummary(rows, start, end);
+  renderPipeline();
+  renderCoverageMap();
+  if (!rows.length) {
+    renderNoMatches();
+    return;
+  }
+  renderHeatmap(rows, start, end);
+  renderTrend(rows, start, end);
+  renderDrivers(rows);
+  renderSources(rows);
+  renderOrigins(rows);
+  renderCadence(rows, start, end);
+  renderRequestSize(rows);
+  renderScale(rows);
+  if (publicationFeature("recordsTable")) renderTable(rows);
+};
+
+applyPublicationView();
+initTheme();
+document.querySelector("#themeToggle")?.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+  // Charts read CSS variables at draw time, so redraw after the swap.
+  if (state.rows.length) render();
+});
+
+document.querySelectorAll(".range-button").forEach((item) => {
+  const active = item.dataset.range === state.range;
+  item.classList.toggle("active", active);
+  item.setAttribute("aria-pressed", String(active));
+});
+document.querySelectorAll(".range-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".range-button").forEach((item) => {
+      item.classList.remove("active");
+      item.setAttribute("aria-pressed", "false");
+    });
+    button.classList.add("active");
+    button.setAttribute("aria-pressed", "true");
+    state.range = button.dataset.range;
+    render();
+  });
+});
+
+[
+  ["sourceFilter", "source"],
+  ["fidelityFilter", "fidelity"],
+  ["originFilter", "origin"]
+].forEach(([id, filter]) => {
+  document.querySelector(`#${id}`)?.addEventListener("change", (event) => {
+    state.filters[filter] = event.target.value;
+    render();
+  });
+});
+
+document.querySelector("#resetFilters")?.addEventListener("click", () => {
+  state.filters = { source: "all", fidelity: "all", origin: "all" };
+  document.querySelector("#sourceFilter").value = "all";
+  document.querySelector("#fidelityFilter").value = "all";
+  document.querySelector("#originFilter").value = "all";
+  render();
+});
+
+// Data is always inlined by the build; there is no runtime fetch. The dev
+// server rebuilds and serves the same artifact, so development and production
+// exercise one path instead of two that can drift apart.
+Promise.resolve(window.__DAILY_BURN__)
+  .then((rows) => {
+    if (!rows) throw new Error("No data inlined \u2014 run npm run build.");
+    state.rows = rows.map(normalizeLegacyRow).map((row) => ({
+      ...row,
+      total: row.total ?? sourceTotal(row)
+    }));
+    populateFilters();
+    render();
+  })
+  .catch((error) => {
+    const main = document.createElement("main");
+    main.className = "shell";
+    const panel = document.createElement("section");
+    panel.className = "panel";
+    const heading = document.createElement("h1");
+    heading.textContent = "Data load failed";
+    const detail = document.createElement("p");
+    detail.textContent = error instanceof Error ? error.message : String(error);
+    panel.append(heading, detail);
+    main.append(panel);
+    document.body.replaceChildren(main);
+  });
+
+if (publicationFeature("github")) Promise.resolve(window.__GITHUB_SUMMARY__)
+  .then((summary) => {
+    if (!summary) throw new Error("no github summary inlined");
+    renderGithubSummary(summary);
+  })
+  .catch(() => {
+    document.querySelector("#githubContributions").textContent = "-";
+    document.querySelector("#githubWindow").textContent = "lookup unavailable";
+  });
+
+</script>
+  </body>
+</html>

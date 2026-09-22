@@ -6,8 +6,14 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - A footer of routes off the page, driven by `config/site.json`: source, data contract, privacy, issues, and `llms.txt`. A build without a site config renders none.
 - Social card art at `imgs/og.png` and `docs/imgs/og.png`, referenced from the page's OpenGraph, Twitter, and structured-data metadata.
 - Issue and pull request templates under `.github/`.
+- A home page at `/` describing the project: the three invariants, how receipts become a dataset, what the record cannot see, and what it is not. Built from `src/landing.html` by `scripts/build-landing.js`, with `TechArticle`, `SoftwareApplication`, and `WebSite` structured data, a byline with published and updated dates, IndieWeb `rel="me"` links, a skip link, and a canonical-reference note.
+- `demo_path` in `config/site.json`, naming the public route of the built dashboard, and a `landing` block carrying the byline, dates, version, and the landing-only footer routes.
+- `npm run build:landing` and `npm run build:demo` build one page each; `npm run build` builds both.
 
 ### Changed
+- The dashboard moved from `/` to `/demo/`. It is the demonstration of the project, not the project's home page, and it now says so: away from the site root it carries `WebPage` structured data inside the site rather than `WebSite` and `SoftwareApplication` claiming to be the site, and its title, canonical URL, and social metadata name the demo.
+- The dev server serves both routes, derived from `config/site.json` rather than hardcoded, so a local path matches the served one. A config without `demo_path` keeps the historical behaviour, where the dashboard is the only page and answers at `/`.
+- The CI build-reproducibility step hashes both built pages, not only `docs/index.html`.
 - CI moves to Depot CI, which executes `.depot/workflows/ci.yml` directly. The GitHub Actions copy at `.github/workflows/ci.yml` is retained as a `workflow_dispatch` fallback and no longer runs on push or pull request. Both copies drop the `macos-latest` matrix leg and verify on Linux across both Node versions, and both accept `workflow_dispatch` so a run can be fired by hand.
 - The CI workflow tests now assert against both copies rather than the GitHub one alone, and fail if their steps lists drift apart, if they diverge anywhere beyond their triggers and matrix legs, or if anything appears under `.depot/` besides the workflow itself.
 
@@ -19,6 +25,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - The publication CTAs shipped `href="#"` while hidden, which a raw-HTML fetcher reads as a link to nowhere; an external agent-readiness scan counted both as dead CTAs on the live site. The attribute is now absent until activation supplies a real URL, matching how the records link already worked.
 - The burn drivers list scrolls on its own but was not keyboard reachable, and the time-range panel carried an `aria-label` with no role. Found by a live axe-core scan on 2026-09-22; both are now asserted by the accessibility contract test.
 - Social card art carried EXIF and text metadata chunks, which the candidate verifier rejects for any published image.
+- `verify:candidate --self` reported every git-ignored working-tree path as a file outside the inventory. A path git ignores and does not track cannot reach a published candidate, so it is now excluded from the walk and the count of excluded paths is reported; a tracked file stays in scope even where an ignore rule would match it.
 
 ## [0.1.0] - 2026-09-22
 ### Added

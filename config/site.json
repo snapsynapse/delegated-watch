@@ -1,6 +1,9 @@
 {
   "domain": "delegated.watch",
-  "build_output": "docs/index.html",
+  "build_output": "docs/demo/index.html",
+  "note_build_output": "The dashboard is the demonstration, not the home page. It builds to docs/demo/ and is served at demo_path; docs/index.html is the landing page built by scripts/build-landing.js. A pre-launch checkout points this at docs2B/index.html instead, outside the served tree entirely.",
+  "demo_path": "/demo/",
+  "note_demo_path": "The public route of the built dashboard. Declared rather than derived from build_output, because a pre-launch build_output names a staging path that is not served at any route at all.",
   "posture": "live",
   "postures": {
     "pre-launch": "docs/ serves a data-free placeholder. The built dashboard goes to docs2B/. eval:served asserts no dataset content reaches docs/.",
@@ -22,6 +25,10 @@
   "note_links": "Footer routes for the served page. Like the domain above, these name a public location, so they live here rather than in src/index.html: a build with no site config renders no footer. An agent landing on the dashboard needs a way out of it, to the source, to the contract the data obeys, and to a person.",
   "links": [
     {
+      "label": "Home",
+      "href": "/"
+    },
+    {
       "label": "Source",
       "href": "https://github.com/snapsynapse/delegated-watch"
     },
@@ -41,5 +48,33 @@
       "label": "llms.txt",
       "href": "/llms.txt"
     }
-  ]
+  ],
+  "landing": {
+    "author": "Sam Rogers",
+    "author_url": "https://snapsynapse.com/",
+    "author_label": "Snap Synapse",
+    "twitter": "@snapsynapse",
+    "date_published": "2026-06-22",
+    "date_modified": "2026-09-22",
+    "version": "0.1.0",
+    "same_as": [
+      "https://github.com/snapsynapse/delegated-watch",
+      "https://snapsynapse.com/"
+    ],
+    "note": "Byline and identity for the landing page. Dates: date_published is the first commit of the private delegated-watch-record repository, where the work began; date_modified is the first public release of this one.",
+    "extra_links": [
+      {
+        "label": "Demo",
+        "href": "/demo/"
+      },
+      {
+        "label": "Changelog",
+        "href": "https://github.com/snapsynapse/delegated-watch/blob/main/CHANGELOG.md"
+      },
+      {
+        "label": "Revisions",
+        "href": "https://github.com/snapsynapse/delegated-watch/commits/main/INTENT.md"
+      }
+    ]
+  }
 }

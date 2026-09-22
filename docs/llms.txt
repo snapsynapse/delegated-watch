@@ -14,11 +14,15 @@ normalized JSON file, aggregated to one scrubbed row per day per source. A
 static page renders that file. Token counts are the unit; delegated work is the
 subject. There is no backend.
 
-## What the published page shows
+## Pages
 
-The page at https://delegated.watch/ carries invented demonstration data. It is
-not a record of anyone's actual usage, and publishing a personal record is a
-separate decision that has not been made. Treat every figure on it as synthetic.
+- https://delegated.watch/ is the home page: what the project is, the three
+  invariants that govern it, how receipts become a dataset, and what the record
+  cannot see. It carries no data.
+- https://delegated.watch/demo/ is the dashboard, rendering invented
+  demonstration data. It is not a record of anyone's actual usage, and
+  publishing a personal record is a separate decision that has not been made.
+  Treat every figure on it as synthetic.
 
 ## Design invariants
 
@@ -60,3 +64,7 @@ Centralizing raw logs anywhere, including in the repository.
 - No `llms-full.txt`. This file is the comprehensive artifact.
 - `sitemap.xml` and `site.webmanifest` are served at the site root.
 - `docs/robots.txt` permits all major AI and SEO crawlers explicitly.
+- Neither served page is hand-edited. The home page is built from
+  `src/landing.html` by `scripts/build-landing.js`; the dashboard is built from
+  `src/index.html` by `scripts/build.js`. Every public URL either of them names comes
+  from `config/site.json`.

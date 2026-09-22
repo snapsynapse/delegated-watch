@@ -82,24 +82,28 @@ jobs:
         run: |
           set -euo pipefail
 
-          hash_index() {
+          # Both built pages, not just the home page: the dashboard is the one
+          # that inlines the dataset, so it is the one that can drift.
+          hash_pages() {
             if command -v sha256sum >/dev/null 2>&1; then
-              sha256sum docs/index.html | awk '{print $1}'
+              sha256sum docs/index.html docs/demo/index.html | awk '{print $1}'
             else
-              shasum -a 256 docs/index.html | awk '{print $1}'
+              shasum -a 256 docs/index.html docs/demo/index.html | awk '{print $1}'
             fi
           }
 
-          before="$(hash_index)"
+          before="$(hash_pages)"
           npm run build
-          after="$(hash_index)"
+          after="$(hash_pages)"
 
           if [ "$before" != "$after" ]; then
-            echo "Build is not reproducible: $before != $after"
+            echo "Build is not reproducible:"
+            printf 'before:\n%s\nafter:\n%s\n' "$before" "$after"
             exit 1
           fi
 
-          echo "Build reproducible at $after"
+          echo "Build reproducible at:"
+          echo "$after"
 
       - name: Verify public candidate (self)
         run: npm run verify:candidate -- --self

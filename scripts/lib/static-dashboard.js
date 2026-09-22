@@ -46,48 +46,79 @@ const SITE_OG_IMAGE_ALT =
   "The Delegated.watch wordmark beside a calendar heatmap of blue cells at varying intensity, with scattered dark cells where no record exists.";
 const SITE_DESCRIPTION =
   "Account-wide record of AI work delegated to models, across every provider, surface, and machine.";
+const DEMO_TITLE = "Delegated.watch demo dashboard";
+const DEMO_DESCRIPTION =
+  "The Delegated.watch dashboard rendering synthetic demonstration data: daily token usage by source, with exact counters kept distinct from estimates and unrecovered days kept visible as unknown.";
 
+// Where this build is served decides what it may claim. At the site root the
+// page is the site, so it carries WebSite and SoftwareApplication. Moved to a
+// demo route it is one page of a site whose home page is something else, and
+// claiming to be the site from a subpath splits the identity between two URLs
+// that crawlers then have to reconcile. The landing page owns those two types;
+// this page describes itself and points back.
 const buildSiteDiscovery = (site, publication) => {
   if (!site?.domain || publication?.canonicalUrl) return "";
   const origin = `https://${site.domain}`;
-  const structuredData = [
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      name: SITE_TITLE,
-      url: `${origin}/`,
-      description: SITE_DESCRIPTION,
-      image: `${origin}/imgs/og.png`,
-      inLanguage: "en"
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      name: SITE_TITLE,
-      applicationCategory: "DeveloperApplication",
-      operatingSystem: "macOS, Linux, Windows",
-      url: `${origin}/`,
-      license: "https://opensource.org/license/mit",
-      description: SITE_DESCRIPTION,
-      image: `${origin}/imgs/og.png`
-    }
-  ];
+  const route = site.demo_path ?? "/";
+  const atRoot = route === "/";
+  const pageUrl = `${origin}${route}`;
+  const title = atRoot ? SITE_TITLE : DEMO_TITLE;
+  const description = atRoot ? SITE_DESCRIPTION : DEMO_DESCRIPTION;
+  const structuredData = atRoot
+    ? [
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: SITE_TITLE,
+          url: `${origin}/`,
+          description: SITE_DESCRIPTION,
+          image: `${origin}/imgs/og.png`,
+          inLanguage: "en"
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: SITE_TITLE,
+          applicationCategory: "DeveloperApplication",
+          operatingSystem: "macOS, Linux, Windows",
+          url: `${origin}/`,
+          license: "https://opensource.org/license/mit",
+          description: SITE_DESCRIPTION,
+          image: `${origin}/imgs/og.png`
+        }
+      ]
+    : [
+        {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: DEMO_TITLE,
+          url: pageUrl,
+          description: DEMO_DESCRIPTION,
+          image: `${origin}/imgs/og.png`,
+          inLanguage: "en",
+          isPartOf: {
+            "@type": "WebSite",
+            name: SITE_TITLE,
+            url: `${origin}/`
+          }
+        }
+      ];
   const lines = [
-    `<link rel="canonical" href="${origin}/">`,
+    `<link rel="canonical" href="${pageUrl}">`,
     `<link rel="alternate" type="text/plain" href="${origin}/llms.txt" title="LLM-readable summary">`,
-    '<meta property="og:type" content="website">',
+    `<meta property="og:type" content="${atRoot ? "website" : "article"}">`,
     `<meta property="og:site_name" content="${SITE_TITLE}">`,
     '<meta property="og:locale" content="en_US">',
-    `<meta property="og:url" content="${origin}/">`,
-    `<meta property="og:title" content="${SITE_TITLE}">`,
-    `<meta property="og:description" content="${SITE_DESCRIPTION}">`,
+    `<meta property="og:url" content="${pageUrl}">`,
+    `<meta property="og:title" content="${title}">`,
+    `<meta property="og:description" content="${description}">`,
     `<meta property="og:image" content="${origin}/imgs/og.png">`,
     '<meta property="og:image:width" content="1200">',
     '<meta property="og:image:height" content="630">',
     `<meta property="og:image:alt" content="${SITE_OG_IMAGE_ALT}">`,
     '<meta name="twitter:card" content="summary_large_image">',
-    `<meta name="twitter:title" content="${SITE_TITLE}">`,
-    `<meta name="twitter:description" content="${SITE_DESCRIPTION}">`,
+    `<meta name="twitter:title" content="${title}">`,
+    `<meta name="twitter:description" content="${description}">`,
     `<meta name="twitter:image" content="${origin}/imgs/og.png">`,
     `<meta name="twitter:image:alt" content="${SITE_OG_IMAGE_ALT}">`,
     ...structuredData.map((block) =>
@@ -164,6 +195,12 @@ export async function renderStaticDashboard({
   );
 
   let html = htmlSource;
+  // Served away from the site root, the page needs a title that says which page
+  // it is. "Delegated.watch" in a tab, a bookmark, or a search result is the
+  // home page's name, and two pages answering to it is one of them lost.
+  if (site?.demo_path && site.demo_path !== "/") {
+    html = html.replace("<title>Delegated.watch</title>", `<title>${DEMO_TITLE}</title>`);
+  }
   if (site?.dataset === "synthetic") {
     html = html.replace('<main class="shell">', `<main class="shell">\n${DEMO_BANNER}`);
   }

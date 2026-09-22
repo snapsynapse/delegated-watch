@@ -27,6 +27,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstat, readdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { privateTextFindings } from "./lib/receipt-privacy.js";
@@ -242,6 +243,45 @@ async function walk(relativeDir) {
 await walk("");
 files.sort();
 
+// In --self mode the candidate is a live working checkout, so the walk also
+// picks up whatever the developer's tools left lying around: an editor's dot
+// directory, an agent's scratch state, a local research cache. None of those
+// can reach a published candidate, because git never carries them, so counting
+// them as inventory extras reports a leak that cannot exist and trains the
+// reader to ignore this check. A path is dropped only when git says it is
+// ignored AND does not track it; a tracked file stays in scope even if a
+// pattern would otherwise match it, which is the case a stale rule could hide.
+let ignoredCount = 0;
+if (selfMode) {
+  const runGit = (args, input) => {
+    const result = spawnSync("git", ["-C", candidateDir, ...args], {
+      input,
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024
+    });
+    // status 1 from check-ignore means "nothing matched", which is not a failure.
+    if (result.error || (result.status !== 0 && result.status !== 1)) return null;
+    return result.stdout.split("\0").filter(Boolean);
+  };
+  const tracked = runGit(["ls-files", "-z"], undefined);
+  const ignored = runGit(["check-ignore", "--stdin", "-z", "-z"], files.join("\0"));
+  if (tracked === null || ignored === null) {
+    // Without both answers the filter cannot be applied safely, so nothing is
+    // dropped: a noisy extras list beats a silently narrowed scan.
+    check("working-tree state excluded", "WARN", "git unavailable; ignored paths stay in scope");
+  } else {
+    const trackedSet = new Set(tracked);
+    const drop = new Set(ignored.filter((path) => !trackedSet.has(path)));
+    ignoredCount = drop.size;
+    if (drop.size) {
+      const kept = files.filter((path) => !drop.has(path));
+      files.length = 0;
+      files.push(...kept);
+    }
+  }
+}
+
+if (ignoredCount) check("git-ignored working state excluded", "ok", `${ignoredCount} path(s) git ignores and does not track`);
 check("candidate fully walkable", unreadable.length ? "FAIL" : "ok",
   unreadable.length ? `cannot list: ${unreadable.join(", ")} — the tree cannot be cleared` : "");
 check("no symlinks in candidate", symlinks.length ? "FAIL" : "ok",
