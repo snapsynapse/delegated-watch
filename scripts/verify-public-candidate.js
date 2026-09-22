@@ -293,9 +293,14 @@ check("no files outside the inventory", extras.length ? "FAIL" : "ok",
   extras.length ? `extra: ${extras.slice(0, 20).join(", ")}${extras.length > 20 ? ` (+${extras.length - 20} more)` : ""}` : "");
 
 // .git, plus the dotfiles that carry provenance nobody meant to publish.
+// In --self mode the tree is a checkout of the published repository, so its
+// own .git is expected; an assembled candidate has none, and --fresh-history
+// requires exactly one.
 const gitProblems = freshHistory
   ? (gitDirectories.length ? [] : ["--fresh-history given but the candidate has no .git"])
-  : gitDirectories.map((path) => `${path} present (history is not assembled output)`);
+  : selfMode
+    ? gitDirectories.filter((path) => path !== ".git").map((path) => `${path} present (nested repository)`)
+    : gitDirectories.map((path) => `${path} present (history is not assembled output)`);
 const ALWAYS_FORBIDDEN = new Set([".gitmodules", ".DS_Store"]);
 const dotProblems = files.filter((path) => {
   const segments = path.split("/");

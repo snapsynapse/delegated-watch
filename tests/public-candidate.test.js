@@ -598,6 +598,12 @@ test("--self verifies the tree that holds the script, as the shipped copy does i
   const result = spawnSync(process.execPath, [join(fixture.candidate, "scripts/verify-public-candidate.js"), "--self"], { cwd: fixture.candidate, encoding: "utf8" });
   assert.equal(result.status, 0, output(result));
   assert.match(result.stdout, /every inventoried file present/);
+
+  // The published repository verifies itself from a checkout, where .git is
+  // the tree's own history rather than assembled output.
+  execFileSync("git", ["init", "-q"], { cwd: fixture.candidate });
+  const checkedOut = spawnSync(process.execPath, [join(fixture.candidate, "scripts/verify-public-candidate.js"), "--self"], { cwd: fixture.candidate, encoding: "utf8" });
+  assert.equal(checkedOut.status, 0, output(checkedOut));
 });
 
 test("an optional generated file is accepted when present and not required when absent", async (t) => {
