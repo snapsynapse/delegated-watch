@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
-## [Unreleased]
+## [0.2.0] - 2026-09-22
 ### Added
 - A footer of routes off the page, driven by `config/site.json`: source, data contract, privacy, issues, and `llms.txt`. A build without a site config renders none.
 - Social card art at `imgs/og.png` and `docs/imgs/og.png`, referenced from the page's OpenGraph, Twitter, and structured-data metadata.

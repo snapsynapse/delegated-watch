@@ -1,6 +1,6 @@
 {
   "name": "delegated-watch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A local-first, static-site record of tokens delegated to AI models, aggregated to one scrubbed row per day per source.",
   "license": "MIT",
   "type": "module",
