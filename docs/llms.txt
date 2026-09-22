@@ -30,11 +30,15 @@ subject. There is no backend.
 
 Read https://delegated.watch/.well-known/assistant-guide.txt and follow it
 rather than this file. That guide conforms to the GuideCheck Human-Verifiable
-Assistant Guide profile 2.0.0 at Level 3: strict ASCII under 8 KiB, an explicit
-task scope and non-goals, and one structured action block per step with an
-approval gate on every networked and code-executing command. Verify it first,
-report the achieved level, and ask the operator before running a gated action.
-Conformance is a claim about form, not safety.
+Assistant Guide profile 2.0.0 at Level 4, the highest level a guide file can
+reach: strict ASCII under 8 KiB, an explicit task scope and non-goals, one
+structured action block per step with an approval gate on every networked and
+code-executing command, a sidecar manifest at
+https://delegated.watch/.well-known/assistant-guide-manifest.txt pinning the
+guide's exact bytes, and that same hash published as a DNS TXT record at
+_assistant-guide.delegated.watch. Verify it first, report the achieved level,
+and ask the operator before running a gated action. Conformance is a claim
+about form, not safety.
 
 ## Design invariants
 

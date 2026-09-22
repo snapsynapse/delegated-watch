@@ -463,22 +463,19 @@ npm run dev</code></pre>
     <p>That serves the home page and the dashboard over the synthetic dataset shipped with this release. To walk the same importer gates a real receipt would face, run <code>npm run demo:import</code>. To put your own usage in, write receipts to the <a href="{{REPO}}/blob/main/DATA_CONTRACT.md" target="_blank" rel="noopener">data contract</a> and run <code>npm run import</code>. The one reference capture in this release is for local inference through Ollama; it relays a request unchanged and persists only the model identity and the authoritative counters, never the prompt or the generated text.</p>
 
     <aside class="canonical-note" role="note">
-      <strong>GuideCheck Level 3.</strong> The assistant guide conforms to the
+      <strong>GuideCheck Level 4.</strong> The assistant guide conforms to the
       <a href="https://guidecheck.org/" target="_blank" rel="noopener">GuideCheck</a>
-      Human-Verifiable Assistant Guide profile 2.0.0 at Level 3: strict ASCII inside the byte
-      and size limits, the full assistant safety contract, and a structured action block with
-      an explicit approval gate for every substantive step. Verified with the reference
-      verifier on 2026-09-22 with zero blocking findings. Check it yourself at
+      Human-Verifiable Assistant Guide profile 2.0.0 at Level 4, the highest level a guide file
+      can reach: strict ASCII inside the byte and size limits, the full assistant safety
+      contract, a structured action block with an explicit approval gate for every substantive
+      step, a <a href="/.well-known/assistant-guide-manifest.txt">sidecar manifest</a> pinning
+      the guide's exact bytes, and that same hash cross-published as a DNS TXT record at
+      <code>_assistant-guide.delegated.watch</code>, an independent control plane. The hosted
+      verifier reported Level 4 with zero blocking findings on 2026-09-22. Check it yourself at
       <a href="https://guidecheck.org/verify" target="_blank" rel="noopener">guidecheck.org/verify</a>,
       or with any conformant verifier. Conformance is a claim about form, not about safety:
-      it means you can read the whole instruction surface before an assistant acts on it.
-      Level 4 additionally needs a sidecar manifest and the guide's hash cross-published on an
-      independent control plane. Both are live: a
-      <a href="/.well-known/assistant-guide-manifest.txt">sidecar manifest</a> pins the guide's
-      exact bytes, and a DNS TXT record at <code>_assistant-guide.delegated.watch</code> carries
-      the same hash. The Level 4 claim itself belongs to a fetching verifier, because the
-      reference CLI caps local evaluation at Level 3 and cannot resolve an anchor. This page
-      claims what has been demonstrated.
+      it means you can read the whole instruction surface before an assistant acts on it, and
+      confirm through a second channel that the bytes you read are the bytes being served.
     </aside>
   </div>
 </section>
