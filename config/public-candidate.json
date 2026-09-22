@@ -233,7 +233,7 @@
     "note": "Rows are schema-legal under strict validation: fidelity exact or estimated, drivers from the reviewed vocabulary, never sample. Every evidence string begins with the prefix so a synthetic row can never be mistaken for a measured one. The private dataset is passed to verify --private-data and any (date, source, tokens) triple that also appears there fails."
   },
   "pinned": {
-    ".depot/workflows/ci.yml": "5003f11301c8c0ec4f71d13f545140e97e95aedac7c43da4b20f85d8cc4d1640",
+    ".depot/workflows/ci.yml": "51589dd240ef7123425c0725e3091a6333faa48ebc0a1332beaa74d1dd4cc5e4",
     ".github/FUNDING.yml": "c32c1cb87ba598703c9c593e4d5b51a6245d8f8b48594cf49f941d2c95a31571",
     ".github/ISSUE_TEMPLATE/bug_report.md": "3fda039a1bf79296e0875cfc0a10b23663dd337b4d6f75c97ea624d63c71c0f5",
     ".github/ISSUE_TEMPLATE/config.yml": "a915bf26d62163c37255877feba27da558a48685e5c32edeb5390b4e1624e0ed",
@@ -243,7 +243,7 @@
     ".gitignore": "dbfde6d16da30b04b4604ed07f301034fba16da76dcec235841d2a0d68b2b444",
     ".node-version": "55075b5ec4e8b31936cbbc282b8829116d1fd48f2f2f1856dee592a6650700ce",
     "ATTRIBUTION.md": "1a8a261895e3b9543aaa7e3a60d3a3445000feecd10d6aaec4193ab7bd82a484",
-    "CHANGELOG.md": "6012cb374e0c1b01eb4f74445c1aa0425da5359db00afd5222ffa1b5288bf279",
+    "CHANGELOG.md": "fbd4af661b6dcc490425b13636d294b89d316957fac28dd998d0ab9ae5abf1be",
     "config/claude-reconciliation.json": "c28d136d6dcc6892e9e4931096a1b66b8c2dca032e3ee29221c5d7a9e7a327e1",
     "config/known-activity.json": "a4ef448cf04ce3505117fb9e82b4d6aad37eb495923dad692c7dc071467e112a",
     "config/observed-intervals.json": "cd2d8ffbd8309d4748385f0bb0fbdbd5766a524b02fcea4f911eeadf23db03b3",
