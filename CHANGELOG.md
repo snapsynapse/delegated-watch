@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
+## [Unreleased]
+### Added
+- Social card art at `imgs/og.png` and `docs/imgs/og.png`, referenced from the page's OpenGraph, Twitter, and structured-data metadata.
+- Issue and pull request templates under `.github/`.
+
 ## [0.1.0] - 2026-09-22
 ### Added
 - First public release of the candidate tree: receipt schema v2, a deterministic importer with cutoff, no-decrease, settled-entry, exclusion, and reconciliation gates, and a single normalized dataset file.

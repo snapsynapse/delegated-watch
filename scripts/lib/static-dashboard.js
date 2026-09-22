@@ -42,6 +42,8 @@ ${links}
 // emits none of it, which keeps a page built for local viewing free of
 // absolute URLs it cannot honor.
 const SITE_TITLE = "Delegated.watch";
+const SITE_OG_IMAGE_ALT =
+  "The Delegated.watch wordmark beside a calendar heatmap of blue cells at varying intensity, with scattered dark cells where no record exists.";
 const SITE_DESCRIPTION =
   "Account-wide record of AI work delegated to models, across every provider, surface, and machine.";
 
@@ -55,6 +57,7 @@ const buildSiteDiscovery = (site, publication) => {
       name: SITE_TITLE,
       url: `${origin}/`,
       description: SITE_DESCRIPTION,
+      image: `${origin}/imgs/og.png`,
       inLanguage: "en"
     },
     {
@@ -65,7 +68,8 @@ const buildSiteDiscovery = (site, publication) => {
       operatingSystem: "macOS, Linux, Windows",
       url: `${origin}/`,
       license: "https://opensource.org/licenses/MIT",
-      description: SITE_DESCRIPTION
+      description: SITE_DESCRIPTION,
+      image: `${origin}/imgs/og.png`
     }
   ];
   const lines = [
@@ -77,9 +81,15 @@ const buildSiteDiscovery = (site, publication) => {
     `<meta property="og:url" content="${origin}/">`,
     `<meta property="og:title" content="${SITE_TITLE}">`,
     `<meta property="og:description" content="${SITE_DESCRIPTION}">`,
+    `<meta property="og:image" content="${origin}/imgs/og.png">`,
+    '<meta property="og:image:width" content="1200">',
+    '<meta property="og:image:height" content="630">',
+    `<meta property="og:image:alt" content="${SITE_OG_IMAGE_ALT}">`,
     '<meta name="twitter:card" content="summary_large_image">',
     `<meta name="twitter:title" content="${SITE_TITLE}">`,
     `<meta name="twitter:description" content="${SITE_DESCRIPTION}">`,
+    `<meta name="twitter:image" content="${origin}/imgs/og.png">`,
+    `<meta name="twitter:image:alt" content="${SITE_OG_IMAGE_ALT}">`,
     ...structuredData.map((block) =>
       [
         '<script type="application/ld+json">',

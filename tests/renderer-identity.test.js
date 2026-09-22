@@ -161,6 +161,9 @@ test("renderer identity: discovery metadata comes from site config, never the pa
   assert.ok(withSite.includes('<link rel="canonical" href="https://example.test/">'));
   assert.ok(withSite.includes('<meta property="og:url" content="https://example.test/">'));
   assert.ok(withSite.includes('<link rel="alternate" type="text/plain" href="https://example.test/llms.txt"'));
+  assert.ok(withSite.includes('<meta property="og:image" content="https://example.test/imgs/og.png">'));
+  assert.ok(withSite.includes('<meta name="twitter:image" content="https://example.test/imgs/og.png">'));
+  assert.match(withSite, /<meta property="og:image:alt" content="[^"]{40,}">/);
 
   const blocks = [...withSite.matchAll(
     /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
