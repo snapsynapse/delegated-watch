@@ -113,7 +113,7 @@ test('a build reproducibility step exists', () => {
   assert.ok(hasHashTool, 'expected a step referencing sha256sum or shasum to check build reproducibility');
 });
 
-test('the candidate .github tree contains only the ci workflow file', () => {
+test('the candidate .github tree contains only its declared files', () => {
   const githubRoot = path.join(candidateRoot, '.github');
   const files = [];
 
@@ -129,5 +129,15 @@ test('the candidate .github tree contains only the ci workflow file', () => {
   }
 
   walk(githubRoot);
-  assert.deepEqual(files, ['.github/workflows/ci.yml']);
+  // The inventory is asserted rather than bounded to the workflow alone: the
+  // repository is public and takes contributions, so contributor-facing
+  // templates belong here. Anything arriving outside this list is unreviewed.
+  assert.deepEqual(files.sort(), [
+    '.github/FUNDING.yml',
+    '.github/ISSUE_TEMPLATE/bug_report.md',
+    '.github/ISSUE_TEMPLATE/config.yml',
+    '.github/ISSUE_TEMPLATE/feature_request.md',
+    '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/workflows/ci.yml'
+  ]);
 });

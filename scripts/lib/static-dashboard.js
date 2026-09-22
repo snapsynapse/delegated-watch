@@ -67,7 +67,7 @@ const buildSiteDiscovery = (site, publication) => {
       applicationCategory: "DeveloperApplication",
       operatingSystem: "macOS, Linux, Windows",
       url: `${origin}/`,
-      license: "https://opensource.org/licenses/MIT",
+      license: "https://opensource.org/license/mit",
       description: SITE_DESCRIPTION,
       image: `${origin}/imgs/og.png`
     }
@@ -103,6 +103,24 @@ const buildSiteDiscovery = (site, publication) => {
     .split("\n")
     .map((line) => `    ${line}`)
     .join("\n");
+};
+
+// Routes off the page, for a reader who arrived at a dashboard and needs the
+// source, the contract, or a person. Like the discovery metadata these name
+// public locations, so they come from config/site.json and a build without one
+// renders no footer at all. A publication config supplies its own footer and
+// wins.
+const buildSiteFooter = (site, publication) => {
+  if (publication?.identity || !site?.links?.length) return "";
+  const links = site.links
+    .map(({ label, href }) => `        <a href="${href}">${escapeAmpersand(label)}</a>`)
+    .join("\n");
+  return `
+    <footer class="site-footer">
+      <nav aria-label="Site">
+${links}
+      </nav>
+    </footer>`;
 };
 
 const DEMO_BANNER = '      <p class="demo-banner" role="note">This page renders synthetic demonstration data. Nothing here is a measured record.</p>';
@@ -219,6 +237,10 @@ export async function renderStaticDashboard({
   }
 
   const page = html
+    .replace("    </main>", () => {
+      const footer = buildSiteFooter(site, publication);
+      return footer ? `    </main>\n${footer}` : "    </main>";
+    })
     .replace("    <!--SITE_DISCOVERY-->\n", () => {
       const discovery = buildSiteDiscovery(site, publication);
       return discovery ? `${discovery}\n` : "";

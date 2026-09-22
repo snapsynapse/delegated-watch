@@ -452,6 +452,7 @@ h2 {
 }
 
 .heatmap:focus-visible,
+.drivers:focus-visible,
 .table-wrap:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;
@@ -1600,4 +1601,37 @@ td {
 .hist-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.72rem; }
 :where([hidden]) {
   display: none !important;
+}
+
+/* Routes off the page. Rendered only when config/site.json supplies links, and
+   never alongside a publication identity's own footer. */
+.site-footer {
+  width: min(1480px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 24px 0 36px;
+  border-top: 1px solid var(--line);
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.site-footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  color: var(--cyan);
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.site-footer a:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
 }

@@ -154,22 +154,22 @@ test("renderer identity: discovery metadata comes from site config, never the pa
     dailyBurn,
     profile,
     observedIntervals,
-    site: { domain: "example.test" }
+    site: { domain: "example.net" }
   });
 
   assert.ok(!withSite.includes("<!--SITE_DISCOVERY-->"));
-  assert.ok(withSite.includes('<link rel="canonical" href="https://example.test/">'));
-  assert.ok(withSite.includes('<meta property="og:url" content="https://example.test/">'));
-  assert.ok(withSite.includes('<link rel="alternate" type="text/plain" href="https://example.test/llms.txt"'));
-  assert.ok(withSite.includes('<meta property="og:image" content="https://example.test/imgs/og.png">'));
-  assert.ok(withSite.includes('<meta name="twitter:image" content="https://example.test/imgs/og.png">'));
+  assert.ok(withSite.includes('<link rel="canonical" href="https://example.net/">'));
+  assert.ok(withSite.includes('<meta property="og:url" content="https://example.net/">'));
+  assert.ok(withSite.includes('<link rel="alternate" type="text/plain" href="https://example.net/llms.txt"'));
+  assert.ok(withSite.includes('<meta property="og:image" content="https://example.net/imgs/og.png">'));
+  assert.ok(withSite.includes('<meta name="twitter:image" content="https://example.net/imgs/og.png">'));
   assert.match(withSite, /<meta property="og:image:alt" content="[^"]{40,}">/);
 
   const blocks = [...withSite.matchAll(
     /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
   )].map((match) => JSON.parse(match[1]));
   assert.deepEqual(blocks.map((block) => block["@type"]), ["WebSite", "SoftwareApplication"]);
-  assert.ok(blocks.every((block) => block.url === "https://example.test/"));
+  assert.ok(blocks.every((block) => block.url === "https://example.net/"));
 
   // A publication config already emits its own canonical and social meta; the
   // site-driven set must not double up on it.
@@ -177,8 +177,8 @@ test("renderer identity: discovery metadata comes from site config, never the pa
     dailyBurn,
     profile,
     observedIntervals,
-    site: { domain: "example.test" },
+    site: { domain: "example.net" },
     publication: reservedPublication
   });
-  assert.ok(!withBoth.includes("https://example.test/"));
+  assert.ok(!withBoth.includes("https://example.net/"));
 });

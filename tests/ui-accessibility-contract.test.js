@@ -14,8 +14,16 @@ test("keyboard-scroll regions have names, landmarks, and visible focus treatment
 
   assert.match(index, /id="heatmap"[^>]*role="region"[^>]*aria-label="Daily token burn heatmap\. Use arrow keys to scroll the calendar\."[^>]*tabindex="0"/);
   assert.match(index, /class="table-wrap"[^>]*role="region"[^>]*aria-label="Recent daily records table\. Use arrow keys to scroll\."[^>]*tabindex="0"/);
+  // The drivers list scrolls on its own (.mix-layout > .drivers sets overflow-y),
+  // so it needs the same treatment. A live axe scan caught this one in 2026-09
+  // after the contract test had asserted only the heatmap and the tables.
+  assert.match(index, /id="drivers"[^>]*role="region"[^>]*aria-label="Burn drivers list\. Use arrow keys to scroll\."[^>]*tabindex="0"/);
   assert.match(records, /class="table-wrap records-table-wrap"[^>]*role="region"[^>]*aria-label="Latest active days table\. Use arrow keys to scroll\."[^>]*tabindex="0"/);
-  assert.match(styles, /\.heatmap:focus-visible,\s*\.table-wrap:focus-visible\s*\{[\s\S]*outline: 2px solid var\(--cyan\)/);
+  assert.match(styles, /\.heatmap:focus-visible,\s*\.drivers:focus-visible,\s*\.table-wrap:focus-visible\s*\{[\s\S]*outline: 2px solid var\(--cyan\)/);
+
+  // A labelled div needs a role for the label to be exposed; axe flags the
+  // bare aria-label as prohibited otherwise.
+  assert.match(index, /class="range-panel" role="group" aria-label="Time range"/);
 });
 
 test("freshness groups retain visually unlabeled provider columns with accessible empty states", async () => {

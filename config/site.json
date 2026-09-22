@@ -18,5 +18,28 @@
   "pages_enabled": true,
   "pages_verified": null,
   "default_range": "all",
-  "note_default_range": "The page opens on the whole record rather than the trailing year, because the synthetic rows sit in a fixed past year. Remove this key or set it to 365 for a live record."
+  "note_default_range": "The page opens on the whole record rather than the trailing year, because the synthetic rows sit in a fixed past year. Remove this key or set it to 365 for a live record.",
+  "note_links": "Footer routes for the served page. Like the domain above, these name a public location, so they live here rather than in src/index.html: a build with no site config renders no footer. An agent landing on the dashboard needs a way out of it, to the source, to the contract the data obeys, and to a person.",
+  "links": [
+    {
+      "label": "Source",
+      "href": "https://github.com/snapsynapse/delegated-watch"
+    },
+    {
+      "label": "Data contract",
+      "href": "https://github.com/snapsynapse/delegated-watch/blob/main/DATA_CONTRACT.md"
+    },
+    {
+      "label": "Privacy",
+      "href": "https://github.com/snapsynapse/delegated-watch/blob/main/PRIVACY.md"
+    },
+    {
+      "label": "Report an issue",
+      "href": "https://github.com/snapsynapse/delegated-watch/issues"
+    },
+    {
+      "label": "llms.txt",
+      "href": "/llms.txt"
+    }
+  ]
 }

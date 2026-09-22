@@ -3,8 +3,13 @@ All notable changes to this project are documented here. Format follows [Keep a 
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
 ### Added
+- A footer of routes off the page, driven by `config/site.json`: source, data contract, privacy, issues, and `llms.txt`. A build without a site config renders none.
 - Social card art at `imgs/og.png` and `docs/imgs/og.png`, referenced from the page's OpenGraph, Twitter, and structured-data metadata.
 - Issue and pull request templates under `.github/`.
+
+### Fixed
+- The burn drivers list scrolls on its own but was not keyboard reachable, and the time-range panel carried an `aria-label` with no role. Found by a live axe-core scan on 2026-09-22; both are now asserted by the accessibility contract test.
+- Social card art carried EXIF and text metadata chunks, which the candidate verifier rejects for any published image.
 
 ## [0.1.0] - 2026-09-22
 ### Added

@@ -48,7 +48,7 @@
           Sub-year ranges are deliberately absent: the rolling calendar makes
           them redundant. "all" shows the history the trailing year hides.
         -->
-        <div class="range-panel" aria-label="Time range">
+        <div class="range-panel" role="group" aria-label="Time range">
           <button class="range-button active" data-range="365" type="button" aria-pressed="true">1y</button>
           <button class="range-button" data-range="all" type="button" aria-pressed="false">all</button>
         </div>
@@ -154,7 +154,7 @@
           </div>
           <div class="mix-layout driver-mix">
             <svg id="driverDonut" class="donut donut-large" role="img" aria-label="Burn driver mix donut chart"></svg>
-            <div id="drivers" class="drivers"></div>
+            <div id="drivers" class="drivers" role="region" aria-label="Burn drivers list. Use arrow keys to scroll." tabindex="0"></div>
           </div>
         </article>
         <article class="panel">
