@@ -24,8 +24,15 @@ These are structural, not gaps waiting on an extractor. They are restated from `
 - Local inference not routed through a capture. A model run directly, through a desktop app, or through a third-party client passes through no wrapper that reads its counters.
 - Deleted or rotated logs. Once retention or a reinstall removes a transcript, the counters it held exist nowhere else.
 ## The surface register
-Status column meanings: **Shipped** means an extractor or capture is in this release. **Documented** means the dedupe convention is specified in `DATA_CONTRACT.md` and an extractor can be written against it. **Recognized** means the dashboard has a label for the source id but the repository asserts nothing about what that surface exposes. **Structural** means the class above applies and no extractor can change it.
-Recognized is not a claim of queryability. It is the honest statement that the source id is in the vocabulary and nobody has verified the surface. Treat a Recognized row as unassessed.
+Status column meanings, strongest first. **Shipped**: an extractor or capture is in this release. **Documented**: the dedupe convention is specified in `DATA_CONTRACT.md` and an extractor can be written against it. **Reported**: secondary research says what the surface exposes, and nobody here has confirmed it against the product. **Recognized**: the dashboard has a label for the source id and the repository asserts nothing at all. **Structural**: a class above applies and no extractor can change it.
+Reported and Recognized are both open questions, differing only in whether anything has been read about the surface. A Reported row carries a date, because vendor reporting changes and a claim about it goes stale without announcing itself. Neither is a claim of queryability.
+### The second axis: where the counter comes from
+Recovery state says whether a figure can exist. It does not say how much to trust it. The receipt schema's `authority` field carries that separately, as `provider`, `tool`, `reconstructed`, or `estimated`, and evidence precedence runs in that order. Four sources can all be `exact` and still not be equally authoritative:
+- A **provider's own response**, returning usage alongside the completion. Highest authority, and the only one that is contemporaneous with the request.
+- A **cloud billing or service telemetry export**, authoritative for consumption and usually coarser than one request.
+- A **gateway or observability record**, authoritative for everything that traversed it and silent about everything that did not.
+- A **client-side reconstruction**, re-tokenizing content the surface never counted. Honest as an estimate, never as a provider figure.
+Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 | Source id | Surface | Best achievable state | Status | Basis |
 |---|---|---|---|---|
 | `ollama` | Local inference relayed through the shipped capture | Exact | Shipped | `scripts/ollama-capture.mjs`; counters come from the response, one receipt per call |
@@ -33,15 +40,19 @@ Recognized is not a claim of queryability. It is the honest statement that the s
 | `perplexity_api` | Perplexity API | Exact | Documented | `DATA_CONTRACT.md` dedupe key: the API response's own id |
 | `typesafe_api` | TypeSafe API | Exact | Documented | `DATA_CONTRACT.md`: no request id exposed, so receipts key on a SHA-256 of the canonical response |
 | generic | Any source exposing a cumulative snapshot | Exact | Documented | `DATA_CONTRACT.md` `snapshot_key` dominance rules |
-| `claude_api`, `openai_api` | Hosted provider APIs and organization usage endpoints | Exact | Recognized | Label only. An organization usage API also needs a reconciliation verdict against client-side transcripts for the same account |
-| `codex`, `kilo`, `snapdev` | IDE and agent surfaces | Recognized | Recognized | Label only |
-| `chatgpt`, `claude_chat`, `claude_cowork`, `claude_design`, `gemini`, `grok`, `perplexity_chat` | Consumer chat products | Recognized | Recognized | Label only. Whether each exposes a counter is unverified here; a chat surface with no per-message counter is Dates only at best |
-| `qwen_local`, `llama_local`, `gemma_local`, `deepseek_local`, `gpt_oss` | Local models | Exact when relayed through a capture, otherwise Unrecoverable | Recognized | Label only. The state is decided by whether the call passes through a capture, not by the model |
+| `claude_api`, `openai_api` | Hosted provider APIs | Exact | Reported (2026-09-22) | Secondary research: both return per-request usage, including cache accounting, and both expose an organization usage or cost report. An organization usage API also needs a reconciliation verdict against client-side transcripts for the same account. Unconfirmed here |
+| n/a | Gemini, Vertex, xAI APIs | Exact | Reported (2026-09-22) | Secondary research: per-request usage metadata. No source id yet |
+| n/a | Azure OpenAI, Bedrock | Exact for consumption, coarser per request | Reported (2026-09-22) | Secondary research: cloud billing and service telemetry are authoritative for consumption; per-request token detail generally needs client-side or gateway instrumentation |
+| n/a | Gateways and observability layers: LiteLLM, OpenRouter, Helicone, Langfuse | Exact for everything that traversed them | Reported (2026-09-22) | Secondary research: request-level records with a stable identity, covering every provider behind the layer and nothing that bypassed it. Highest-yield extractor target per `ROADMAP.md` item 5 |
+| `codex`, `kilo`, `snapdev` | IDE and agent surfaces | Unassessed | Recognized | Label only |
+| `chatgpt`, `claude_chat`, `claude_cowork`, `claude_design`, `gemini`, `grok`, `perplexity_chat` | Consumer chat products | Dates only, pending evidence of a counter | Reported (2026-09-22) | Secondary research: consumer subscriptions generally report quotas, message windows, or credits rather than authoritative token totals. That makes Dates only the working assumption and Exact the claim requiring evidence, which inverts the burden of proof for this row group. Unconfirmed per product |
+| n/a | Seat-metered assistants: GitHub Copilot, Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Dates only | Reported (2026-09-22) | Secondary research: admin analytics report seats, active users, and feature usage. Underlying token counts are generally not exposed to a subscriber |
+| `qwen_local`, `llama_local`, `gemma_local`, `deepseek_local`, `gpt_oss` | Local models | Exact when relayed through a capture, otherwise Unrecoverable | Recognized | The state is decided by whether the call passes through a capture, not by the model. llama.cpp, LM Studio, MLX, and vLLM each expose per-call counters and none has a capture yet |
 | n/a | Provider-side search and research steps | Unrecoverable | Structural | Per-call marker only |
 | n/a | Image and video generation services | Unrecoverable | Structural | No token accounting unit |
 | n/a | Deleted or rotated logs | Unrecoverable | Structural | Evidence destroyed |
 ### Reading this table honestly
-Every Recognized row is an open question, not a promise. The repository ships one capture. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
+Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships one capture. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
 If you verify a surface's real behaviour, open a pull request that moves its row and cites how you established it. A row promoted without evidence is the failure this project exists to prevent.
 ## Adding a surface
 1. Establish which state the surface can reach, using the four questions above.

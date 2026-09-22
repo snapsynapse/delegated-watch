@@ -65,6 +65,8 @@ Every command below is documented at the top of its script.
 - `npm run test`: run the test suite against synthetic fixtures.
 - `npm run validate`: validate the dataset file against the schema.
 - `npm run verify:candidate`: check an assembled candidate directory against the inventory file.
+## Roadmap
+What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
 0.1.0, first public release. Provider-specific extractors, the scheduled automation that runs a private pipeline unattended, and any real usage data are deliberately excluded. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Attribution
