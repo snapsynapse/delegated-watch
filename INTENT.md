@@ -23,10 +23,22 @@ Out of scope:
 - A backend. The dashboard is a static page over one JSON file.
 - Any scoreboard framing, or a chart that cannot change the next decision.
 - Centralizing raw logs anywhere, including in this repo.
+## Conformance philosophy
+N/A because this repository is a product, not an open specification. It defines no conformance ladder for third parties. Its own claims are checked by the `eval:*` commands in `package.json`, which any clone can run.
 ## Admission criteria for changes
 A change is admissible when it runs on canonical Node 24 LTS or the verified-compatible Node 26 line, `npm test` passes, `npm run validate` passes, and every configured `eval:*` command passes. A change to a design invariant above is recorded in this document before the code changes.
+## Relationships to other PAICE standards
+Non-binding. The repository adopts no PAICE standard as a conformance target today.
+- HardGuard25: not adopted. The dataset is token-denominated but publishes no budget or limit metadata for LLM consumers, so the adopt-when condition does not hold.
+- Graceful Boundaries: not applicable. There is no API or MCP surface, so there is no agent-facing refusal path to format.
+- GuideCheck: not applicable. The site publishes no `assistant-guide.txt`.
+- EveryAILaw: not cited. The published surface carries synthetic demonstration data and processes no one's personal record, so no live AI-regulation obligation attaches to it.
+- AI Posture: not published. Publication is opt-in and no assertion has been elected for this subject.
 ## Exceptions to Repo Standards
 - No `sitemap.xml`, and no `Sitemap:` line in `docs/robots.txt`. The served tree is a single page; a sitemap would restate the canonical URL and nothing else. `docs/llms.txt` records the same decision for agent readers.
+- Accessibility gate is a source-contract test, not an axe run (2026-09-22). `tests/ui-accessibility-contract.test.js` asserts the accessible names, landmark roles, and visible focus treatment of every keyboard-scrollable region, and runs on every CI job. It is deterministic and blocking, which an axe scan of a single static page adds little to. The portfolio acceptance bar remains no major findings; this exception records the evidence form, not a lower bar. Revisit if the page gains interactive state beyond keyboard scrolling.
+- No `llms-full.txt` at the site root (2026-09-22). `docs/llms.txt` inlines what a reader needs about the site rather than only linking out, which is the comprehensiveness criterion the hygiene matrix makes the OPTIONAL carve-out conditional on.
 
 ## Changelog
-- 0.1.0: first public release of this candidate tree.
+- 2026-09-22: added Conformance philosophy and Relationships sections to complete the nine-section template; recorded the accessibility-evidence and `llms-full.txt` exceptions from the repo-standards walk.
+- 2026-09-22 (0.1.0): first public release of this candidate tree.

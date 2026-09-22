@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
-## [0.1.0]
+## [0.1.0] - 2026-09-22
 ### Added
 - First public release of the candidate tree: receipt schema v2, a deterministic importer with cutoff, no-decrease, settled-entry, exclusion, and reconciliation gates, and a single normalized dataset file.
 - Static dashboard build and a loopback-only local dev server that serve the same self-contained page.

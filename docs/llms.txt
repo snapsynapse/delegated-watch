@@ -1,24 +1,63 @@
 # Delegated.watch
 
-> Account-wide record of AI work delegated to models, across every provider, surface, and machine. Token-denominated, person-scoped, static.
+> A local-first record of the work you delegate to AI models, counted in tokens,
+> honest about what it cannot see. This file is comprehensive: it inlines what a
+> machine reader needs, rather than only pointing at the repository.
 
-Delegated.watch is a static dashboard over one JSON file. It counts inference
-requests and tokens for delegated AI work across providers, interaction
-surfaces, and machines, including local inference. Raw logs never enter the
-repository; only scrubbed aggregates are committed.
+Updated: 2026-09-22
 
-The published page at https://delegated.watch/ carries synthetic demonstration
-data, not a record of anyone's actual usage.
+## What this is
 
-## Pages
-- [Dashboard](https://delegated.watch/): the served page.
+Extractors and captures read provider logs and usage APIs read-only and emit
+receipt JSONL. A deterministic importer merges those receipts into one
+normalized JSON file, aggregated to one scrubbed row per day per source. A
+static page renders that file. Token counts are the unit; delegated work is the
+subject. There is no backend.
+
+## What the published page shows
+
+The page at https://delegated.watch/ carries invented demonstration data. It is
+not a record of anyone's actual usage, and publishing a personal record is a
+separate decision that has not been made. Treat every figure on it as synthetic.
+
+## Design invariants
+
+1. Absence of evidence is never reported as zero usage. A source with no
+   coverage for a period is absent, not empty.
+2. Fidelity is declared per source entry as `exact` or `estimated`. Placeholder
+   data may not exist in committed data.
+3. Each inference request is counted once, deduped on a stable request id, and
+   the most authoritative exact counter wins.
+4. Raw logs never enter the repository. Only scrubbed aggregates are committed.
+   Evidence describes a work family or review source, never prompt text,
+   customer data, private URLs, secrets, or transcripts.
+5. Cache and reasoning token treatment is explicit and consistent across every
+   extractor. Cache reads are excluded from headline counts.
+6. A shared account or quota does not imply shared local history. Coverage
+   states the machine, account, surface, and interval it represents.
+7. Provider or model identity and interaction surface are separate dimensions.
+8. Personal values live in configuration, not in code.
+9. Extraction is idempotent and read-only against every source it touches.
+10. Every input is interrogated before it is trusted. Does not exist and cannot
+    be read are different findings, and only the first is evidence of absence.
+
+## Out of scope
+
+Cost modeling, pricing tables, budgets, and spend alerts: tokens are the unit
+and dollars are a separate concern. A backend. Any scoreboard framing.
+Centralizing raw logs anywhere, including in the repository.
 
 ## Source
-- [Repository](https://github.com/snapsynapse/delegated-watch): scripts, data contract, and evaluation harness.
-- [Data contract](https://github.com/snapsynapse/delegated-watch/blob/main/DATA_CONTRACT.md): the shape and fidelity rules every source entry obeys.
-- [Intent](https://github.com/snapsynapse/delegated-watch/blob/main/INTENT.md): design invariants and scope boundaries.
-- [Privacy](https://github.com/snapsynapse/delegated-watch/blob/main/PRIVACY.md): what is and is not published.
 
-## Notes
-- No sitemap.xml. The site is a single page; the sitemap would restate the
+- Repository: https://github.com/snapsynapse/delegated-watch
+- Data contract: https://github.com/snapsynapse/delegated-watch/blob/main/DATA_CONTRACT.md
+- Intent and exceptions: https://github.com/snapsynapse/delegated-watch/blob/main/INTENT.md
+- Privacy: https://github.com/snapsynapse/delegated-watch/blob/main/PRIVACY.md
+- License: MIT
+
+## Notes for agents
+
+- No `sitemap.xml`. The site is a single page; a sitemap would restate the
   canonical URL and nothing else.
+- No `llms-full.txt`. This file is the comprehensive artifact.
+- `docs/robots.txt` permits all major AI and SEO crawlers explicitly.
