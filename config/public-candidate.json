@@ -9,6 +9,7 @@
   },
   "producer_files": [
     ".node-version",
+    "SURFACES.md",
     "scripts/apply-source-entry-exclusions.js",
     "scripts/assemble-public-candidate.js",
     "scripts/build-evidence-manifest.js",
@@ -54,6 +55,7 @@
     "src/records.js",
     "src/styles.css",
     "tests/accepted-evidence.test.js",
+    "tests/assistant-guide.test.js",
     "tests/ci-workflow.test.js",
     "tests/csv-parity.test.js",
     "tests/dashboard-model.test.js",
@@ -115,7 +117,9 @@
     "docs/imgs/og.png": "candidate/docs/imgs/og.png",
     "imgs/og.png": "candidate/imgs/og.png",
     "imgs/social-preview.png": "candidate/imgs/social-preview.png",
-    ".depot/workflows/ci.yml": "candidate/.depot/workflows/ci.yml"
+    ".depot/workflows/ci.yml": "candidate/.depot/workflows/ci.yml",
+    "docs/.well-known/assistant-guide.txt": "candidate/docs/.well-known/assistant-guide.txt",
+    "docs/.well-known/assistant-guide-manifest.txt": "candidate/docs/.well-known/assistant-guide-manifest.txt"
   },
   "overlay_globs": {
     "fixtures/receipts/*.jsonl": "candidate/fixtures/receipts/"
@@ -158,7 +162,8 @@
       "ATTRIBUTION.md",
       "package.json",
       "config/site.json",
-      "docs/index.html"
+      "docs/index.html",
+      "docs/.well-known/assistant-guide.txt"
     ],
     "Snap Synapse": [
       "LICENSE",
@@ -169,7 +174,8 @@
       "config/site.json",
       "docs/index.html",
       "scripts/build-landing.js",
-      "src/landing.html"
+      "src/landing.html",
+      "docs/.well-known/assistant-guide.txt"
     ],
     "snapsynapse": [
       "README.md",
@@ -185,7 +191,10 @@
       "docs/index.html",
       "src/landing.html",
       "scripts/build-landing.js",
-      "docs/demo/index.html"
+      "docs/demo/index.html",
+      "docs/.well-known/assistant-guide.txt",
+      "SURFACES.md",
+      "docs/.well-known/assistant-guide-manifest.txt"
     ],
     "Nate B. Jones": [
       "README.md",
@@ -216,7 +225,10 @@
     "https://elsewhere.invalid/",
     "https://example.invalid/",
     "http://www.w3.org/2000/svg",
-    "http://www.sitemaps.org/schemas/sitemap/0.9"
+    "http://www.sitemaps.org/schemas/sitemap/0.9",
+    "https://guidecheck.org/",
+    "https://sam-rogers.com/ai-usage/",
+    "https://registry.npmjs.org"
   ],
   "reserved_identities": {
     "note": "Every identity in synthetic data and fixtures comes from this list. The verifier fails on any other origin, alias, or username in public/data or fixtures.",
@@ -260,24 +272,26 @@
     ".gitignore": "08db4417d878b7f552bd7e7a06052e154a91260315438f2a56b48bf4eaf0727d",
     ".node-version": "55075b5ec4e8b31936cbbc282b8829116d1fd48f2f2f1856dee592a6650700ce",
     "ATTRIBUTION.md": "1a8a261895e3b9543aaa7e3a60d3a3445000feecd10d6aaec4193ab7bd82a484",
-    "CHANGELOG.md": "74c4c87e667b4c0ab7452e1a577ed82305f1ba16c37f10d58dfe3e1433493aa0",
+    "CHANGELOG.md": "a7bfd3ccb541a2b5d73813635588802fb962522327925ec218cb0b060072c1c4",
     "config/claude-reconciliation.json": "c28d136d6dcc6892e9e4931096a1b66b8c2dca032e3ee29221c5d7a9e7a327e1",
     "config/known-activity.json": "a4ef448cf04ce3505117fb9e82b4d6aad37eb495923dad692c7dc071467e112a",
     "config/observed-intervals.json": "cd2d8ffbd8309d4748385f0bb0fbdbd5766a524b02fcea4f911eeadf23db03b3",
     "config/profile.json": "5bc02e6618189bccfd2440041e1283aacd27dd45a8c0eb60dc550e1182afee2f",
     "config/settled-source-entries.json": "db42b036b20ad9eba7f0915ac2ecd23d534d5c7d9c02b57133aeddfef8ed7641",
-    "config/site.json": "7418c66c345f758abbe57ef0b7a6c93ceb5a2fd024ad26ba807195adb97a0d27",
+    "config/site.json": "cc2a54abc99fdaf7e1c357d2e89b90044d4f7be62ecd6d59996fc5e91d1b1275",
     "config/source-entry-exclusions.json": "cf713049f177b7ed0b186cc525ad8483a6a325dd14c50146a8f2f7003de52752",
     "CONTRIBUTING.md": "b2c6cf014577bef87677a5ac0e29c89547d7db37492d325c67b0c7be924a47c4",
     "DATA_CONTRACT.md": "ef3547ba0ef83d01576295310e993272698361a02a17d460b6f2ea42ef0993f6",
     "docs/.nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/.well-known/assistant-guide-manifest.txt": "a80af893e5c4c6c84159204a8354237a72e261cf4652f3dbb24ac2e7973f834e",
+    "docs/.well-known/assistant-guide.txt": "6d3d5fa55102d05ad294abaf30184526e4963c6a9c9d05b2cd58f76f6857a2a7",
     "docs/404.html": "242836fe83077b04d527633a1bf4841543359cb16127a8e4c6e1d95de3ef70b1",
     "docs/CNAME": "c12d40b2a417db5f025750c69fc197b8547703b3f3c4a07ff09c0e76e2848d76",
     "docs/demo/index.html": "4a6babf2559ca270b51b5b00fc06cb0b237ec036212eef3835daad4375b20e9d",
     "docs/favicon.svg": "5fd2551b12d4b2196e29188a8db125cdec2ec62193158f7fdc3dd7e9edd5ee4e",
     "docs/imgs/og.png": "4a24c0f9936a994ed61a0bf0af483f356d1bfbeaab106a98623cd87c6032e836",
-    "docs/index.html": "7b671ad024b41d16fdc2c79e40de1fbfc9b54155c23e7e4ef9f26bfdb2547901",
-    "docs/llms.txt": "4d8b5605d91ac7c54f01addf8c532f6ae5bcb53d808a2568713b3b0c86a985c1",
+    "docs/index.html": "45d866f31bb1a7197a47187e9232ac0389148cb41e34372ba639b6361becb182",
+    "docs/llms.txt": "ecc50ebb8b4e3680f0d239eabff26811f92fc7a2e459b04a732b84474db6d587",
     "docs/robots.txt": "19d8f69cd94a2f99c73e1b8d44c80ebe07f9ecbaee429e840af35e1883790026",
     "docs/screenshot.png": "67c4edd4f09796b57599833991f5f5f1a2e7bd734f26ef12e7ece50afe468e4e",
     "docs/site.webmanifest": "60cc0d0474f1d2d10afa81d196eb18d563daedc9cd6f2cb96780debe57b46dc8",
@@ -288,18 +302,18 @@
     "fixtures/receipts/regression.jsonl": "ed2404b9c512e284204b7698dd9663fe65d62e23aa6a70fe58715f2517388942",
     "imgs/og.png": "4a24c0f9936a994ed61a0bf0af483f356d1bfbeaab106a98623cd87c6032e836",
     "imgs/social-preview.png": "a5ab1c647b068c58d20cf4cbdf6c2e95131633b1ebb8ffd42b41d54045c99b8c",
-    "INTENT.md": "f28469508530746309df51e33a172ebfc6bb2a3727512a8e46528fe7bf7473a8",
+    "INTENT.md": "8eeeca34a860ea3ef6f89e1fda2fe724a412fd917651aa6345b7e218a6f6defa",
     "LICENSE": "da18c017e982945dadff968bd4c86a2c574a28e41d9d3244b7609154ff7a179d",
     "package.json": "c4d3b21d5b7258b3458d8f1d3cb01a9e8d7166d76964394be99e38c0e0d24dda",
     "PRIVACY.md": "b65bf909af677cc2aefbebc33788da15d3a810618e6ce84e50de385b0b58bf52",
     "public/data/daily-burn-detail.csv": "62ebfbdb66baf9c512b189438f4385facec1923daaea6f0950748f93827ec6c0",
     "public/data/daily-burn.csv": "f7766f710cf72c4f958d0c89dbcf994f1c4ac4a39ff75f796d6748b6dc3d81dd",
     "public/data/daily-burn.json": "c10cf9f6b0cd2ba17e0c784a52e62a03d1d042283506cb0c0fe2011201103678",
-    "README.md": "357534a652e725c90a54a5406264f3ee4831e4ea8388ef3c530d6409a8956cbf",
+    "README.md": "1445caea3b13093e0fc610158bf04fabda874d6143abf0c8fa1671df993c0f1b",
     "scripts/apply-source-entry-exclusions.js": "fbee070ab873cc8655cdc3dae84470fe6981a3c65edafffd7d1db616265e3849",
     "scripts/assemble-public-candidate.js": "1d53be9f1eb6e9e560356163001bdee6e5e124c18d8a3a894613d8ac12e8efcb",
     "scripts/build-evidence-manifest.js": "c03fb3919103eacdb6b7dbf9025692e29d451a903b79425331cd8cf03b7bf046",
-    "scripts/build-landing.js": "43c78c64b06692fe661671e9ef2faf85fe5bb34827dbcdac2a2d73b3e4d581d6",
+    "scripts/build-landing.js": "1785d27294ff37fc79d2a58cc0041169a00d28dfa46be4bcf51fd6bb9d82d7fb",
     "scripts/build.js": "01b853cbb0a83de910b626028f1994d8bf5f0c79bc93c79140667e4a355b80e2",
     "scripts/check-runtime.js": "14a4f075751acd1cf7c692cd863815502b261e07e4e97d7410a85da711e83ca4",
     "scripts/coverage-report.js": "80697f5ca075e8c51c47cee09d9654695dbbbd1d07160b71dbbf9f8cd9705e93",
@@ -337,11 +351,13 @@
     "src/app.js": "afda8c1308e8ee58b5e5a12e888da6cad4949792cd5aaecd1daaae798328ce1d",
     "src/dashboard-model.js": "e83329cf4e49d4e0165b89719b6570d4ca0cd432a19069fb46b24c0e2604f581",
     "src/index.html": "732fe50f327345e01881b623a28569a0771fa81f07193912b76c25d4b4ab2bd1",
-    "src/landing.html": "9eb85699a66f1b3a3e8f97af493e9c9429579a96226591cf360002664fa5d777",
+    "src/landing.html": "178a5bf75db0ae476134d69324241e7f6157fd6777f64d0e61f8d60050c46d9c",
     "src/records.html": "8cfbf545df683ab18c17679fd08316718769bed34cfbd5770f25033d66a558f7",
     "src/records.js": "084ddff1dc56c3f9c257a61f4fc335ddc22404a4bcb97e75aebb9c21f52540f7",
     "src/styles.css": "944fb32356743a6e4465f2c30c39ce9c8ab0d921431208a7fb90d30eb67c89a4",
+    "SURFACES.md": "ff30d0a51aac273cbf06e563d63c954577fd7d8e7cf1e2348540fb070a26c9f1",
     "tests/accepted-evidence.test.js": "3380a7591775ee4d8f903a322d52248538c985442209da041b266101a28b41df",
+    "tests/assistant-guide.test.js": "3f3a03584492d6909030c199ec4eb989ed88f5d4b69c5c054944fcf9ae1a955a",
     "tests/ci-workflow.test.js": "bcf12466ea3b6ec629f0f364691a9967e669bac380522c050d20d63c07efb389",
     "tests/csv-parity.test.js": "356b3a9f3df2142b2d7b60fcdff317e9662cb1de20df47c67d6904f68efa7c2d",
     "tests/dashboard-model.test.js": "3f38f2396b0bc86a29a8a76fbf5246e7968822e34a1b8ec0c01aa17fb27fd71a",

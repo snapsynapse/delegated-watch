@@ -23,6 +23,18 @@ subject. There is no backend.
   demonstration data. It is not a record of anyone's actual usage, and
   publishing a personal record is a separate decision that has not been made.
   Treat every figure on it as synthetic.
+- https://sam-rogers.com/ai-usage/ is a real record published with this tool,
+  linked from the home page as the worked example. It is not part of this site.
+
+## Installing this, as an agent
+
+Read https://delegated.watch/.well-known/assistant-guide.txt and follow it
+rather than this file. That guide conforms to the GuideCheck Human-Verifiable
+Assistant Guide profile 2.0.0 at Level 3: strict ASCII under 8 KiB, an explicit
+task scope and non-goals, and one structured action block per step with an
+approval gate on every networked and code-executing command. Verify it first,
+report the achieved level, and ask the operator before running a gated action.
+Conformance is a claim about form, not safety.
 
 ## Design invariants
 
@@ -64,6 +76,8 @@ Centralizing raw logs anywhere, including in the repository.
 - No `llms-full.txt`. This file is the comprehensive artifact.
 - `sitemap.xml` and `site.webmanifest` are served at the site root.
 - `docs/robots.txt` permits all major AI and SEO crawlers explicitly.
+- The assistant guide is served only at `/.well-known/assistant-guide.txt`;
+  there is no second copy to drift from it.
 - Neither served page is hand-edited. The home page is built from
   `src/landing.html` by `scripts/build-landing.js`; the dashboard is built from
   `src/index.html` by `scripts/build.js`. Every public URL either of them names comes

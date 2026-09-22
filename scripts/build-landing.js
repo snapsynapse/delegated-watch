@@ -32,7 +32,9 @@ for (const [path, value] of [
   ["landing.author_url", landing?.author_url],
   ["landing.date_published", landing?.date_published],
   ["landing.date_modified", landing?.date_modified],
-  ["landing.version", landing?.version]
+  ["landing.version", landing?.version],
+  ["landing.live_example", landing?.live_example],
+  ["landing.live_example_label", landing?.live_example_label]
 ]) {
   if (!value) throw new Error(`${CONFIG}: ${path} is required to build ${OUTPUT}`);
 }
@@ -42,9 +44,9 @@ const repo = site.links.find((link) => link.label === "Source")?.href;
 if (!repo) throw new Error(`${CONFIG}: links needs a "Source" entry naming the repository`);
 
 const TITLE = "Delegated.watch";
-const HEADLINE = "Delegated.watch: a local-first record of delegated AI work";
+const HEADLINE = "Delegated.watch: every model, every surface, all of it";
 const DESCRIPTION =
-  "A local-first record of the work you delegate to AI models, counted in tokens. Unknown is never zero: a day with no recovered evidence is absent, not empty.";
+  "One local-first record of everything you delegate to AI, across every provider, surface, and machine, for as far back as the evidence survives.";
 const OG_IMAGE_ALT =
   "The Delegated.watch wordmark beside a calendar heatmap of blue cells at varying intensity, with scattered dark cells where no record exists.";
 
@@ -76,7 +78,7 @@ const structuredData = [
     "@context": "https://schema.org",
     "@type": "TechArticle",
     headline: TITLE,
-    alternativeHeadline: "A local-first record of delegated AI work",
+    alternativeHeadline: "One record of delegated AI work across every provider, surface, and machine",
     description: DESCRIPTION,
     inLanguage: "en",
     url: `${origin}/`,
@@ -205,6 +207,8 @@ const values = {
   VERSION: landing.version,
   MODIFIED: landing.date_modified,
   MODIFIED_HUMAN: humanDate(landing.date_modified),
+  LIVE_EXAMPLE: escapeAttr(landing.live_example),
+  LIVE_EXAMPLE_LABEL: escapeAttr(landing.live_example_label),
   AUTHOR: escapeAttr(landing.author),
   AUTHOR_URL: escapeAttr(landing.author_url),
   AUTHOR_LABEL: escapeAttr(landing.author_label ?? "Snap Synapse")

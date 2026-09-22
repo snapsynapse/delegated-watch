@@ -37,6 +37,10 @@
       "href": "https://github.com/snapsynapse/delegated-watch/blob/main/DATA_CONTRACT.md"
     },
     {
+      "label": "Surfaces",
+      "href": "https://github.com/snapsynapse/delegated-watch/blob/main/SURFACES.md"
+    },
+    {
       "label": "Privacy",
       "href": "https://github.com/snapsynapse/delegated-watch/blob/main/PRIVACY.md"
     },
@@ -68,6 +72,10 @@
         "href": "/demo/"
       },
       {
+        "label": "Assistant guide",
+        "href": "/.well-known/assistant-guide.txt"
+      },
+      {
         "label": "Changelog",
         "href": "https://github.com/snapsynapse/delegated-watch/blob/main/CHANGELOG.md"
       },
@@ -75,6 +83,9 @@
         "label": "Revisions",
         "href": "https://github.com/snapsynapse/delegated-watch/commits/main/INTENT.md"
       }
-    ]
+    ],
+    "live_example": "https://sam-rogers.com/ai-usage/",
+    "live_example_label": "Sam Rogers' AI usage",
+    "note_live_example": "A published real record built with this tool, linked from the home page as the worked example. The demo carries synthetic data; this one does not."
   }
 }

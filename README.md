@@ -7,6 +7,9 @@ Literal
 ```bash
 npm run dev
 ```
+## Installing this with an agent
+The install path an assistant follows is `docs/.well-known/assistant-guide.txt`, served at [delegated.watch/.well-known/assistant-guide.txt](https://delegated.watch/.well-known/assistant-guide.txt). It conforms to the [GuideCheck](https://guidecheck.org/) Human-Verifiable Assistant Guide profile 2.0.0 at Level 3: strict ASCII under 8 KiB, an explicit scope and non-goals, and one structured action block per step with an approval gate on every networked and code-executing command. Point an assistant at it rather than at this README, and have it verify the guide and report the level before it runs anything.
+`tests/assistant-guide.test.js` asserts the byte profile, the approval gates, and every `exec-sha256` pin on every CI job. A pinned script that changes fails the build, because a stale pin reads as provenance while binding bytes that no longer exist.
 ## Three invariants
 - Unknown is never zero. A day with no recovered evidence is absent from the dataset entirely, not written in as a zero; the dashboard renders the two states differently and the dataset check fails on any row whose total is exactly zero.
 - The day is not counted until it has ended. A row describes a whole calendar day in the configured timezone, so the importer holds back any receipt dated the day still in progress and imports it only once that day has fully elapsed.
@@ -21,6 +24,7 @@ A chain of receipts, one deterministic importer, one JSON dataset, and one stati
 - No cloud sync. Receipts and the dataset live on disk; nothing is uploaded anywhere by any shipped command.
 - No prompt text ever enters the record. Extractors and captures read only counters, identifiers, and timestamps; the schema has no field for prompt or response content.
 ## What it cannot see
+The full surface register, every source id with the recovery state it can reach and the basis for that classification, is in [SURFACES.md](SURFACES.md). It distinguishes four states rather than two: exact, estimated, dates only, and unrecoverable. The classes below are the structural ones, where no extractor can change the answer.
 - Provider-side web search and research steps. These run inside the provider's own infrastructure mid-response, and the client never receives a token count for them, only a per-call marker.
 - Consumer chat surfaces that expose no counter. Some hosted chat interfaces return only rendered text, with no usage figure available at any layer a client can read.
 - Image and video services without a usage ledger. A service billed per generated asset rather than per token has no token counter to capture in the first place.

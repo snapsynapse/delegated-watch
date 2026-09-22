@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <title>Delegated.watch: a local-first record of delegated AI work</title>
-  <meta name="description" content="A local-first record of the work you delegate to AI models, counted in tokens. Unknown is never zero: a day with no recovered evidence is absent, not empty.">
+  <title>Delegated.watch: every model, every surface, all of it</title>
+  <meta name="description" content="One local-first record of everything you delegate to AI, across every provider, surface, and machine, for as far back as the evidence survives.">
   <meta name="keywords" content="token usage, token burn, AI usage tracking, local-first, delegated work, inference receipts, provenance, evidence of absence">
   <meta name="author" content="{{AUTHOR}}">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -234,24 +234,19 @@
     .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
     .btn-primary:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
 
-    .flow {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin: 1.5rem 0 2rem;
-      list-style: none;
-      counter-reset: flow;
+    /* A subheading inside a section, set apart from the body text that follows it. */
+    .lead-in {
+      margin-top: 2.5rem;
+      color: var(--accent);
+      font-size: 1rem;
+      letter-spacing: 0.01em;
     }
-    .flow li {
-      padding: 1rem 1.1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--bg-alt);
-      font-size: 0.88rem;
+    .lead-in:first-of-type { margin-top: 0; }
+    .annotation {
+      font-size: 0.85rem;
       color: var(--text-muted);
+      margin-top: -0.5rem;
     }
-    .flow li strong { display: block; color: var(--text); font-size: 0.95rem; margin-bottom: 0.25rem; }
-    .flow li code { font-size: 0.82em; }
 
     .limits { list-style: none; }
     .limits li {
@@ -287,6 +282,25 @@
 
     .demo-block { text-align: center; max-width: 680px; margin: 0 auto; }
 
+    /* FAQ disclosures. Native details/summary keeps keyboard and screen-reader
+       behaviour without a line of script. */
+    .faq { border-top: 1px solid var(--border); }
+    .faq details { border-bottom: 1px solid var(--border); }
+    .faq summary {
+      cursor: pointer;
+      padding: 1rem 0;
+      font-weight: 600;
+      list-style-position: outside;
+    }
+    .faq summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .faq summary::marker { color: var(--accent); }
+    .faq details > *:not(summary) {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      padding-bottom: 1rem;
+      max-width: 62ch;
+    }
+
     footer {
       border-top: 1px solid var(--border);
       padding: 2.5rem 0;
@@ -310,7 +324,6 @@
       h1 { font-size: 2rem; }
       .hero { padding: 3rem 0 2.5rem; }
       .pillars { grid-template-columns: 1fr; }
-      .flow { grid-template-columns: 1fr; }
       nav .links { display: none; }
       nav .links.mobile-compact { display: flex; gap: 0.75rem; }
       .footer-grid { flex-direction: column; }
@@ -351,9 +364,10 @@
       <span>Delegated.watch</span>
     </a>
     <div class="links mobile-compact">
+      <a href="#scope">Scope</a>
       <a href="#invariants">Invariants</a>
-      <a href="#how">How it works</a>
-      <a href="#limits">Limits</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
       <a href="{{DEMO}}">Demo</a>
       <a href="{{REPO}}" class="gh-star" target="_blank" rel="noopener" aria-label="Star snapsynapse/delegated-watch on GitHub">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -368,21 +382,44 @@
 <main id="main-content">
 <section class="hero">
   <div class="container">
-    <h1>Count the work you delegate.</h1>
-    <p class="subtitle">A local-first record of the work you hand to AI models, counted in tokens, aggregated to one scrubbed row per day per source. No backend, no cost model, no leaderboard.</p>
+    <h1>All of it. Every model, every surface, all the way back.</h1>
+    <p class="subtitle">One local-first record of everything you delegate to AI, counted in tokens, across every provider, every interaction surface, and every machine, for as far back as the evidence survives. Not one vendor's dashboard for the last thirty days.</p>
 {{BYLINE}}
     <p class="hook">Every usage surface shows its own slice and calls it the total. This one will not. A day with no recovered evidence is absent from the dataset, not written in as a zero, because absence of evidence and evidence of absence are different findings and only one of them is a measurement.</p>
 
     <img class="hero-img" src="/imgs/og.png" width="1200" height="630" alt="The Delegated.watch wordmark beside a calendar heatmap of blue cells at varying intensity, with scattered dark cells where no record exists.">
 
     <div class="cta-row">
-      <a href="{{DEMO}}" class="btn btn-primary">See the live demo</a>
-      <a href="{{REPO}}" class="btn btn-secondary" target="_blank" rel="noopener">View the source</a>
+      <a href="#install" class="btn btn-primary">Install it</a>
+      <a href="{{LIVE_EXAMPLE}}" class="btn btn-secondary" target="_blank" rel="noopener">See a real record</a>
     </div>
   </div>
 </section>
 
-<section class="alt" id="invariants">
+<section class="alt" id="scope">
+  <div class="container">
+    <h2>One record, not thirteen dashboards</h2>
+    <p>Every provider already counts your tokens, and every one of them counts only its own. The web app does not know what the IDE extension did. The organization usage API does not know what ran on your laptop last March. A chat product that shows you this month tells you nothing about last year, and a tool you stopped using took its history with it. Thirteen partial answers do not add up to one, because nothing reconciles them and nothing says which parts are missing.</p>
+    <p>Delegated.watch is the reconciliation. One dataset, spanning every dimension the evidence reaches:</p>
+    <div class="pillars">
+      <div class="pillar">
+        <h3>Every provider</h3>
+        <p>Hosted APIs, consumer chat products, IDE extensions, gateways, and local inference. Provider identity and interaction surface stay separate dimensions, because an extension is a surface and the model behind it is a provider.</p>
+      </div>
+      <div class="pillar">
+        <h3>Every machine</h3>
+        <p>Laptop, desktop, server, each account on each. A shared subscription quota does not imply shared local history, so coverage states the machine, account, surface, and interval it represents.</p>
+      </div>
+      <div class="pillar">
+        <h3>All of time</h3>
+        <p>As far back as any log, transcript, or usage API still reaches. Not a rolling window. The record grows backwards as extractors recover history, and a request already counted is never counted twice.</p>
+      </div>
+    </div>
+    <p>The unit is the token, not the dollar, and the record is yours: it lives on your disk, no shipped command uploads it, and publishing any part of it is a separate decision you make deliberately.</p>
+  </div>
+</section>
+
+<section id="invariants">
   <div class="container">
     <h2>Three invariants</h2>
     <p>Ten design invariants govern this repository, recorded in <a href="{{REPO}}/blob/main/INTENT.md" target="_blank" rel="noopener">INTENT.md</a> and changed there before any code changes. Three of them are the reason the record is worth keeping at all.</p>
@@ -406,27 +443,47 @@
   </div>
 </section>
 
-<section id="how">
+<section class="alt" id="install">
   <div class="container">
-    <h2>How it works</h2>
-    <p>A chain of receipts, one deterministic importer, one JSON dataset, and one static page that renders it. An extractor or capture tool reads a provider's own counters and writes a scrubbed receipt carrying a token count, a call count, and a provenance note. Nothing here calls out to a server at read time.</p>
+    <h2>Install</h2>
+    <p>A chain of receipts, one deterministic importer, one JSON dataset, and one static page that renders it. An extractor reads a provider's own counters and writes a scrubbed receipt; the importer merges receipts under the cutoff, no-decrease, and reconciliation gates; the build bakes the result into a page that opens straight from disk. Nothing calls out to a server at read time.</p>
 
-    <ol class="flow">
-      <li><strong>Capture</strong> Read provider logs and usage APIs read-only, idempotently, and emit receipt JSONL.</li>
-      <li><strong>Import</strong> <code>npm run import</code> merges receipts under the cutoff, no-decrease, and reconciliation gates.</li>
-      <li><strong>Dataset</strong> One normalized JSON file, one scrubbed row per day per source. Raw logs never enter the repository.</li>
-      <li><strong>Render</strong> <code>npm run build</code> bakes the dataset into a self-contained page that opens straight from disk.</li>
-    </ol>
+    <h3 class="lead-in">If an assistant is doing the install</h3>
+    <p>Point it at the assistant guide. It is a plain-text file, under 8 KB, that a human can read end to end in a couple of minutes: it states the task scope, the non-goals, and every command as a structured action block with an explicit approval gate. What you review is what the assistant runs.</p>
+<pre><code>Read {{ORIGIN}}/.well-known/assistant-guide.txt
+and follow it. Verify it first and report the level.</code></pre>
+    <p class="annotation">The guide gates every networked and code-executing step behind your approval, and its read-only steps run without one. It refuses to point any command at a real provider account, an API key, or a log store.</p>
 
-    <p>Clone the repository, install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line, and run it. The dev server binds to loopback only.</p>
+    <h3 class="lead-in">If you are doing it yourself</h3>
+    <p>Node 24 (the pinned LTS line) or the verified-compatible Node 26 line. The dev server binds to loopback only.</p>
 <pre><code>git clone https://github.com/snapsynapse/delegated-watch
 cd delegated-watch
+npm ci
 npm run dev</code></pre>
-    <p>The dataset shipped with this release is synthetic demonstration data, not anyone's real usage. Regenerate it with <code>npm run demo:data</code>, and walk the same importer gates a real receipt would face with <code>npm run demo:import</code>. Receipts you write yourself follow the <a href="{{REPO}}/blob/main/DATA_CONTRACT.md" target="_blank" rel="noopener">data contract</a>.</p>
+    <p>That serves the home page and the dashboard over the synthetic dataset shipped with this release. To walk the same importer gates a real receipt would face, run <code>npm run demo:import</code>. To put your own usage in, write receipts to the <a href="{{REPO}}/blob/main/DATA_CONTRACT.md" target="_blank" rel="noopener">data contract</a> and run <code>npm run import</code>. The one reference capture in this release is for local inference through Ollama; it relays a request unchanged and persists only the model identity and the authoritative counters, never the prompt or the generated text.</p>
+
+    <aside class="canonical-note" role="note">
+      <strong>GuideCheck Level 3.</strong> The assistant guide conforms to the
+      <a href="https://guidecheck.org/" target="_blank" rel="noopener">GuideCheck</a>
+      Human-Verifiable Assistant Guide profile 2.0.0 at Level 3: strict ASCII inside the byte
+      and size limits, the full assistant safety contract, and a structured action block with
+      an explicit approval gate for every substantive step. Verified with the reference
+      verifier on 2026-09-22 with zero blocking findings. Check it yourself at
+      <a href="https://guidecheck.org/verify" target="_blank" rel="noopener">guidecheck.org/verify</a>,
+      or with any conformant verifier. Conformance is a claim about form, not about safety:
+      it means you can read the whole instruction surface before an assistant acts on it.
+      Level 4 additionally needs a sidecar manifest and the guide's hash cross-published on an
+      independent control plane. Both are live: a
+      <a href="/.well-known/assistant-guide-manifest.txt">sidecar manifest</a> pins the guide's
+      exact bytes, and a DNS TXT record at <code>_assistant-guide.delegated.watch</code> carries
+      the same hash. The Level 4 claim itself belongs to a fetching verifier, because the
+      reference CLI caps local evaluation at Level 3 and cannot resolve an anchor. This page
+      claims what has been demonstrated.
+    </aside>
   </div>
 </section>
 
-<section class="alt" id="limits">
+<section id="limits">
   <div class="container">
     <h2>What it cannot see</h2>
     <p>Stated here rather than discovered later, because a record that hides its own gaps is worse than no record.</p>
@@ -449,14 +506,54 @@ npm run dev</code></pre>
   </div>
 </section>
 
+<section class="alt" id="faq">
+  <div class="container">
+    <h2>Questions</h2>
+    <div class="faq">
+      <details>
+        <summary>Which surfaces can it actually read?</summary>
+        <p>Four states, not two. <strong>Exact</strong> where the surface exposes an authoritative token counter an extractor can read. <strong>Estimated</strong> where no counter exists but enough content survives to reconstruct one. <strong>Dates only</strong> where activity is evidenced but nothing supports a token figure, so the surface records a bound and never a row. <strong>Unrecoverable</strong> where nothing survives that any client can read, which is recorded as absence rather than as a zero. The full register, surface by surface, with the basis for each classification, is in <a href="{{REPO}}/blob/main/SURFACES.md" target="_blank" rel="noopener">SURFACES.md</a>.</p>
+      </details>
+      <details>
+        <summary>Which ones are permanently out of reach?</summary>
+        <p>Provider-side web search and research steps, which run inside the provider's infrastructure and return a per-call marker rather than a count. Image and video services billed per generated asset, which have no token accounting unit at all. Chat products that expose no counter at any layer a client can read. Local inference not routed through a capture. And anything a retention policy or a reinstall already deleted. These are structural, not gaps waiting on an extractor, and <a href="{{REPO}}/blob/main/SURFACES.md" target="_blank" rel="noopener">SURFACES.md</a> marks them as such.</p>
+      </details>
+      <details>
+        <summary>How much does this release actually ship?</summary>
+        <p>One capture, for local inference through Ollama, plus documented dedupe conventions for several more. Every other source id the dashboard recognizes is exactly that, a label, with the repository asserting nothing about what that surface exposes. The register marks those rows Recognized, which means unassessed. Promoting one takes a verified dependency closure against the store it reads and a test proving an absent source reads as unavailable rather than as a measured zero.</p>
+      </details>
+      <details>
+        <summary>Does any of my data leave the machine?</summary>
+        <p>No shipped command uploads anything. There is no backend and no cloud sync; receipts and the dataset live on your disk. Extractors read provider logs and usage APIs read-only and idempotently. Prompt and response text never enters the record at any point, because the schema has no field for it: extractors read counters, identifiers, and timestamps. Publishing any part of your record is a separate decision you make deliberately.</p>
+      </details>
+      <details>
+        <summary>How far back does the record go?</summary>
+        <p>As far as the evidence survives, which is different for every surface and is not a setting. The record grows backwards as extractors recover history, and a request already counted is never counted twice. A day with nothing recovered stays absent rather than becoming a zero, so a sparse early history reads as a sparse early history rather than as a quiet period.</p>
+      </details>
+      <details>
+        <summary>Why tokens and not money?</summary>
+        <p>Because the conversion is where the lying starts. Prices change, differ per tier, and go stale silently, so a dollar figure attached to a two-year-old row is a guess wearing a number's clothes. Tokens are what the provider counted at the time. There is no unit conversion to a currency anywhere in the schema or the code, by construction rather than as a display flag you could turn back on.</p>
+      </details>
+      <details>
+        <summary>Can I publish mine?</summary>
+        <p>Yes, and it is deliberately not the default. The tool ships as a local unpublished record; publishing takes an explicit public-mode decision that says what is being published and at what resolution. <a href="{{LIVE_EXAMPLE}}" target="_blank" rel="noopener">{{LIVE_EXAMPLE_LABEL}}</a> is a real record published that way, and the <a href="{{DEMO}}">demo on this site</a> is synthetic data rendered by the same build.</p>
+      </details>
+      <details>
+        <summary>How do I add a surface it does not support?</summary>
+        <p>Establish which of the four states the surface can reach, write the extractor read-only and idempotent, key its receipts so the reconciliation rules apply, and prove that an unreadable source is classified rather than swallowed. The steps are in <a href="{{REPO}}/blob/main/SURFACES.md" target="_blank" rel="noopener">SURFACES.md</a>, the receipt schema in <a href="{{REPO}}/blob/main/DATA_CONTRACT.md" target="_blank" rel="noopener">DATA_CONTRACT.md</a>, and the contribution bar in <a href="{{REPO}}/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a>.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
 <section id="demo">
   <div class="container">
     <div class="demo-block">
       <h2>See it running</h2>
-      <p>The demo renders the same static page this repository builds, over synthetic demonstration data. Filter by source, fidelity, and origin; the coverage strip shows which days were recovered and which were never observed.</p>
+      <p>Two places. The demo is this repository's own build over synthetic demonstration data, so every figure on it is invented. The live example is a real record, published deliberately: <a href="{{LIVE_EXAMPLE}}" target="_blank" rel="noopener">{{LIVE_EXAMPLE_LABEL}}</a>, recovered across providers and machines, with exact counters kept distinct from conservative estimates and unrecoverable history left visible as unknown.</p>
       <div class="cta-row">
-        <a href="{{DEMO}}" class="btn btn-primary">Open the demo</a>
-        <a href="{{REPO}}/blob/main/DATA_CONTRACT.md" class="btn btn-secondary" target="_blank" rel="noopener">Read the data contract</a>
+        <a href="{{LIVE_EXAMPLE}}" class="btn btn-primary" target="_blank" rel="noopener">A real record</a>
+        <a href="{{DEMO}}" class="btn btn-secondary">The synthetic demo</a>
       </div>
     </div>
 
