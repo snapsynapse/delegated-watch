@@ -25,5 +25,8 @@ Out of scope:
 - Centralizing raw logs anywhere, including in this repo.
 ## Admission criteria for changes
 A change is admissible when it runs on canonical Node 24 LTS or the verified-compatible Node 26 line, `npm test` passes, `npm run validate` passes, and every configured `eval:*` command passes. A change to a design invariant above is recorded in this document before the code changes.
+## Exceptions to Repo Standards
+- No `sitemap.xml`, and no `Sitemap:` line in `docs/robots.txt`. The served tree is a single page; a sitemap would restate the canonical URL and nothing else. `docs/llms.txt` records the same decision for agent readers.
+
 ## Changelog
 - 0.1.0: first public release of this candidate tree.

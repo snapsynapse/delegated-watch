@@ -1,0 +1,24 @@
+# Delegated.watch
+
+> Account-wide record of AI work delegated to models, across every provider, surface, and machine. Token-denominated, person-scoped, static.
+
+Delegated.watch is a static dashboard over one JSON file. It counts inference
+requests and tokens for delegated AI work across providers, interaction
+surfaces, and machines, including local inference. Raw logs never enter the
+repository; only scrubbed aggregates are committed.
+
+The published page at https://delegated.watch/ carries synthetic demonstration
+data, not a record of anyone's actual usage.
+
+## Pages
+- [Dashboard](https://delegated.watch/): the served page.
+
+## Source
+- [Repository](https://github.com/snapsynapse/delegated-watch): scripts, data contract, and evaluation harness.
+- [Data contract](https://github.com/snapsynapse/delegated-watch/blob/main/DATA_CONTRACT.md): the shape and fidelity rules every source entry obeys.
+- [Intent](https://github.com/snapsynapse/delegated-watch/blob/main/INTENT.md): design invariants and scope boundaries.
+- [Privacy](https://github.com/snapsynapse/delegated-watch/blob/main/PRIVACY.md): what is and is not published.
+
+## Notes
+- No sitemap.xml. The site is a single page; the sitemap would restate the
+  canonical URL and nothing else.

@@ -21,3 +21,7 @@ venv/
 .playwright-mcp/
 handoffs/
 working/
+
+# --- baseline additions (automated audit 2026-09-22) ---
+.search-evidence-private/
+/.perplexity-research/
