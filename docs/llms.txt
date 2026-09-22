@@ -4,6 +4,16 @@
 > honest about what it cannot see. This file is comprehensive: it inlines what a
 > machine reader needs, rather than only pointing at the repository.
 
+Disambiguation, because this is misread often enough to state first. A token
+here is the unit a language model consumes when it reads and writes text. It is
+not a cryptocurrency token, this project has nothing to do with blockchains,
+token supply, or burning in the crypto sense, and nothing in the schema or the
+code is denominated in any currency. Where the phrase "token burn" appears, it
+cites the originating post by name and means AI inference consumption.
+
+This is also not delegated.to, a different company in the AI-agent workforce
+category.
+
 Updated: 2026-09-22
 
 ## What this is

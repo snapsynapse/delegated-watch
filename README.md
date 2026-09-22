@@ -1,5 +1,6 @@
 # Delegated.watch
 A local-first record of the work you delegate to AI models, counted in tokens, that refuses to lower a committed number without a stated reason and is honest about what it cannot see.
+Tokens here are the units a language model consumes reading and writing text. Not cryptocurrency: there is no blockchain, no supply, no burning in that sense, and nothing in the schema or the code is denominated in any currency. Not to be confused with delegated.to, a different company.
 ![Dashboard rendering synthetic demonstration data](docs/screenshot.png)
 The site is at [delegated.watch](https://delegated.watch/); the dashboard above runs at [delegated.watch/demo/](https://delegated.watch/demo/) over synthetic demonstration data.
 Clone the repository, install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line, and run the dashboard. It opens on 127.0.0.1.

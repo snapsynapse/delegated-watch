@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <title>Delegated.watch: every model, every surface, all of it</title>
   <meta name="description" content="One local-first record of everything you delegate to AI, across every provider, surface, and machine, for as far back as the evidence survives.">
-  <meta name="keywords" content="token usage, token burn, AI usage tracking, local-first, delegated work, inference receipts, provenance, evidence of absence">
+  <meta name="keywords" content="LLM token usage, AI token tracking, language model tokens, AI usage tracking, local-first, delegated work, inference receipts, provenance, evidence of absence">
   <meta name="author" content="{{AUTHOR}}">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
   <meta name="theme-color" content="#151515">
@@ -421,7 +421,7 @@
         <p>As far back as any log, transcript, or usage API still reaches. Not a rolling window. The record grows backwards as extractors recover history, and a request already counted is never counted twice.</p>
       </div>
     </div>
-    <p>The unit is the token, not the dollar, and the record is yours: it lives on your disk, no shipped command uploads it, and publishing any part of it is a separate decision you make deliberately.</p>
+    <p>A token here is the unit a language model consumes when it reads and writes, the same unit every provider counts against you. It is not a cryptocurrency, and nothing in this project is denominated in one. The unit is the token, not the dollar, and the record is yours: it lives on your disk, no shipped command uploads it, and publishing any part of it is a separate decision you make deliberately.</p>
   </div>
 </section>
 
@@ -535,7 +535,7 @@ npm run dev</code></pre>
       </details>
       <details>
         <summary>Why tokens and not money?</summary>
-        <p>Because the conversion is where the lying starts. Prices change, differ per tier, and go stale silently, so a dollar figure attached to a two-year-old row is a guess wearing a number's clothes. Tokens are what the provider counted at the time. There is no unit conversion to a currency anywhere in the schema or the code, by construction rather than as a display flag you could turn back on.</p>
+        <p>First, to be unambiguous: these are language model tokens, the units a model consumes reading and writing, not cryptocurrency tokens and not anything with a supply or a market. Nothing here is denominated in a currency of any kind. As for why not dollars: because the conversion is where the lying starts. Prices change, differ per tier, and go stale silently, so a dollar figure attached to a two-year-old row is a guess wearing a number's clothes. Tokens are what the provider counted at the time. There is no unit conversion to a currency anywhere in the schema or the code, by construction rather than as a display flag you could turn back on.</p>
       </details>
       <details>
         <summary>Can I publish mine?</summary>

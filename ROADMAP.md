@@ -34,6 +34,12 @@ Ordered by counter authority times the share of a person's delegated work that s
 5. A gateway, if one is operated, per item 5
 6. Azure OpenAI and Bedrock, where cloud billing is authoritative for consumption and coarse for per-request detail
 Each needs a verified dependency closure against the store it reads and a test proving an absent source reads as unavailable rather than as a measured zero, per `CONTRIBUTING.md`.
+## 9. Self-reported acceptance, ranked below every measured signal
+The dataset already carries `driver`, a reviewed category for what a day's work was, and the dashboard renders burn drivers against a named-work versus attribution boundary. That is the thinnest honest answer to "what did the tokens go to" that survives daily aggregation.
+A person could record, per day per driver, whether the work was accepted. It stays token-denominated, stays a daily aggregate, needs no prompt text, no event store, no gateway, and no backend, which is what separates it from the outcome tracking ruled out below.
+It needs a new `authority` value, `self_reported`, ranked below `estimated`. A person's recollection of whether last Tuesday's work was any good is the weakest evidence this system would hold, and the whole posture is refusing to let weak evidence wear strong clothes. A self-reported figure must never be summed with a measured one, and the dashboard must render the two differently, for the same reason a bound is not a row.
+Unranked against items 1 through 8 until someone wants it. It is listed because it is the one outcome-aware idea that fits inside the boundaries rather than requiring them to move.
+
 ## Decided against, permanently
 Recorded here so they are not re-proposed. Each follows from a scope boundary or an invariant in `INTENT.md`.
 - **Cost fields of any kind**, including a currency amount, a pricing version, or an estimated spend. Tokens are the unit. There is no conversion in the schema or the code, by construction rather than as a display flag.
@@ -42,3 +48,5 @@ Recorded here so they are not re-proposed. Each follows from a scope boundary or
 - **Organization, team, and multi-user fields.** The record is person-scoped. Chargeback and seat reporting are a different product.
 - **Event-level storage.** The dataset is one scrubbed row per day per source. Per-event retention is what raw logs are, and raw logs never enter the repository.
 - **A gateway, proxy, or any other backend**, as architecture. See item 5.
+- **Becoming an observability platform with outcome tracking.** Proposed periodically, and worth writing down once with its costs. The shape is: the delegation is the unit, a record carries intent plus execution trace plus artifact plus outcome, and the headline metric is cost per accepted outcome. It is a good product. It is Langfuse or LangSmith with an outcome column, and building it here means reversing six commitments at once, not adjusting one. Cost per accepted outcome needs a currency, which the scope boundary excludes from the schema and the code. Intent, artifacts, and review decisions need event-level records, excluded above. Prompt and context composition needs prompt content, excluded by invariant 4. Tool calls, file heatmaps, and subagent lineage need runtime instrumentation, which is a backend and which also forfeits the whole-history claim, because intent cannot be recovered from a provider log after the fact. Attribution by customer or team needs multi-user fields, excluded above. Item 9 is the version of this that fits.
+

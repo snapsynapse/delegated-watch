@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
+## [Unreleased]
+### Added
+- An "Adjacent tools and what this is not" section in `INTENT.md`, mapping the five nearby categories (provider billing dashboards, LLM observability platforms, coding-agent analytics, agent-operation dashboards, FinOps tools) and why none is what this repository does. Recorded so the boundary is not re-argued from each new competitive survey. It also names the namespace neighbour `delegated.to`, a live product in the AI-agent workforce category.
+- `ROADMAP.md` item 9: self-reported acceptance per day per driver, needing a new `authority` value ranked below `estimated`. It is the one outcome-aware idea that fits inside the existing boundaries rather than requiring them to move, because it stays token-denominated, stays a daily aggregate, and needs no prompt text, event store, gateway, or backend.
+- A permanent exclusion in `ROADMAP.md` for becoming an observability platform with outcome tracking, with the six commitments it would reverse enumerated rather than gestured at.
+### Changed
+- The home page, `README.md`, and `docs/llms.txt` now state which tokens are meant. A language model's tokens, not cryptocurrency: no blockchain, no supply, no burning in that sense, and nothing denominated in any currency. A research tool misread the project this way, which makes it a documentation defect rather than a reader's error. `llms.txt` says it first, before anything else a machine reads, and also disambiguates from `delegated.to`.
+- Page keywords name LLM tokens explicitly and drop the bare "token burn" phrasing, which is retained only where it cites the originating post.
+
 ## [0.2.0] - 2026-09-22
 ### Added
 - A footer of routes off the page, driven by `config/site.json`: source, data contract, privacy, issues, and `llms.txt`. A build without a site config renders none.
