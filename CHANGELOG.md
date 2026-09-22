@@ -28,9 +28,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - The CI build-reproducibility step hashes both built pages, not only `docs/index.html`.
 - CI moves to Depot CI, which executes `.depot/workflows/ci.yml` directly. The GitHub Actions copy at `.github/workflows/ci.yml` is retained as a `workflow_dispatch` fallback and no longer runs on push or pull request. Both copies drop the `macos-latest` matrix leg and verify on Linux across both Node versions, and both accept `workflow_dispatch` so a run can be fired by hand.
 - The CI workflow tests now assert against both copies rather than the GitHub one alone, and fail if their steps lists drift apart, if they diverge anywhere beyond their triggers and matrix legs, or if anything appears under `.depot/` besides the workflow itself.
-
 - CI runs every eval under `--strict`, so a WARN now fails the build instead of passing unread, and a test asserts the flag stays on each eval step in both workflow copies.
-
 - The served-tree eval checks that every real link in the served HTML resolves to a served file or an existing fragment, that own-domain URLs are all `https` and bare, and that the sitemap lists only canonical-origin URLs. `data-href`, which the page activates at runtime, is deliberately not treated as a link.
 
 ### Fixed

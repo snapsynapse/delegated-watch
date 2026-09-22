@@ -273,7 +273,7 @@
     ".gitignore": "08db4417d878b7f552bd7e7a06052e154a91260315438f2a56b48bf4eaf0727d",
     ".node-version": "55075b5ec4e8b31936cbbc282b8829116d1fd48f2f2f1856dee592a6650700ce",
     "ATTRIBUTION.md": "1a8a261895e3b9543aaa7e3a60d3a3445000feecd10d6aaec4193ab7bd82a484",
-    "CHANGELOG.md": "b61ab1ce2f48c85037064cd7a1473ab9f9f790f4a4537904658786a887ed68db",
+    "CHANGELOG.md": "575ba7b8052021155d6f7a937afebd597b65c1aca7bb4a6664bbb61ca4ca1928",
     "config/claude-reconciliation.json": "c28d136d6dcc6892e9e4931096a1b66b8c2dca032e3ee29221c5d7a9e7a327e1",
     "config/known-activity.json": "a4ef448cf04ce3505117fb9e82b4d6aad37eb495923dad692c7dc071467e112a",
     "config/observed-intervals.json": "cd2d8ffbd8309d4748385f0bb0fbdbd5766a524b02fcea4f911eeadf23db03b3",
