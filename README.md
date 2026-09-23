@@ -74,7 +74,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.2.0. The first public release was 0.1.0, on the same day. Provider-specific extractors, the scheduled automation that runs a private pipeline unattended, and any real usage data are deliberately excluded. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.2.1. The first public release was 0.1.0, on the same day. Provider-specific extractors, the scheduled automation that runs a private pipeline unattended, and any real usage data are deliberately excluded. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution

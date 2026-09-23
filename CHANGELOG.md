@@ -2,6 +2,8 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+
+## [0.2.1] - 2026-09-22
 ### Added
 - An "Adjacent tools and what this is not" section in `INTENT.md`, mapping the five nearby categories (provider billing dashboards, LLM observability platforms, coding-agent analytics, agent-operation dashboards, FinOps tools) and why none is what this repository does. Recorded so the boundary is not re-argued from each new competitive survey. It also names the namespace neighbour `delegated.to`, a live product in the AI-agent workforce category.
 - `ROADMAP.md` item 9: self-reported acceptance per day per driver, needing a new `authority` value ranked below `estimated`. It is the one outcome-aware idea that fits inside the existing boundaries rather than requiring them to move, because it stays token-denominated, stays a daily aggregate, and needs no prompt text, event store, gateway, or backend.
