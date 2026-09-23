@@ -9,6 +9,9 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ### Changed
 - The home page, `README.md`, and `docs/llms.txt` now state which tokens are meant. A language model's tokens, not cryptocurrency: no blockchain, no supply, no burning in that sense, and nothing denominated in any currency. A research tool misread the project this way, which makes it a documentation defect rather than a reader's error. `llms.txt` says it first, before anything else a machine reads, and also disambiguates from `delegated.to`.
 - Page keywords name LLM tokens explicitly and drop the bare "token burn" phrasing, which is retained only where it cites the originating post.
+- `README.md` gives the clone command rather than only saying to clone, and gains a Contributing section pointing at `CONTRIBUTING.md` and `SECURITY.md`.
+### Fixed
+- `SECURITY.md` named 0.1.x as the supported line after 0.2.0 shipped. It now names 0.2.x.
 
 ## [0.2.0] - 2026-09-22
 ### Added

@@ -1,6 +1,6 @@
 # Security
 ## Supported versions
-0.1.x is the only supported line while this project is at its first public release.
+0.2.x is the only supported line. Earlier releases receive no fixes; upgrade to the latest 0.2 release before reporting.
 ## Reporting a vulnerability
 Report privately through GitHub's private vulnerability reporting on this repository, not through a public issue: https://github.com/snapsynapse/delegated-watch/security/advisories/new
 GitHub's own guide to the process is at https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability

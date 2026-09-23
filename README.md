@@ -3,7 +3,12 @@ A local-first record of the work you delegate to AI models, counted in tokens, t
 Tokens here are the units a language model consumes reading and writing text. Not cryptocurrency: there is no blockchain, no supply, no burning in that sense, and nothing in the schema or the code is denominated in any currency. Not to be confused with delegated.to, a different company.
 ![Dashboard rendering synthetic demonstration data](docs/screenshot.png)
 The site is at [delegated.watch](https://delegated.watch/); the dashboard above runs at [delegated.watch/demo/](https://delegated.watch/demo/) over synthetic demonstration data.
-Clone the repository, install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line, and run the dashboard. It opens on 127.0.0.1.
+Install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line, then clone the repository. There are no runtime dependencies, so there is no install step.
+Literal
+```bash
+git clone https://github.com/snapsynapse/delegated-watch.git && cd delegated-watch
+```
+Run the dashboard. It opens on 127.0.0.1.
 Literal
 ```bash
 npm run dev
@@ -70,6 +75,8 @@ Every command below is documented at the top of its script.
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
 0.2.0. The first public release was 0.1.0, on the same day. Provider-specific extractors, the scheduled automation that runs a private pipeline unattended, and any real usage data are deliberately excluded. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+## Contributing
+Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution
 Origin, lineage, and license attribution are recorded in `ATTRIBUTION.md`.
 ## License
