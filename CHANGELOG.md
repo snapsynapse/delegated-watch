@@ -2,6 +2,11 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+### Added
+- `eval:served` checks every sitemap entry against the page it names: the served file exists, its canonical is the sitemap URL, it is not noindex, its JSON-LD parses, and every modified date it states equals the sitemap `lastmod`, which must be a valid date not in the future. It also checks that `404.html` is noindex and absent from the sitemap.
+### Changed
+- `docs/sitemap.xml` is built by `npm run build:landing` from `config/site.json`, rather than kept by hand. Its `lastmod` is the same `landing.date_modified` the home page states as `article:modified_time` and JSON-LD `dateModified`, so the three cannot drift apart. The built file is byte-identical to the one it replaces.
+- The CI reproducibility check hashes `docs/sitemap.xml` alongside both pages, so a committed sitemap that a build would change fails the job.
 
 ## [0.2.1] - 2026-09-22
 ### Added

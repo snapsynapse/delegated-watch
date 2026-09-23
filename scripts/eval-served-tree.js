@@ -145,6 +145,57 @@ const strayLocs = locs.filter((loc) => !loc.startsWith(`https://${domain}/`));
 check("sitemap lists only canonical-origin URLs", sitemap && !strayLocs.length ? "ok" : sitemap ? "FAIL" : "WARN",
   !sitemap ? "no sitemap.xml" : strayLocs.length ? strayLocs.slice(0, 4).join("; ") : `${locs.length} url(s)`);
 
+// Each sitemap entry must describe a page that agrees with it: the page exists,
+// names the same URL as canonical, allows indexing, carries parseable JSON-LD,
+// and states the same modified date wherever it states one. A sitemap that
+// disagrees with its own pages sends a crawler two answers and it keeps neither.
+const today = new Date().toISOString().slice(0, 10);
+const entries = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((match) => ({
+  loc: (match[1].match(/<loc>([^<]*)<\/loc>/) ?? [])[1]?.trim(),
+  lastmod: (match[1].match(/<lastmod>([^<]*)<\/lastmod>/) ?? [])[1]?.trim()
+}));
+const pageFindings = [];
+for (const { loc, lastmod } of entries.filter((entry) => entry.loc?.startsWith(`https://${domain}/`))) {
+  const path = new URL(loc).pathname;
+  const file = join(SERVED_DIR, path.endsWith("/") ? `${path}index.html` : path);
+  const html = await readFile(file, "utf8").catch(() => null);
+  if (html === null) {
+    pageFindings.push(`${loc}: no served file at ${file}`);
+    continue;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastmod ?? "") || lastmod > today) pageFindings.push(`${loc}: lastmod "${lastmod}" is missing, malformed, or in the future`);
+  const canonical = (html.match(/<link rel="canonical" href="([^"]*)"/) ?? [])[1];
+  if (canonical !== loc) pageFindings.push(`${loc}: canonical is ${canonical ?? "absent"}`);
+  if (/<meta name="robots" content="[^"]*noindex/i.test(html)) pageFindings.push(`${loc}: listed in the sitemap but noindex`);
+  const modifiedTime = (html.match(/<meta property="article:modified_time" content="([^"]*)"/) ?? [])[1];
+  if (modifiedTime && modifiedTime.slice(0, 10) !== lastmod) pageFindings.push(`${loc}: article:modified_time ${modifiedTime} vs lastmod ${lastmod}`);
+  for (const [, block] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    let data;
+    try {
+      data = JSON.parse(block);
+    } catch {
+      pageFindings.push(`${loc}: a JSON-LD block does not parse`);
+      continue;
+    }
+    for (const node of [data, ...(data["@graph"] ?? [])]) {
+      if (node.dateModified && String(node.dateModified).slice(0, 10) !== lastmod) {
+        pageFindings.push(`${loc}: ${node["@type"]} dateModified ${node.dateModified} vs lastmod ${lastmod}`);
+      }
+    }
+  }
+}
+check("sitemap pages agree with the sitemap", !sitemap ? "WARN" : pageFindings.length ? "FAIL" : "ok",
+  !sitemap ? "no sitemap.xml" : pageFindings.length ? pageFindings.slice(0, 6).join("; ") : `${entries.length} page(s): canonical, indexable, JSON-LD, dates`);
+
+// The error page must stay out of the index and out of the sitemap, or a
+// crawler that samples it records a soft 404 against the site.
+const notFound = await readFile(join(SERVED_DIR, "404.html"), "utf8").catch(() => null);
+const notFoundFindings = [];
+if (notFound !== null && !/<meta name="robots" content="[^"]*noindex/i.test(notFound)) notFoundFindings.push("404.html is not noindex");
+if (locs.some((loc) => loc.endsWith("/404.html"))) notFoundFindings.push("404.html is listed in the sitemap");
+check("error page stays out of the index", notFound === null ? "WARN" : notFoundFindings.length ? "FAIL" : "ok",
+  notFound === null ? "no 404.html" : notFoundFindings.join("; "));
+
 // Distinctive strings drawn from the real dataset. If any appears in the served
 // tree while pre-launch, data has leaked.
 const rows = JSON.parse(await readFile(DATA_FILE, "utf8"));

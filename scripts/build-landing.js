@@ -1,4 +1,5 @@
-// Landing-page build: render src/landing.html into the served tree.
+// Landing-page build: render src/landing.html and the sitemap into the served
+// tree.
 //
 // The home page describes the project. The dashboard is the demonstration of
 // it and lives at config.demo_path. Both are built; neither is hand-edited in
@@ -20,6 +21,7 @@ import { dirname } from "node:path";
 const TEMPLATE = "src/landing.html";
 const CONFIG = "config/site.json";
 const OUTPUT = "docs/index.html";
+const SITEMAP = "docs/sitemap.xml";
 
 const site = JSON.parse(await readFile(CONFIG, "utf8"));
 const landing = site.landing;
@@ -228,3 +230,27 @@ if (/\{\{/.test(page)) {
 await mkdir(dirname(OUTPUT), { recursive: true });
 await writeFile(OUTPUT, page);
 console.log(`Built ${OUTPUT} (${(page.length / 1024).toFixed(1)} KB, demo at ${site.demo_path}).`);
+
+// The sitemap's lastmod is the same date as the page's article:modified_time
+// and JSON-LD dateModified, so it is written from the same config value rather
+// than kept by hand beside it. A crawler that reads two different dates for one
+// page trusts neither. The dashboard has no modified date of its own, so it
+// carries the site's.
+const sitemapEntry = (path, priority) => [
+  "  <url>",
+  `    <loc>${origin}${path}</loc>`,
+  `    <lastmod>${landing.date_modified}</lastmod>`,
+  "    <changefreq>monthly</changefreq>",
+  `    <priority>${priority}</priority>`,
+  "  </url>"
+];
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...sitemapEntry("/", "1.0"),
+  ...sitemapEntry(site.demo_path, "0.8"),
+  "</urlset>",
+  ""
+].join("\n");
+await writeFile(SITEMAP, sitemap);
+console.log(`Built ${SITEMAP} (lastmod ${landing.date_modified}).`);

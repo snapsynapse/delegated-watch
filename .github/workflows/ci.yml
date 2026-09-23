@@ -71,13 +71,14 @@ jobs:
           # against another build inside this job never can: both sides would be
           # freshly built and agree while the committed page stayed a build
           # behind. Building twice then catches non-reproducibility on top.
-          # A config change that only one of the two pages consumed is the exact
-          # drift this is here for.
+          # A config change that only one of the generated files consumed is the
+          # exact drift this is here for, and the sitemap counts: its lastmod is
+          # built from the same date the home page states.
           hash_pages() {
             if command -v sha256sum >/dev/null 2>&1; then
-              sha256sum docs/index.html docs/demo/index.html | awk '{print $1}'
+              sha256sum docs/index.html docs/demo/index.html docs/sitemap.xml | awk '{print $1}'
             else
-              shasum -a 256 docs/index.html docs/demo/index.html | awk '{print $1}'
+              shasum -a 256 docs/index.html docs/demo/index.html docs/sitemap.xml | awk '{print $1}'
             fi
           }
 
