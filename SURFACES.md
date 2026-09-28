@@ -22,7 +22,8 @@ What you can recover from your own machine and accounts with this repository, an
 | TypeSafe API | Captured from each response at call time, via the same hook or `npm run typesafe:capture` | Exact | Ships |
 | claude.ai and Claude Design | Account data export, via `npm run estimate:claude-chat` | Estimated | Ships |
 | ChatGPT | Account data export, via `npm run estimate:chatgpt` | Estimated | Ships |
-| Gemini API, Vertex AI, AI Studio, Gemini CLI | Per-request usage metadata; exports | Exact where a counter exists | Not yet supported |
+| Gemini CLI and Qwen Code | Local chat sessions, via `npm run extract:gemini-cli` | Exact | Ships (Gemini CLI verified against its 0.58.0 recording code; Qwen Code follows the same format and is unverified) |
+| Gemini API, Vertex AI, AI Studio | Per-request usage metadata; billing exports | Exact where a counter exists | Not yet supported |
 | xAI, Mistral, DeepSeek, and other hosted APIs | Per-request usage metadata | Exact | Not yet supported |
 | Azure OpenAI, Amazon Bedrock | Cloud billing and service telemetry | Exact for consumption, coarser per request | Not yet supported |
 | OpenRouter, LiteLLM, Helicone, Langfuse, and other gateways | Request-level records | Exact for everything routed through them | Not yet supported |

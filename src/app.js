@@ -98,23 +98,25 @@ const sourceLabels = {
   codex: "Codex",
   deepseek_local: "DeepSeek local",
   gemini: "Gemini",
+  gemini_cli: "Gemini CLI",
+  gemma_local: "Gemma local",
   gpt_oss: "GPT-OSS",
   grok: "Grok",
-  llama_local: "Llama local",
   kilo: "Kilo Code",
-  gemma_local: "Gemma local",
-  openai_api: "OpenAI API",
+  llama_local: "Llama local",
   local_deepseek: "DeepSeek local",
   local_gemma: "Gemma local",
   local_llama: "Llama local",
+  local_qwen: "Qwen local",
+  openai_api: "OpenAI API",
   perplexity: "Perplexity",
   perplexity_api: "Perplexity API",
   perplexity_chat: "Perplexity Chat",
+  qwen_code: "Qwen Code",
   qwen_local: "Qwen local",
   roo_code: "Roo Code",
   snapdev: "Snapdev",
-  typesafe_api: "TypeSafe API",
-  local_qwen: "Qwen local"
+  typesafe_api: "TypeSafe API"
 };
 
 const formatTokens = (value) => {
