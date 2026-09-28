@@ -72,13 +72,14 @@ The importer enforces these before any receipt reaches the dataset.
 - No private URLs.
 - `evidence` describes a work family or review signal generically. It must never reproduce a raw conversation title or any other identifying text.
 ## Dedupe keys
-Documented conventions for extractors you write against this contract. The claude_code, codex, goose, and VS Code agent extractors and the ollama capture ship with this release; the rest describe how a provider-specific extractor should key its receipts so the reconciliation rules in `scripts/lib/receipt-schema.js` apply correctly.
+Documented conventions for extractors you write against this contract. The claude_code, codex, goose, VS Code agent, claude_api, and openai_api extractors and the ollama capture ship with this release; the rest describe how a provider-specific extractor should key its receipts so the reconciliation rules in `scripts/lib/receipt-schema.js` apply correctly.
 | Source convention | Key | Rule |
 |---|---|---|
 | claude_code | requestId | Latest timestamp wins. A streamed turn rewrites the same request under earlier partial counts before it settles. |
 | codex | cumulative token_count snapshot within one rollout | A repeated cumulative snapshot is skipped; each first-seen snapshot contributes its last_token_usage once. Receipts key on account, machine, and day, so a backup of one store dedupes and distinct stores sum. |
 | goose | usage_ledger row, one per call | Receipts key on origin, source, and day. Local models take their family source id; calls goose routed to a hosted provider become `goose_<provider>` and may overlap that provider's own usage API. |
 | cline, roo_code, kilo, snapdev | hash of task id, request timestamp, and request index | Receipts key on account, machine, and day. Cache reads are excluded; a record whose counters fit both the legacy and inclusive conventions is refused unless `--token-convention` breaks the tie. |
+| claude_api, openai_api | account and day | One account-scoped receipt per day from the provider's organization report, with provider authority. Cache reads and cached input are excluded. The report overlaps client-side sources that used the same organization's keys; `claude_api` is quarantined until a reconciliation verdict is recorded. |
 | perplexity_api | response id | The API response's own identifier. Two independent captures of the same call reconcile to one receipt instead of double counting. |
 | typesafe_api | SHA-256 of the canonical response | No request id is exposed, so byte-identical responses collapse to one receipt. |
 | ollama | one receipt per captured call | Each relayed request and response pair is its own receipt; nothing is pre-aggregated before capture. |

@@ -37,3 +37,11 @@ test("metadata rejects content-bearing shapes and unhashed correlation keys", ()
     assert(privateTextFindings(text).length);
   }
 });
+
+test("a Bearer template placeholder is not a credential, but any literal token is", () => {
+  const rule = (text) => privateTextFindings(text).some((finding) => /authorization header/.test(JSON.stringify(finding)));
+  assert.equal(rule("Authorization: `Bearer ${adminKey}`"), false);
+  for (const text of ["Bearer secret", "Authorization: Bearer abc123", "bearer $TOKEN", "Bearer {token}"]) {
+    assert.equal(rule(text), true, text);
+  }
+});

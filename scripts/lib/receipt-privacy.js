@@ -8,7 +8,9 @@ const FIELDS = new Set([
 ]);
 const PATTERNS = [
   ["secret-like token", /\b(?:sk-|pplx-|ghp_|github_pat_)[A-Za-z0-9_-]{16,}\b/],
-  ["authorization header", /\bBearer\s+\S+/i],
+  // A template placeholder such as `Bearer ${key}` names a variable, not a
+  // credential; any literal token that follows the scheme still matches.
+  ["authorization header", /\bBearer\s+(?!\$\{)\S+/i],
   ["absolute user path", /(?:\/(?:Users|home)\/[^/\s]+|[A-Z]:\\Users\\[^\\\s]+)/i],
   ["email address", /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i],
   ["URL", /(?:https?|file):\/\//i],

@@ -56,7 +56,23 @@ Literal
 ```bash
 npm run ollama:capture -- --endpoint generate < request.json
 ```
-Extractors for the Anthropic and OpenAI usage APIs, Perplexity, and the claude.ai and ChatGPT exports have been tested and are being ported; each ships once it clears the bar in `CONTRIBUTING.md`. Writing an extractor for a service that is not yet supported is covered there too.
+For API usage, the organization usage reports are the provider's own count of every call made with the organization's keys. Each extractor reads an admin key from its environment variable and skips cleanly without one. Never commit a key, paste it into a chat, or type it on a command line, where shell history keeps it. Reading it without echo avoids all three. After this command starts, the shell waits silently: paste the Anthropic admin key, which is not shown, and press Return.
+
+Literal
+```bash
+read -rs ANTHROPIC_ADMIN_KEY && export ANTHROPIC_ADMIN_KEY && npm run extract:claude-api
+```
+
+The same for OpenAI: paste the organization admin key, which is not shown, and press Return.
+
+Literal
+```bash
+read -rs OPENAI_ADMIN_KEY && export OPENAI_ADMIN_KEY && npm run extract:openai-api
+```
+
+An organization report covers every client that used its keys, so it can overlap a local extractor that counted the same calls: Claude Code or Codex signed in with an API key, or an editor extension or agent pointed at the same organization. Anthropic receipts are therefore held in `scratch/reconcile/` until `npm run reconcile:claude` compares them with your Claude Code record and you record a verdict in `config/claude-reconciliation.json`. OpenAI has no reconciliation step yet; if your local OpenAI clients use an API key rather than a ChatGPT sign-in, leave `openai_api` out rather than count those calls twice.
+
+Extractors for Perplexity and the claude.ai and ChatGPT exports have been tested and are being ported; each ships once it clears the bar in `CONTRIBUTING.md`. Writing an extractor for a service that is not yet supported is covered there too.
 ## Commands
 Every command below is documented at the top of its script.
 - `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
@@ -77,6 +93,8 @@ Every command below is documented at the top of its script.
 - `npm run extract:codex`: extract exact daily usage from Codex rollout files, excluding cached input from the headline.
 - `npm run extract:goose`: extract exact daily usage from goose's usage ledger, local models by family and hosted providers labelled as goose traffic.
 - `npm run extract:vscode-agents`: extract exact daily usage from Cline, Roo Code, Kilo Code, and Snapdev task counters in every VS Code-family editor.
+- `npm run extract:claude-api`: extract exact daily usage from the Anthropic Admin Usage Report, quarantined until a reconciliation verdict is recorded. Needs `ANTHROPIC_ADMIN_KEY`.
+- `npm run extract:openai-api`: extract exact daily text-token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`.
 - `npm run export:csv`: export the dataset as two CSV files, one row per day and one row per day, source, and origin.
 - `npm run import`: merge receipt JSONL into the dataset, enforcing the cutoff, no-decrease, and reconciliation gates.
 - `npm run manifest`: validate and report the accepted-evidence ledger; exits nonzero until an import has accepted evidence, because there is nothing to report before that.
@@ -89,7 +107,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, and the Cline family of VS Code agent extensions, and the Ollama capture; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, and the Ollama capture; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution
