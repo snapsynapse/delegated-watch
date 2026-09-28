@@ -335,9 +335,17 @@
       .footer-grid { flex-direction: column; }
       pre { font-size: 0.75rem; }
     }
+    /* On a phone the section links wrap to their own row under the logo
+       rather than disappearing, so Install and the FAQ stay one tap away. */
     @media (max-width: 520px) {
-      nav .links.mobile-compact a:not(.gh-star) { display: none; }
-      nav .container { gap: 0.5rem; }
+      nav { padding: 0.75rem 0 0.5rem; }
+      nav .container { flex-wrap: wrap; gap: 0.5rem; }
+      nav .links.mobile-compact { width: 100%; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; }
+      nav .links.mobile-compact a:not(.gh-star) { display: inline-flex; align-items: center; min-height: 32px; }
+      /* The star keeps its accessible name from aria-label; only the visible
+         text goes, so the whole nav fits one row beside the section links. */
+      nav .links.mobile-compact .gh-star span { display: none; }
+      nav .links.mobile-compact .gh-star { padding: 0.35rem 0.5rem; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }

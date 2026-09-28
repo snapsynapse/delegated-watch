@@ -9,6 +9,11 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - The CI reproducibility check hashes `docs/sitemap.xml` alongside both pages, so a committed sitemap that a build would change fails the job.
 - `eval:code` scans `src/` as well as `scripts/`, because dashboard source is baked into the served page. The inline-personal-constant rule flags any IANA timezone literal rather than one named zone.
 ### Fixed
+- The landing byline no longer shows a gap before its comma: each phrase is one element, so the flex gap separates phrases rather than punctuation.
+- On a phone the landing navigation keeps its section links on a row under the logo, with the GitHub star reduced to its icon, instead of hiding every link but the star.
+- The demo is anchored to `as_of` in `config/site.json`, which the renderer inlines only for a synthetic dataset and the banner states. Its recent windows, freshness ages, and 1y range now describe the synthetic year instead of the months since it ended. The synthetic generator makes the final fourteen days active so the seven-day average shows a value; earlier rows are unchanged.
+- The GitHub tile is withheld when no GitHub summary is configured, instead of reporting a lookup that never ran.
+- A filter combination with no matching evidence reads "No match" in the headline instead of "0 tokens", which read as a measured zero.
 - `npm ci` works from a fresh clone. The landing page and the assistant guide both run it, and it refused with EUSAGE because no lockfile existed. `package-lock.json` records the empty dependency set and is inventoried; the guide's bytes, manifest, and DNS anchor are unchanged.
 - The `--fresh-history` test disables commit signing for its fixture commits, so the suite passes for a contributor with `commit.gpgsign` set and a locked key.
 - The dashboard's legacy-row fallback reads the timezone from the profile instead of a hard-coded zone.

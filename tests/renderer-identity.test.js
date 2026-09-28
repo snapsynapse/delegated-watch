@@ -201,3 +201,24 @@ test("renderer identity: no control ships a placeholder href", async () => {
     'a control shipped href="#"; leave the attribute off and let activation set it'
   );
 });
+
+test("renderer site: as_of reaches the page only for a synthetic dataset, and the banner names it", async () => {
+  const synthetic = await renderStaticDashboard({
+    dailyBurn,
+    profile,
+    observedIntervals: null,
+    site: { dataset: "synthetic", default_range: "all", as_of: "2026-01-01" }
+  });
+  assert.ok(synthetic.includes('window.__SITE__ = {"dataset":"synthetic","default_range":"all","as_of":"2026-01-01"};'));
+  assert.match(synthetic, /class="demo-banner"[^>]*>[^<]*shown as of January 1, 2026\./);
+
+  // A measured record always runs against today, whatever the config says.
+  const measured = await renderStaticDashboard({
+    dailyBurn,
+    profile,
+    observedIntervals: null,
+    site: { dataset: "measured", default_range: "all", as_of: "2026-01-01" }
+  });
+  assert.ok(!measured.includes('"as_of"'));
+  assert.ok(!measured.includes("shown as of"));
+});

@@ -154,7 +154,15 @@ ${links}
     </footer>`;
 };
 
-const DEMO_BANNER = '      <p class="demo-banner" role="note">This page renders synthetic demonstration data. Nothing here is a measured record.</p>';
+const DEMO_BANNER_TEXT = "This page renders synthetic demonstration data. Nothing here is a measured record.";
+const demoBanner = (asOf) => {
+  // The date is formatted here rather than by the page, so the banner reads the
+  // same with scripts off. It names the anchor the recent windows use.
+  const when = asOf
+    ? ` It is shown as of ${new Date(`${asOf}T00:00:00Z`).toLocaleDateString("en-US", { timeZone: "UTC", month: "long", day: "numeric", year: "numeric" })}.`
+    : "";
+  return `      <p class="demo-banner" role="note">${DEMO_BANNER_TEXT}${when}</p>`;
+};
 
 export async function renderStaticDashboard({
   dailyBurn,
@@ -182,9 +190,16 @@ export async function renderStaticDashboard({
     knownActivity ? `window.__KNOWN_ACTIVITY__ = ${inlineJson(knownActivity)};` : "",
     evidenceManifest ? `window.__EVIDENCE_MANIFEST__ = ${inlineJson(evidenceManifest)};` : "",
     publication ? `window.__PUBLICATION__ = ${inlineJson(publication)};` : "",
-    // Only the two site keys the page acts on reach the page; the rest of
+    // Only the site keys the page acts on reach the page; the rest of
     // config/site.json (posture, hosting notes) stays out of the artifact.
-    site ? `window.__SITE__ = ${inlineJson({ dataset: site.dataset ?? null, default_range: site.default_range ?? null })};` : "",
+    // as_of anchors a synthetic demo to the end of its own data, so recent
+    // windows describe the demo rather than a year of nothing; a measured
+    // record never carries it and always runs against today.
+    site ? `window.__SITE__ = ${inlineJson({
+      dataset: site.dataset ?? null,
+      default_range: site.default_range ?? null,
+      ...(site.dataset === "synthetic" && site.as_of ? { as_of: site.as_of } : {})
+    })};` : "",
     "</script>"
   ].filter(Boolean).join("\n");
 
@@ -202,7 +217,7 @@ export async function renderStaticDashboard({
     html = html.replace("<title>Delegated.watch</title>", `<title>${DEMO_TITLE}</title>`);
   }
   if (site?.dataset === "synthetic") {
-    html = html.replace('<main class="shell">', `<main class="shell">\n${DEMO_BANNER}`);
+    html = html.replace('<main class="shell">', `<main class="shell">\n${demoBanner(site.as_of)}`);
   }
   if (publication) {
     const structuredData = JSON.stringify({

@@ -174,11 +174,14 @@ const discovery = [
 // and the author or license semantics go with it.
 const byline = [
   '<p class="byline">',
-  `  By <a href="${escapeAttr(landing.author_url)}" target="_blank" rel="noopener author">${escapeAttr(landing.author)}</a>, <a href="${escapeAttr(landing.author_url)}" target="_blank" rel="noopener">${escapeAttr(landing.author_label ?? "Snap Synapse")}</a>`,
+  // Each phrase is one span. The byline is a flex row with a gap, and loose
+  // text between links becomes its own flex item, which is how a comma ended
+  // up with a gap in front of it.
+  `  <span>By <a href="${escapeAttr(landing.author_url)}" target="_blank" rel="noopener author">${escapeAttr(landing.author)}</a>, <a href="${escapeAttr(landing.author_url)}" target="_blank" rel="noopener">${escapeAttr(landing.author_label ?? "Snap Synapse")}</a></span>`,
   '  <span class="sep">&middot;</span>',
-  `  Published <time datetime="${landing.date_published}">${humanDate(landing.date_published)}</time>`,
+  `  <span>Published <time datetime="${landing.date_published}">${humanDate(landing.date_published)}</time></span>`,
   '  <span class="sep">&middot;</span>',
-  `  Updated <time datetime="${landing.date_modified}">${humanDate(landing.date_modified)}</time>`,
+  `  <span>Updated <time datetime="${landing.date_modified}">${humanDate(landing.date_modified)}</time></span>`,
   '  <span class="sep">&middot;</span>',
   `  <span class="version">v${escapeAttr(landing.version)}</span>`,
   '  <span class="sep">&middot;</span>',

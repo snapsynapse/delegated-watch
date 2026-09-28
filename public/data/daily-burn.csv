@@ -212,11 +212,15 @@ date,timezone,total_tokens,driver,evidence,sources,fidelity
 2025-12-16,UTC,13515,building:spec,synthetic: representative spec-writing day,claude_chat codex qwen_local,mixed
 2025-12-18,UTC,30821,building:content,synthetic: representative content-building day,codex,exact
 2025-12-19,UTC,27845,shipping,synthetic: representative shipping day,codex,exact
-2025-12-21,UTC,41713,building:infra,synthetic: representative infrastructure day,codex perplexity_api qwen_local,mixed
-2025-12-22,UTC,66702,maintenance:deps,synthetic: representative dependency day,claude_chat claude_code openai_api,mixed
-2025-12-23,UTC,58517,research,synthetic: representative research day,claude_code codex qwen_local,mixed
-2025-12-25,UTC,8697,strategy,synthetic: representative strategy day,qwen_local,mixed
-2025-12-26,UTC,11497,building:spec,synthetic: representative spec-writing day,openai_api,exact
-2025-12-29,UTC,39938,fixing:data,synthetic: representative data-fixing day,claude_code perplexity_api qwen_local,mixed
-2025-12-30,UTC,26730,research,synthetic: representative research day,claude_chat openai_api perplexity_api,mixed
-2025-12-31,UTC,14237,shipping,synthetic: representative shipping day,openai_api qwen_local,mixed
+2025-12-20,UTC,7137,career,synthetic: representative career day,perplexity_api,mixed
+2025-12-21,UTC,23205,building:feature,synthetic: representative feature-building day,claude_chat codex qwen_local,mixed
+2025-12-22,UTC,4197,building:spec,synthetic: representative spec-writing day,openai_api,exact
+2025-12-23,UTC,17300,fixing:data,synthetic: representative data-fixing day,codex perplexity_api,mixed
+2025-12-24,UTC,34473,maintenance:sync,synthetic: representative sync-maintenance day,openai_api qwen_local,mixed
+2025-12-25,UTC,16838,building:feature,synthetic: representative feature-building day,claude_code,exact
+2025-12-26,UTC,24956,career,synthetic: representative career day,claude_chat claude_code qwen_local,mixed
+2025-12-27,UTC,59874,maintenance:docs,synthetic: representative documentation day,claude_code openai_api perplexity_api,mixed
+2025-12-28,UTC,446,fixing:bug,synthetic: representative bug-fixing day,qwen_local,mixed
+2025-12-29,UTC,497,maintenance:docs,synthetic: representative documentation day,perplexity_api,mixed
+2025-12-30,UTC,17351,maintenance:sync,synthetic: representative sync-maintenance day,openai_api perplexity_api qwen_local,mixed
+2025-12-31,UTC,15035,maintenance:hygiene,synthetic: representative hygiene day,claude_chat perplexity_api qwen_local,mixed

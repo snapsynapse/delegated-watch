@@ -167,7 +167,11 @@ const allSources = (rows) => [...new Set(rows.flatMap((row) => Object.keys(row.s
 const movingAverage = (rows, endDate) =>
   summarizeCalendarWindows(rows, parseLocalDate(endDate)).recent;
 
-const today = () => parseLocalDate(dashboardCalendarDay(window.__PROFILE__?.timezone || "UTC"));
+// A synthetic demo may be anchored to a fixed day by site config; the renderer
+// only inlines as_of for synthetic data, so a measured record runs on today.
+const today = () => window.__SITE__?.as_of
+  ? parseLocalDate(window.__SITE__.as_of)
+  : parseLocalDate(dashboardCalendarDay(window.__PROFILE__?.timezone || "UTC"));
 
 const configuredDayBoundaryCopy = (timezone) =>
   `Days are grouped by the configured ${timezone || "UTC"} day boundary. ` +
@@ -250,12 +254,17 @@ const renderSummary = (rows, start, end) => {
     elapsedDays
   } = summarizeDashboardRows(rows, start, end);
 
-  document.querySelector("#totalTokens").textContent = `${formatTokens(total)} tokens`;
+  // No matching evidence is not a measured zero, so it is never shown as one.
+  document.querySelector("#totalTokens").textContent = evidenceDays
+    ? `${formatTokens(total)} tokens`
+    : "No match";
   // The headline mixes exact counters with chars/4 arithmetic over an export.
   // Splitting it is what makes the number readable as a floor: the exact part is
   // measured, the estimated part is a lower bound on work that reports no
   // counters at all.
-  document.querySelector("#totalSplit").innerHTML = split.estimated
+  document.querySelector("#totalSplit").innerHTML = !evidenceDays
+    ? "adjust the filters"
+    : split.estimated
     ? `${formatTokens(split.exact)} exact · <b>${formatTokens(split.estimated)} estimated</b>`
     : `${formatTokens(split.exact)} exact`;
   document.querySelector("#peakDay").textContent = peak ? `${formatTokens(peak.total)} ${formatDate(peak.date)}` : "No match";
@@ -1294,7 +1303,12 @@ Promise.resolve(window.__DAILY_BURN__)
     document.body.replaceChildren(main);
   });
 
-if (publicationFeature("github")) Promise.resolve(window.__GITHUB_SUMMARY__)
+// The GitHub tile is adjacent context that only exists when a summary was
+// configured. With none inlined there is nothing to look up, so the tile is
+// withheld rather than reporting a lookup that never ran.
+if (!window.__GITHUB_SUMMARY__) {
+  document.querySelectorAll('[data-publication-feature="githubMetric"]').forEach((tile) => { tile.hidden = true; });
+} else if (publicationFeature("github")) Promise.resolve(window.__GITHUB_SUMMARY__)
   .then((summary) => {
     if (!summary) throw new Error("no github summary inlined");
     renderGithubSummary(summary);

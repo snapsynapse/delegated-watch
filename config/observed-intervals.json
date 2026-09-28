@@ -6,7 +6,7 @@
       "observed": [
         {
           "from": "2025-01-02",
-          "to": "2025-12-30",
+          "to": "2025-12-31",
           "status": "covered",
           "evidence": "synthetic: generated with the dataset"
         }
@@ -16,7 +16,7 @@
       "observed": [
         {
           "from": "2025-01-07",
-          "to": "2025-12-29",
+          "to": "2025-12-27",
           "status": "covered",
           "evidence": "synthetic: generated with the dataset"
         }
@@ -36,7 +36,7 @@
       "observed": [
         {
           "from": "2025-01-09",
-          "to": "2025-12-31",
+          "to": "2025-12-30",
           "status": "covered",
           "evidence": "synthetic: generated with the dataset"
         }
@@ -46,7 +46,7 @@
       "observed": [
         {
           "from": "2025-01-07",
-          "to": "2025-12-30",
+          "to": "2025-12-31",
           "status": "covered",
           "evidence": "synthetic: generated with the dataset"
         }

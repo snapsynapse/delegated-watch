@@ -125,8 +125,10 @@ function splitOrigins(rng, tokens, originPool) {
 
 // One calendar day's worth of source entries, or null when the day is a
 // deliberate gap (unknown is never zero: an absent day, not a zero day).
-function generateRow(rng, date, dayOfWeek) {
-  if (!rng.chance(0.62)) return null;
+// `alwaysActive` fills a day that would otherwise be a gap. The draw is still
+// taken, so the generator's sequence and every row before it are unchanged.
+function generateRow(rng, date, dayOfWeek, alwaysActive = false) {
+  if (!rng.chance(0.62) && !alwaysActive) return null;
 
   const sourceCount = rng.randInt(1, 3);
   const pool = [...EXACT_SOURCES, ...ESTIMATED_SOURCES];
@@ -176,11 +178,20 @@ function* datesInRange(start, end) {
   }
 }
 
+// The dashboard only averages a complete seven-day window, and compares it with
+// the seven days before. The demo is shown as of the day after its last row, so
+// the final fourteen days are always active: the average tile then demonstrates
+// a value, while gaps everywhere else keep demonstrating unknown-is-not-zero.
+const COMPLETE_TAIL_DAYS = 14;
+
 export function generateDataset() {
   const rng = makeRng(SEED);
   const rows = [];
+  const tailStart = new Date(`${DATE_RANGE.end}T00:00:00Z`);
+  tailStart.setUTCDate(tailStart.getUTCDate() - (COMPLETE_TAIL_DAYS - 1));
+  const tailFrom = tailStart.toISOString().slice(0, 10);
   for (const { date, dayOfWeek } of datesInRange(DATE_RANGE.start, DATE_RANGE.end)) {
-    const row = generateRow(rng, date, dayOfWeek);
+    const row = generateRow(rng, date, dayOfWeek, date >= tailFrom);
     if (row) rows.push(row);
   }
   return rows;

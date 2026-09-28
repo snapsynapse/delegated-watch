@@ -5405,224 +5405,306 @@
     "evidence": "synthetic: representative shipping day"
   },
   {
-    "date": "2025-12-21",
+    "date": "2025-12-20",
     "timezone": "UTC",
     "sources": {
-      "qwen_local": {
-        "tokens": 8642,
-        "fidelity": "estimated",
-        "by_origin": {
-          "account/example-provider": 5617,
-          "machine/example": 3025
-        }
-      },
-      "codex": {
-        "tokens": 26095,
-        "fidelity": "exact",
-        "calls": 26,
-        "by_origin": {
-          "machine/example": 26095
-        }
-      },
       "perplexity_api": {
-        "tokens": 6976,
+        "tokens": 7137,
         "fidelity": "estimated",
         "by_origin": {
-          "account/example-provider": 6976
+          "account/example-provider": 4639,
+          "machine/example": 2498
         }
       }
     },
-    "total": 41713,
-    "driver": "building:infra",
-    "evidence": "synthetic: representative infrastructure day"
+    "total": 7137,
+    "driver": "career",
+    "evidence": "synthetic: representative career day"
+  },
+  {
+    "date": "2025-12-21",
+    "timezone": "UTC",
+    "sources": {
+      "claude_chat": {
+        "tokens": 3070,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 3070
+        }
+      },
+      "codex": {
+        "tokens": 14697,
+        "fidelity": "exact",
+        "calls": 30,
+        "by_origin": {
+          "machine/example": 9553,
+          "machine/example-laptop": 5144
+        }
+      },
+      "qwen_local": {
+        "tokens": 5438,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 3535,
+          "machine/example": 1903
+        }
+      }
+    },
+    "total": 23205,
+    "driver": "building:feature",
+    "evidence": "synthetic: representative feature-building day"
   },
   {
     "date": "2025-12-22",
     "timezone": "UTC",
     "sources": {
       "openai_api": {
-        "tokens": 38136,
+        "tokens": 4197,
         "fidelity": "exact",
-        "calls": 10,
+        "calls": 12,
         "by_origin": {
-          "machine/example": 38136
-        }
-      },
-      "claude_chat": {
-        "tokens": 879,
-        "fidelity": "estimated",
-        "by_origin": {
-          "account/example-provider": 879
-        }
-      },
-      "claude_code": {
-        "tokens": 27687,
-        "fidelity": "exact",
-        "calls": 7,
-        "by_origin": {
-          "machine/example": 17997,
-          "machine/example-laptop": 9690
+          "machine/example": 2728,
+          "machine/example-laptop": 1469
         }
       }
     },
-    "total": 66702,
-    "driver": "maintenance:deps",
-    "evidence": "synthetic: representative dependency day"
+    "total": 4197,
+    "driver": "building:spec",
+    "evidence": "synthetic: representative spec-writing day"
   },
   {
     "date": "2025-12-23",
     "timezone": "UTC",
     "sources": {
-      "claude_code": {
-        "tokens": 22607,
-        "fidelity": "exact",
-        "calls": 3,
-        "by_origin": {
-          "machine/example": 22607
-        }
-      },
       "codex": {
-        "tokens": 32248,
+        "tokens": 12466,
         "fidelity": "exact",
-        "calls": 26,
+        "calls": 7,
         "by_origin": {
-          "machine/example": 32248
+          "machine/example": 8103,
+          "machine/example-laptop": 4363
         }
       },
-      "qwen_local": {
-        "tokens": 3662,
+      "perplexity_api": {
+        "tokens": 4834,
         "fidelity": "estimated",
         "by_origin": {
-          "account/example-provider": 3662
+          "account/example-provider": 4834
         }
       }
     },
-    "total": 58517,
-    "driver": "research",
-    "evidence": "synthetic: representative research day"
+    "total": 17300,
+    "driver": "fixing:data",
+    "evidence": "synthetic: representative data-fixing day"
+  },
+  {
+    "date": "2025-12-24",
+    "timezone": "UTC",
+    "sources": {
+      "openai_api": {
+        "tokens": 26959,
+        "fidelity": "exact",
+        "calls": 21,
+        "by_origin": {
+          "machine/example": 26959
+        }
+      },
+      "qwen_local": {
+        "tokens": 7514,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 4884,
+          "machine/example": 2630
+        }
+      }
+    },
+    "total": 34473,
+    "driver": "maintenance:sync",
+    "evidence": "synthetic: representative sync-maintenance day"
   },
   {
     "date": "2025-12-25",
     "timezone": "UTC",
     "sources": {
-      "qwen_local": {
-        "tokens": 8697,
-        "fidelity": "estimated",
+      "claude_code": {
+        "tokens": 16838,
+        "fidelity": "exact",
+        "calls": 10,
         "by_origin": {
-          "account/example-provider": 5653,
-          "machine/example": 3044
+          "machine/example": 10945,
+          "machine/example-laptop": 5893
         }
       }
     },
-    "total": 8697,
-    "driver": "strategy",
-    "evidence": "synthetic: representative strategy day"
+    "total": 16838,
+    "driver": "building:feature",
+    "evidence": "synthetic: representative feature-building day"
   },
   {
     "date": "2025-12-26",
     "timezone": "UTC",
     "sources": {
-      "openai_api": {
-        "tokens": 11497,
-        "fidelity": "exact",
-        "calls": 26,
-        "by_origin": {
-          "machine/example": 11497
-        }
-      }
-    },
-    "total": 11497,
-    "driver": "building:spec",
-    "evidence": "synthetic: representative spec-writing day"
-  },
-  {
-    "date": "2025-12-29",
-    "timezone": "UTC",
-    "sources": {
-      "claude_code": {
-        "tokens": 32070,
-        "fidelity": "exact",
-        "calls": 9,
-        "by_origin": {
-          "machine/example": 32070
-        }
-      },
       "qwen_local": {
-        "tokens": 7014,
+        "tokens": 6973,
         "fidelity": "estimated",
         "by_origin": {
-          "account/example-provider": 4559,
-          "machine/example": 2455
-        }
-      },
-      "perplexity_api": {
-        "tokens": 854,
-        "fidelity": "estimated",
-        "by_origin": {
-          "account/example-provider": 555,
-          "machine/example": 299
-        }
-      }
-    },
-    "total": 39938,
-    "driver": "fixing:data",
-    "evidence": "synthetic: representative data-fixing day"
-  },
-  {
-    "date": "2025-12-30",
-    "timezone": "UTC",
-    "sources": {
-      "perplexity_api": {
-        "tokens": 2026,
-        "fidelity": "estimated",
-        "by_origin": {
-          "account/example-provider": 1317,
-          "machine/example": 709
+          "account/example-provider": 6973
         }
       },
       "claude_chat": {
+        "tokens": 8350,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 5428,
+          "machine/example": 2922
+        }
+      },
+      "claude_code": {
+        "tokens": 9633,
+        "fidelity": "exact",
+        "calls": 11,
+        "by_origin": {
+          "machine/example": 6261,
+          "machine/example-laptop": 3372
+        }
+      }
+    },
+    "total": 24956,
+    "driver": "career",
+    "evidence": "synthetic: representative career day"
+  },
+  {
+    "date": "2025-12-27",
+    "timezone": "UTC",
+    "sources": {
+      "openai_api": {
+        "tokens": 39013,
+        "fidelity": "exact",
+        "calls": 27,
+        "by_origin": {
+          "machine/example": 25358,
+          "machine/example-laptop": 13655
+        }
+      },
+      "claude_code": {
+        "tokens": 19756,
+        "fidelity": "exact",
+        "calls": 8,
+        "by_origin": {
+          "machine/example": 12841,
+          "machine/example-laptop": 6915
+        }
+      },
+      "perplexity_api": {
         "tokens": 1105,
         "fidelity": "estimated",
         "by_origin": {
           "account/example-provider": 1105
         }
-      },
-      "openai_api": {
-        "tokens": 23599,
-        "fidelity": "exact",
-        "calls": 11,
+      }
+    },
+    "total": 59874,
+    "driver": "maintenance:docs",
+    "evidence": "synthetic: representative documentation day"
+  },
+  {
+    "date": "2025-12-28",
+    "timezone": "UTC",
+    "sources": {
+      "qwen_local": {
+        "tokens": 446,
+        "fidelity": "estimated",
         "by_origin": {
-          "machine/example": 23599
+          "account/example-provider": 290,
+          "machine/example": 156
         }
       }
     },
-    "total": 26730,
-    "driver": "research",
-    "evidence": "synthetic: representative research day"
+    "total": 446,
+    "driver": "fixing:bug",
+    "evidence": "synthetic: representative bug-fixing day"
+  },
+  {
+    "date": "2025-12-29",
+    "timezone": "UTC",
+    "sources": {
+      "perplexity_api": {
+        "tokens": 497,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 323,
+          "machine/example": 174
+        }
+      }
+    },
+    "total": 497,
+    "driver": "maintenance:docs",
+    "evidence": "synthetic: representative documentation day"
+  },
+  {
+    "date": "2025-12-30",
+    "timezone": "UTC",
+    "sources": {
+      "openai_api": {
+        "tokens": 12939,
+        "fidelity": "exact",
+        "calls": 16,
+        "by_origin": {
+          "machine/example": 8410,
+          "machine/example-laptop": 4529
+        }
+      },
+      "qwen_local": {
+        "tokens": 3862,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 2510,
+          "machine/example": 1352
+        }
+      },
+      "perplexity_api": {
+        "tokens": 550,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 358,
+          "machine/example": 192
+        }
+      }
+    },
+    "total": 17351,
+    "driver": "maintenance:sync",
+    "evidence": "synthetic: representative sync-maintenance day"
   },
   {
     "date": "2025-12-31",
     "timezone": "UTC",
     "sources": {
-      "openai_api": {
-        "tokens": 5270,
-        "fidelity": "exact",
-        "calls": 37,
+      "perplexity_api": {
+        "tokens": 2216,
+        "fidelity": "estimated",
         "by_origin": {
-          "machine/example": 5270
+          "account/example-provider": 2216
         }
       },
       "qwen_local": {
-        "tokens": 8967,
+        "tokens": 7317,
         "fidelity": "estimated",
         "by_origin": {
-          "account/example-provider": 5829,
-          "machine/example": 3138
+          "account/example-provider": 4756,
+          "machine/example": 2561
+        }
+      },
+      "claude_chat": {
+        "tokens": 5502,
+        "fidelity": "estimated",
+        "by_origin": {
+          "account/example-provider": 3576,
+          "machine/example": 1926
         }
       }
     },
-    "total": 14237,
-    "driver": "shipping",
-    "evidence": "synthetic: representative shipping day"
+    "total": 15035,
+    "driver": "maintenance:hygiene",
+    "evidence": "synthetic: representative hygiene day"
   }
 ]
