@@ -18,7 +18,7 @@ npm run eval:dashboard
 npm run eval:served
 ```
 ## Proposing an extractor
-This release ships one capture, `ollama:capture`; the tested extractors listed in `SURFACES.md` are being ported. An extractor, new or ported, for a provider, a chat surface, or an IDE extension needs, at minimum:
+This release ships `extract:claude-code` and `ollama:capture`; the other tested extractors listed in `SURFACES.md` are being ported. An extractor, new or ported, for a provider, a chat surface, or an IDE extension needs, at minimum:
 - Conformance to the receipt contract in `DATA_CONTRACT.md`, including `schema_version: 2` and a dedupe key documented in its "Dedupe keys" table.
 - A verified dependency closure against the store it reads: know exactly which files or endpoints it touches and what changes their shape.
 - A test proving that an absent source reads as unavailable, never as a measured zero. This is the single most important test a new extractor can carry, because a script that gets it wrong produces a dataset that looks complete and is not.

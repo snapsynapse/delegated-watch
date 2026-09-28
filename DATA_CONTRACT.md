@@ -72,7 +72,7 @@ The importer enforces these before any receipt reaches the dataset.
 - No private URLs.
 - `evidence` describes a work family or review signal generically. It must never reproduce a raw conversation title or any other identifying text.
 ## Dedupe keys
-Documented conventions for extractors you write against this contract. Only the ollama capture ships with this release; the rest describe how a provider-specific extractor should key its receipts so the reconciliation rules in `scripts/lib/receipt-schema.js` apply correctly.
+Documented conventions for extractors you write against this contract. The claude_code extractor and the ollama capture ship with this release; the rest describe how a provider-specific extractor should key its receipts so the reconciliation rules in `scripts/lib/receipt-schema.js` apply correctly.
 | Source convention | Key | Rule |
 |---|---|---|
 | claude_code | requestId | Latest timestamp wins. A streamed turn rewrites the same request under earlier partial counts before it settles. |

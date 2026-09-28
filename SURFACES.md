@@ -12,7 +12,7 @@ What you can recover from your own machine and accounts with this repository, an
 | Service | Where the evidence lives | Fidelity | Status |
 |---|---|---|---|
 | Ollama | Local inference relayed through `npm run ollama:capture` | Exact | Ships |
-| Claude Code and the Claude desktop app's agent sessions | Local transcripts | Exact | Tested, being ported |
+| Claude Code and the Claude desktop app's agent sessions | Local transcripts, via `npm run extract:claude-code` | Exact | Ships (desktop sessions verified on macOS; Windows and Linux paths follow platform convention and are unverified) |
 | Codex CLI and IDE | Local rollout files | Exact | Tested, being ported |
 | goose, and the local models it runs | goose's local usage ledger | Exact | Tested, being ported |
 | Kilo Code and similar VS Code agent extensions | Extension task counters | Exact | Tested, being ported |
@@ -67,7 +67,7 @@ Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 | Source id | Surface | Best achievable state | Status | Basis |
 |---|---|---|---|---|
 | `ollama` | Local inference relayed through the shipped capture | Exact | Shipped | `scripts/ollama-capture.mjs`; counters come from the response, one receipt per call |
-| `claude_code`, `claude_cowork` | Claude Code and desktop agent sessions, local transcripts | Exact | Tested, being ported | `DATA_CONTRACT.md` dedupe key `requestId`, latest timestamp wins |
+| `claude_code`, `claude_cowork` | Claude Code and desktop agent sessions, local transcripts | Exact | Shipped | `DATA_CONTRACT.md` dedupe key `requestId`, latest timestamp wins |
 | `perplexity_api` | Perplexity API, captured at call time | Exact | Tested, being ported | `DATA_CONTRACT.md` dedupe key: the API response's own id |
 | `typesafe_api` | TypeSafe API | Exact | Documented | `DATA_CONTRACT.md`: no request id exposed, so receipts key on a SHA-256 of the canonical response |
 | generic | Any source exposing a cumulative snapshot | Exact | Documented | `DATA_CONTRACT.md` `snapshot_key` dominance rules |
@@ -83,7 +83,7 @@ Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 | n/a | Image and video generation services | Unrecoverable | Structural | No token accounting unit |
 | n/a | Deleted or rotated logs | Unrecoverable | Structural | Evidence destroyed |
 ### Reading this table honestly
-Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships one capture today, and the tested extractors are being ported. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
+Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships the Claude Code extractor and the Ollama capture today, and the other tested extractors are being ported. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
 If you verify a surface's real behaviour, open a pull request that moves its row and cites how you established it. A row promoted without evidence is the failure this project exists to prevent.
 ## Adding a surface
 1. Establish which state the surface can reach, using the four questions above.
