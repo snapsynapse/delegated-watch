@@ -13,7 +13,7 @@ What you can recover from your own machine and accounts with this repository, an
 |---|---|---|---|
 | Ollama | Local inference relayed through `npm run ollama:capture` | Exact | Ships |
 | Claude Code and the Claude desktop app's agent sessions | Local transcripts, via `npm run extract:claude-code` | Exact | Ships (desktop sessions verified on macOS; Windows and Linux paths follow platform convention and are unverified) |
-| Codex CLI and IDE | Local rollout files | Exact | Tested, being ported |
+| Codex CLI and IDE | Local rollout files, via `npm run extract:codex` | Exact | Ships |
 | goose, and the local models it runs | goose's local usage ledger | Exact | Tested, being ported |
 | Kilo Code and similar VS Code agent extensions | Extension task counters | Exact | Tested, being ported |
 | Anthropic API | Organization usage API, with an admin key | Exact | Tested, being ported |
@@ -75,7 +75,8 @@ Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 | n/a | Gemini, Vertex, xAI APIs | Exact | Reported (2026-09-22) | Secondary research: per-request usage metadata. No source id yet |
 | n/a | Azure OpenAI, Bedrock | Exact for consumption, coarser per request | Reported (2026-09-22) | Secondary research: cloud billing and service telemetry are authoritative for consumption; per-request token detail generally needs client-side or gateway instrumentation |
 | n/a | Gateways and observability layers: LiteLLM, OpenRouter, Helicone, Langfuse | Exact for everything that traversed them | Reported (2026-09-22) | Secondary research: request-level records with a stable identity, covering every provider behind the layer and nothing that bypassed it. Highest-yield extractor target per `ROADMAP.md` item 5 |
-| `codex`, `kilo`, `snapdev` | IDE and agent surfaces | Exact | Tested, being ported | Local rollout files and extension task counters |
+| `codex` | Codex CLI and IDE | Exact | Shipped | `scripts/extract-codex.js`; cumulative token_count snapshots per rollout |
+| `kilo`, `snapdev` | VS Code agent extensions | Exact | Tested, being ported | Extension task counters |
 | `chatgpt`, `claude_chat`, `claude_cowork`, `claude_design`, `gemini`, `grok`, `perplexity_chat` | Consumer chat products | Dates only, pending evidence of a counter | Reported (2026-09-22) | Secondary research: consumer subscriptions generally report quotas, message windows, or credits rather than authoritative token totals. That makes Dates only the working assumption and Exact the claim requiring evidence, which inverts the burden of proof for this row group. Unconfirmed per product |
 | n/a | Seat-metered assistants: GitHub Copilot, Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Dates only | Reported (2026-09-22) | Secondary research: admin analytics report seats, active users, and feature usage. Underlying token counts are generally not exposed to a subscriber |
 | `qwen_local`, `llama_local`, `gemma_local`, `deepseek_local`, `gpt_oss` | Local models | Exact when relayed through a capture, otherwise Unrecoverable | Recognized | The state is decided by whether the call passes through a capture, not by the model. llama.cpp, LM Studio, MLX, and vLLM each expose per-call counters and none has a capture yet |
@@ -83,7 +84,7 @@ Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 | n/a | Image and video generation services | Unrecoverable | Structural | No token accounting unit |
 | n/a | Deleted or rotated logs | Unrecoverable | Structural | Evidence destroyed |
 ### Reading this table honestly
-Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships the Claude Code extractor and the Ollama capture today, and the other tested extractors are being ported. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
+Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships the Claude Code and Codex extractors and the Ollama capture today, and the other tested extractors are being ported. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
 If you verify a surface's real behaviour, open a pull request that moves its row and cites how you established it. A row promoted without evidence is the failure this project exists to prevent.
 ## Adding a surface
 1. Establish which state the surface can reach, using the four questions above.

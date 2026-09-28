@@ -72,10 +72,11 @@ The importer enforces these before any receipt reaches the dataset.
 - No private URLs.
 - `evidence` describes a work family or review signal generically. It must never reproduce a raw conversation title or any other identifying text.
 ## Dedupe keys
-Documented conventions for extractors you write against this contract. The claude_code extractor and the ollama capture ship with this release; the rest describe how a provider-specific extractor should key its receipts so the reconciliation rules in `scripts/lib/receipt-schema.js` apply correctly.
+Documented conventions for extractors you write against this contract. The claude_code and codex extractors and the ollama capture ship with this release; the rest describe how a provider-specific extractor should key its receipts so the reconciliation rules in `scripts/lib/receipt-schema.js` apply correctly.
 | Source convention | Key | Rule |
 |---|---|---|
 | claude_code | requestId | Latest timestamp wins. A streamed turn rewrites the same request under earlier partial counts before it settles. |
+| codex | cumulative token_count snapshot within one rollout | A repeated cumulative snapshot is skipped; each first-seen snapshot contributes its last_token_usage once. Receipts key on account, machine, and day, so a backup of one store dedupes and distinct stores sum. |
 | perplexity_api | response id | The API response's own identifier. Two independent captures of the same call reconcile to one receipt instead of double counting. |
 | typesafe_api | SHA-256 of the canonical response | No request id is exposed, so byte-identical responses collapse to one receipt. |
 | ollama | one receipt per captured call | Each relayed request and response pair is its own receipt; nothing is pre-aggregated before capture. |
