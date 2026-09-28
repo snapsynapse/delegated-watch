@@ -3,6 +3,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
 ### Added
+- `SURFACES.md` opens with a supported-services list: what ships, what has a tested extractor being ported, what is not yet supported, and what is never countable. `INTENT.md` gains "Who it is for", and `ROADMAP.md` puts porting the tested extractors first.
 - `eval:served` checks every sitemap entry against the page it names: the served file exists, its canonical is the sitemap URL, it is not noindex, its JSON-LD parses, and every modified date it states equals the sitemap `lastmod`, which must be a valid date not in the future. It also checks that `404.html` is noindex and absent from the sitemap.
 ### Changed
 - `docs/sitemap.xml` is built by `npm run build:landing` from `config/site.json`, rather than kept by hand. Its `lastmod` is the same `landing.date_modified` the home page states as `article:modified_time` and JSON-LD `dateModified`, so the three cannot drift apart. The built file is byte-identical to the one it replaces.

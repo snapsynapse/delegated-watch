@@ -1,6 +1,12 @@
 # Roadmap
 What this repository intends to build, in priority order, and what it has decided never to build. `INTENT.md` records why past choices were made; this file records what is not done yet.
 Items are ordered by whether they close a gap between a claim the repository already makes and what its schema can actually keep. An integrity gap outranks a feature.
+## First: port the tested extractors
+The repository's central claim is that a person can install it and recover their own record from every surface they use. With one capture shipped, that claim is mostly unmet, which makes it the widest gap between what the repository says and what it does.
+
+Extractors for Claude Code and the Claude desktop app, Codex, goose, VS Code agent extensions, the Anthropic and OpenAI organization usage APIs, Perplexity call-time capture, and the claude.ai and ChatGPT exports already exist and have been run against real stores. Each ships once it has opt-in source selection, platform path resolution beyond macOS, and a test proving an absent source reads as unavailable. A single `npm run refresh` then runs every enabled extractor, imports, validates, and rebuilds, so that installing and running one command produces a dashboard. `SURFACES.md` tracks each one from "Tested, being ported" to "Ships".
+
+The two usage-API extractors land alongside item 1, because they are where cache and reasoning tokens first need a field.
 ## 1. Cache and reasoning token fields in the receipt schema
 Design invariant 5 says cache and reasoning token treatment is explicit and consistent across every extractor, that cache reads are excluded from headline counts, and that they are preserved in receipt provenance. Receipt schema v2 has no field to preserve them in. `sources.*.tokens` is one number, and the shipped Ollama capture sums `prompt_eval_count` and `eval_count` into it.
 For Ollama that is harmless, because local inference reports neither cache nor reasoning tokens. For Anthropic and OpenAI it is not: both report cache reads separately from fresh input, and reasoning tokens separately from visible output. An extractor written against either today must either discard that breakdown or smuggle it into the total, and both choices break the invariant.

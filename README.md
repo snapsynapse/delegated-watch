@@ -40,12 +40,14 @@ The full surface register, every source id with the recovery state it can reach 
 Receipt JSONL, written by an extractor or a capture tool, is merged by `npm run import` under the gates described in `DATA_CONTRACT.md`. The result is `public/data/daily-burn.json`, the one dataset file. `npm run build` bakes it into `docs/demo/index.html`, a self-contained page that renders straight from disk, and renders the home page at `docs/index.html` from `src/landing.html`, with `docs/sitemap.xml` beside it. Neither served page is hand-edited, and every public URL either one names comes from `config/site.json`.
 The dataset shipped with this candidate is synthetic demonstration data, not anyone's real usage. Regenerate it with `npm run demo:data`, and walk the same importer gates a real receipt would face with `npm run demo:import`.
 ## Running it on your own record
-Write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. The one reference capture in this release is for local inference through Ollama: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
+The goal is that you install this, point it at your own machine and accounts, and see all of your own delegated work: every surface, every provider, as far back as the evidence survives. [SURFACES.md](SURFACES.md#supported-services) lists which services ship today, which have tested extractors being ported, and which are not yet supported.
+
+Write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. The capture that ships today is for local inference through Ollama: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
 Literal
 ```bash
 npm run ollama:capture -- --endpoint generate < request.json
 ```
-Provider-specific extractors, for hosted chat products, IDE extensions, or organization usage APIs, are not included in this release. Each one needs a verified dependency closure against the store it reads, and a test proving that an absent source reads as unavailable rather than as a measured zero. Writing one is covered in `CONTRIBUTING.md`.
+Extractors for Claude Code, Codex, goose, VS Code agent extensions, the Anthropic and OpenAI usage APIs, Perplexity, and the claude.ai and ChatGPT exports have been tested and are being ported; each ships once it clears the bar in `CONTRIBUTING.md`. Writing an extractor for a service that is not yet supported is covered there too.
 ## Commands
 Every command below is documented at the top of its script.
 - `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
@@ -74,7 +76,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.2.1. The first public release was 0.1.0, on the same day. Provider-specific extractors, the scheduled automation that runs a private pipeline unattended, and any real usage data are deliberately excluded. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, and the Ollama capture; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution
