@@ -18,6 +18,8 @@
     "demo:data": "node scripts/synthetic-dataset.js",
     "demo:import": "node scripts/demo-import.js",
     "dev": "node scripts/dev-server.js",
+    "estimate:chatgpt": "node scripts/estimate-chatgpt.js",
+    "estimate:claude-chat": "node scripts/estimate-claude-chat.js",
     "eval": "node scripts/eval-dataset.js",
     "eval:code": "node scripts/eval-code-honesty.js",
     "eval:dashboard": "node scripts/eval-dashboard.js",

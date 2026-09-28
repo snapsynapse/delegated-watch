@@ -72,7 +72,16 @@ read -rs OPENAI_ADMIN_KEY && export OPENAI_ADMIN_KEY && npm run extract:openai-a
 
 An organization report covers every client that used its keys, so it can overlap a local extractor that counted the same calls: Claude Code or Codex signed in with an API key, or an editor extension or agent pointed at the same organization. Anthropic receipts are therefore held in `scratch/reconcile/` until `npm run reconcile:claude` compares them with your Claude Code record and you record a verdict in `config/claude-reconciliation.json`. OpenAI has no reconciliation step yet; if your local OpenAI clients use an API key rather than a ChatGPT sign-in, leave `openai_api` out rather than count those calls twice.
 
-Extractors for Perplexity and the claude.ai and ChatGPT exports have been tested and are being ported; each ships once it clears the bar in `CONTRIBUTING.md`. Writing an extractor for a service that is not yet supported is covered there too.
+Consumer chat products report no token counts, but their account data exports hold the conversations, so usage can be estimated at about four characters per token. Request an export from claude.ai (Settings, Privacy, Export data) or ChatGPT (Settings, Data controls, Export data), unzip a claude.ai export into `raw/claude-export-<date>/`, and place a ChatGPT export ZIP, manifest, or `conversations.json` anywhere under `raw/`, which is never committed. Then:
+
+Literal
+```bash
+npm run estimate:claude-chat; npm run estimate:chatgpt
+```
+
+The claude.ai estimate counts everything that entered or left the model, including thinking, tool calls, tool results, and attachment text, but not the context each turn re-sends, so it is a floor. Overlapping exports dedupe by message. A ChatGPT ZIP is read with the `unzip` program; where that is missing, extract it and point the estimator at the extracted files. Both read from `window_start` in `config/profile.json`, so set it as early as your history goes, or pass `--since` to the ChatGPT estimator.
+
+An extractor for Perplexity has been tested and is being ported; each ships once it clears the bar in `CONTRIBUTING.md`. Writing an extractor for a service that is not yet supported is covered there too.
 ## Commands
 Every command below is documented at the top of its script.
 - `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
@@ -95,6 +104,8 @@ Every command below is documented at the top of its script.
 - `npm run extract:vscode-agents`: extract exact daily usage from Cline, Roo Code, Kilo Code, and Snapdev task counters in every VS Code-family editor.
 - `npm run extract:claude-api`: extract exact daily usage from the Anthropic Admin Usage Report, quarantined until a reconciliation verdict is recorded. Needs `ANTHROPIC_ADMIN_KEY`.
 - `npm run extract:openai-api`: extract exact daily text-token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`.
+- `npm run estimate:chatgpt`: estimate daily ChatGPT usage from an OpenAI account export, at four characters per token.
+- `npm run estimate:claude-chat`: estimate daily claude.ai and Claude Design usage from an account export, at four characters per token, as a floor.
 - `npm run export:csv`: export the dataset as two CSV files, one row per day and one row per day, source, and origin.
 - `npm run import`: merge receipt JSONL into the dataset, enforcing the cutoff, no-decrease, and reconciliation gates.
 - `npm run manifest`: validate and report the accepted-evidence ledger; exits nonzero until an import has accepted evidence, because there is nothing to report before that.
@@ -107,7 +118,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, and the Ollama capture; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, estimators for the claude.ai and ChatGPT exports, and the Ollama capture; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution
