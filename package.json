@@ -25,6 +25,7 @@
     "export:csv": "node scripts/export-csv.js",
     "extract:claude-code": "node scripts/extract-claude-code.js",
     "extract:codex": "node scripts/extract-codex.js",
+    "extract:goose": "node scripts/extract-goose.js",
     "import": "node scripts/import-daily-burn.js",
     "manifest": "node scripts/build-evidence-manifest.js",
     "ollama:capture": "node scripts/ollama-capture.mjs",
