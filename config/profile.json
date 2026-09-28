@@ -1,13 +1,13 @@
 {
   "timezone": "UTC",
-  "window_start": "2025-01-01",
+  "window_start": "2022-11-30",
   "github_username": null,
   "origin": null,
   "machine_alias": null,
   "finalize_after_days": 30,
   "notes": {
     "timezone": "Day-grouping basis for every source. UTC matches how provider usage APIs bucket their own data, so a provider's daily bucket maps to exactly one local day and a full-history fetch costs a handful of requests instead of hundreds. It also removes DST as a class of day-boundary bug.",
-    "window_start": "2025-01-01 because the bundled sample dataset is synthetic and covers calendar year 2025. Set this to whatever date your own recovery effort should start from; it has no relationship to when any provider or model existed.",
+    "window_start": "The earliest day a recovered record can hold. 2022-11-30 is ChatGPT's public launch, the start of the consumer AI era, so a first run keeps everything any source still has. The importer refuses a receipt dated before it, and the ChatGPT and OpenAI extractors start reading here, so an earlier date is only needed for history that genuinely predates it. The synthetic demo frames its own year through window_start in config/site.json, which applies only to synthetic data.",
     "github_username": "Optional GitHub username for adjacent activity context (contribution counts shown alongside token totals, never folded into them). Leave null to disable that panel.",
     "origin": "Stable identity for one (machine, profile) pair, used to attribute receipts when more than one machine or user profile contributes evidence. Left null until first extraction; extractors then derive and pin it, because a hostname can change while the underlying store identity does not.",
     "machine_alias": "Stable scrubbed machine identity used in snapshot keys. Left null until first extraction, then pinned the same way as origin: never rederive it after a hostname change, or one historical store will look like two machines.",

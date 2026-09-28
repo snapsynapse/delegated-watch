@@ -24,6 +24,8 @@
   "note_default_range": "The page opens on the whole record rather than the trailing year, because the synthetic rows sit in a fixed past year. Remove this key or set it to 365 for a live record.",
   "as_of": "2026-01-01",
   "note_as_of": "Synthetic only. The demo is presented as of this day, so the recent windows, freshness ages, and the 1y range describe the synthetic year instead of the months since it ended. The renderer ignores it unless dataset is \"synthetic\"; a live record always runs against today. 2026-01-01 makes 2025-12-31, the last synthetic day, the last elapsed day.",
+  "window_start": "2025-01-01",
+  "note_window_start": "Synthetic only. The demo page opens its recovery window here, on the synthetic year, instead of at the profile's window_start, which is set for real records. The build ignores it unless dataset is \"synthetic\"; a live record always uses config/profile.json.",
   "note_links": "Footer routes for the served page. Like the domain above, these name a public location, so they live here rather than in src/index.html: a build with no site config renders no footer. An agent landing on the dashboard needs a way out of it, to the source, to the contract the data obeys, and to a person.",
   "links": [
     {

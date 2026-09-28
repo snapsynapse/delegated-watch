@@ -28,8 +28,11 @@ const [dailyBurn, githubSummary, observedIntervals, knownActivity, evidenceManif
 // The page needs the recovery window, not just the rows, or "all" silently
 // means "all we found" and the years with nothing recovered become invisible.
 // Personal values stay in config/ and reach the page only through the build.
+// A synthetic demo may frame its own year through site.window_start, the way
+// as_of anchors its end; a measured record always uses the profile's window.
 const { timezone, windowStart } = await import("./lib/profile.js");
-const profileForPage = { timezone: await timezone(), windowStart: await windowStart() };
+const pageWindowStart = site?.dataset === "synthetic" && site?.window_start ? site.window_start : await windowStart();
+const profileForPage = { timezone: await timezone(), windowStart: pageWindowStart };
 
 // Coverage visualization needs interval bounds and status, not the private
 // evidence notes or request costs stored beside them.

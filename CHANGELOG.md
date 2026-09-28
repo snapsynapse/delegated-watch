@@ -16,6 +16,7 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - The CI reproducibility check hashes `docs/sitemap.xml` alongside both pages, so a committed sitemap that a build would change fails the job.
 - `eval:code` scans `src/` as well as `scripts/`, because dashboard source is baked into the served page. The inline-personal-constant rule flags any IANA timezone literal rather than one named zone.
 ### Fixed
+- A first run keeps a person's whole history. `window_start` in `config/profile.json` defaults to 2022-11-30, ChatGPT's public launch, instead of the synthetic demo's year, which made the importer refuse any older receipt and the ChatGPT and OpenAI extractors stop reading at 2025. The demo frames its own year through a synthetic-only `window_start` in `config/site.json`.
 - The landing byline no longer shows a gap before its comma: each phrase is one element, so the flex gap separates phrases rather than punctuation.
 - On a phone the landing navigation keeps its section links on a row under the logo, with the GitHub star reduced to its icon, instead of hiding every link but the star.
 - The demo is anchored to `as_of` in `config/site.json`, which the renderer inlines only for a synthetic dataset and the banner states. Its recent windows, freshness ages, and 1y range now describe the synthetic year instead of the months since it ended. The synthetic generator makes the final fourteen days active so the seven-day average shows a value; earlier rows are unchanged.

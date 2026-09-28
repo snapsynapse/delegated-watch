@@ -79,7 +79,7 @@ Literal
 npm run estimate:claude-chat; npm run estimate:chatgpt
 ```
 
-The claude.ai estimate counts everything that entered or left the model, including thinking, tool calls, tool results, and attachment text, but not the context each turn re-sends, so it is a floor. Overlapping exports dedupe by message. A ChatGPT ZIP is read with the `unzip` program; where that is missing, extract it and point the estimator at the extracted files. Both read from `window_start` in `config/profile.json`, so set it as early as your history goes, or pass `--since` to the ChatGPT estimator.
+The claude.ai estimate counts everything that entered or left the model, including thinking, tool calls, tool results, and attachment text, but not the context each turn re-sends, so it is a floor. Overlapping exports dedupe by message. A ChatGPT ZIP is read with the `unzip` program; where that is missing, extract it and point the estimator at the extracted files. The record starts at `window_start` in `config/profile.json`, 2022-11-30 by default, which is ChatGPT's public launch; set it earlier only if your history predates it.
 
 An extractor for Perplexity has been tested and is being ported; each ships once it clears the bar in `CONTRIBUTING.md`. Writing an extractor for a service that is not yet supported is covered there too.
 ## Commands
