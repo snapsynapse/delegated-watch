@@ -74,11 +74,10 @@ check("no zero-total rows", zeroRows.length ? "FAIL" : "ok",
   zeroRows.map((row) => row.date).join(", "));
 
 // A day-boundary migration leaves duplicates behind. When the profile timezone
-// moved from America/Denver to UTC, every session that ran in the Denver
-// evening moved forward a day; re-extraction wrote the new day, and the old row
-// stayed because the importer merges by date and source and has no way to
-// retire a date no receipt covers any more. Ten such entries survived, double
-// counting 7,289,199 tokens.
+// changes, every session near the old day boundary moves to a neighbouring day;
+// re-extraction writes the new day, and the old row stays because the importer
+// merges by date and source and has no way to retire a date no receipt covers
+// any more. Each surviving entry double counts that day's tokens.
 //
 // The signature is exact: the same source on adjacent days with identical token
 // counts AND identical call counts. Two real days do not agree to the token.

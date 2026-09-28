@@ -34,10 +34,12 @@ const scannedFiles = async () => {
   return stdout.split("\n").filter(Boolean).sort();
 };
 
-test("scans every JavaScript module under scripts/, whatever the extension", async () => {
+test("scans every JavaScript module under scripts/ and src/, whatever the extension", async () => {
   const expected = [];
-  for await (const path of modulesUnder(join(repo, "scripts"))) {
-    expected.push(path.slice(repo.length + 1));
+  for (const dir of ["scripts", "src"]) {
+    for await (const path of modulesUnder(join(repo, dir))) {
+      expected.push(path.slice(repo.length + 1));
+    }
   }
   expected.sort();
 

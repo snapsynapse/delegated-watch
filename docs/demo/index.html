@@ -2262,7 +2262,7 @@ const normalizeLegacyRow = (row) => {
   if (row.sources) return row;
   return {
     date: row.date,
-    timezone: "America/Denver",
+    timezone: window.__PROFILE__?.timezone || "UTC",
     sources: {
       codex: { tokens: row.codex_tokens || 0, fidelity: "exact" },
       claude_code: { tokens: row.claude_code_tokens || 0, calls: row.claude_code_calls || 0, fidelity: "exact" },
@@ -2294,8 +2294,8 @@ const getVisibleWindow = () => {
   const sorted = [...state.rows].sort((a, b) => a.date.localeCompare(b.date));
   if (state.range === "all") {
     // "all" means the whole recovery window, not the span that happens to hold
-    // data. The earliest recovered day is 2025-05-02 and the window opens
-    // 2022-11-30; showing only the former would present 2.4 unexamined years as
+    // data. When the configured window opens before the earliest recovered day,
+    // showing only the recovered span would present the unexamined years as
     // though they did not exist. They render as "no data recovered" -- unknown,
     // which is the finding.
     const opened = window.__PROFILE__?.windowStart;

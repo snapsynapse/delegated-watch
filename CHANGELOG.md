@@ -7,6 +7,10 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ### Changed
 - `docs/sitemap.xml` is built by `npm run build:landing` from `config/site.json`, rather than kept by hand. Its `lastmod` is the same `landing.date_modified` the home page states as `article:modified_time` and JSON-LD `dateModified`, so the three cannot drift apart. The built file is byte-identical to the one it replaces.
 - The CI reproducibility check hashes `docs/sitemap.xml` alongside both pages, so a committed sitemap that a build would change fails the job.
+- `eval:code` scans `src/` as well as `scripts/`, because dashboard source is baked into the served page. The inline-personal-constant rule flags any IANA timezone literal rather than one named zone.
+### Fixed
+- The dashboard's legacy-row fallback reads the timezone from the profile instead of a hard-coded zone.
+- Code comments, an error-message example, a test fixture, and a configuration note no longer carry details of the author's own record: a former timezone, a real token figure, the earliest recovered day, a local account name, or the name of the private producer repository.
 
 ## [0.2.1] - 2026-09-22
 ### Added

@@ -16,7 +16,10 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
-const SCRIPT_DIR = "scripts";
+// Every shipped module: build and extraction scripts, and the dashboard source
+// that is baked into the served page. A personal value inlined in src/ reaches
+// the public site, so it is scanned with the same rules.
+const SCAN_DIRS = ["scripts", "src"];
 const strict = process.argv.includes("--strict");
 const findings = [];
 const note = (file, line, rule, detail) => findings.push({ file, line, rule, detail });
@@ -37,7 +40,7 @@ async function* jsFiles(dir) {
 }
 
 const files = [];
-for await (const file of jsFiles(SCRIPT_DIR)) files.push(file);
+for (const dir of SCAN_DIRS) for await (const file of jsFiles(dir)) files.push(file);
 files.sort();
 
 if (process.argv.includes("--list")) {
@@ -100,7 +103,9 @@ for (const file of files) {
   }
 
   const personalConstant = source.match(
-    /["'`]America\/Denver["'`]|["'`]2022-11-30["'`]/
+    // Any IANA zone literal: a timezone is configuration, and naming one in
+    // code publishes where its author lives.
+    /["'`](?:Africa|America|Antarctica|Asia|Atlantic|Australia|Europe|Indian|Pacific)\/[A-Za-z_]+["'`]|["'`]2022-11-30["'`]/
   );
   if (personalConstant) {
     note(file, 0, "inline-personal-constant",

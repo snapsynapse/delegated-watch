@@ -79,7 +79,7 @@ test("configured day-boundary copy stays truthful for UTC and regional profiles"
   assert.ok(match, "configured day-boundary helper is available for the UI contract");
   const configuredDayBoundaryCopy = new Function(`${match[0].replace(/\n\n\/\/ Fixed ranges[\s\S]*/, "")}\nreturn configuredDayBoundaryCopy;`)();
 
-  for (const timezone of ["UTC", "America/Denver"]) {
+  for (const timezone of ["UTC", "Asia/Tokyo"]) {
     const copy = configuredDayBoundaryCopy(timezone);
     assert.match(copy, new RegExp(`configured ${timezone} day boundary`));
     assert.match(copy, /Provider reports can use different boundaries/);

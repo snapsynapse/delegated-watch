@@ -45,7 +45,7 @@ export function assertOrigin(value) {
   const origin = String(value).trim();
   if (!ORIGIN_PATTERN.test(origin)) {
     throw new Error(
-      `origin "${origin}" must be lowercase alphanumeric with . _ - / separators, e.g. "mbp16/snap" or "account/anthropic"`
+      `origin "${origin}" must be lowercase alphanumeric with . _ - / separators, e.g. "example-laptop/alice" or "account/anthropic"`
     );
   }
   return origin;

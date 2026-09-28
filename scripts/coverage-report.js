@@ -1,6 +1,6 @@
 // Source coverage report for public/data/daily-burn.json.
 //
-// Reports, for the real-data window starting 2022-11-30:
+// Reports, for the recovery window starting at window_start in config/profile.json:
 // - days present vs missing (with explicit missing-day/range listing)
 // - sample-only days (present but still placeholder data)
 // - exact vs estimated token split

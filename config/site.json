@@ -65,7 +65,7 @@
       "https://github.com/snapsynapse/delegated-watch",
       "https://snapsynapse.com/"
     ],
-    "note": "Byline and identity for the landing page. Dates: date_published is the first commit of the private delegated-watch-record repository, where the work began; date_modified is the first public release of this one.",
+    "note": "Byline and identity for the landing page. Dates: date_published is the first commit of the work that preceded this repository; date_modified is the first public release of this one.",
     "extra_links": [
       {
         "label": "Demo",
