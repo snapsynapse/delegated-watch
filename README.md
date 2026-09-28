@@ -112,6 +112,7 @@ Every command below is documented at the top of its script.
 - `npm run extract:claude-code`: extract exact daily usage from Claude Code transcripts and the Claude desktop app's agent sessions, excluding cache reads from the headline.
 - `npm run extract:codex`: extract exact daily usage from Codex rollout files, excluding cached input from the headline.
 - `npm run extract:copilot-cli`: extract exact daily usage from GitHub Copilot CLI session state, counting each session's increase at every shutdown.
+- `npm run extract:cursor`: extract daily usage from Cursor's chat and agent history, as Cursor reports each message's token count.
 - `npm run extract:gemini-cli`: extract exact daily usage from Gemini CLI and Qwen Code chat sessions, excluding cached input from the headline.
 - `npm run extract:goose`: extract exact daily usage from goose's usage ledger, local models by family and hosted providers labelled as goose traffic.
 - `npm run extract:openai-api`: extract exact daily text-token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`.

@@ -28,7 +28,8 @@ What you can recover from your own machine and accounts with this repository, an
 | Azure OpenAI, Amazon Bedrock | Cloud billing and service telemetry | Exact for consumption, coarser per request | Not yet supported |
 | OpenRouter, LiteLLM, Helicone, Langfuse, and other gateways | Request-level records | Exact for everything routed through them | Not yet supported |
 | Zed agent | Local thread database, via `npm run extract:zed-agent` | Exact per thread, dated by thread creation | Ships (field names verified in Zed 1.20.2 on macOS; Windows and Linux locations unverified) |
-| Cursor's and Windsurf's built-in agents, Continue, Aider, JetBrains AI | Local stores and logs, where they persist counters | Unassessed | Not yet supported |
+| Cursor | Local chat and agent history, via `npm run extract:cursor` | Exact as Cursor reports it | Ships (storage verified in Cursor 3.17.21 on macOS; whether its input count includes cached context is not visible in the client) |
+| Windsurf's built-in agent, Continue, Aider, JetBrains AI | Local stores and logs, where they persist counters | Unassessed | Not yet supported |
 | llama.cpp, LM Studio, MLX, vLLM | Per-call counters, through a capture | Exact | Not yet supported |
 | Gemini app, Grok, Perplexity, Microsoft Copilot, Meta AI, NotebookLM | Exports and session history | Dates only, pending evidence of a counter | Not yet supported |
 | GitHub Copilot CLI | Session state, via `npm run extract:copilot-cli` | Exact per session, dated by session end | Ships (verified against the @github/copilot 1.0.73 SDK bundled with VS Code) |

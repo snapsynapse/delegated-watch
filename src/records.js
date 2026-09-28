@@ -8,6 +8,7 @@ const sourceLabels = {
   cline: "Cline",
   codex: "Codex",
   copilot_cli: "Copilot CLI",
+  cursor: "Cursor",
   gemini_cli: "Gemini CLI",
   gemma_local: "Gemma local",
   kilo: "Kilo Code",

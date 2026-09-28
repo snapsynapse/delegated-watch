@@ -97,6 +97,7 @@ const sourceLabels = {
   cline: "Cline",
   codex: "Codex",
   copilot_cli: "Copilot CLI",
+  cursor: "Cursor",
   deepseek_local: "DeepSeek local",
   gemini: "Gemini",
   gemini_cli: "Gemini CLI",
