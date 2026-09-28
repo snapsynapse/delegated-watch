@@ -18,7 +18,7 @@ What you can recover from your own machine and accounts with this repository, an
 | Cline, Roo Code, Kilo Code, Snapdev (in VS Code, Insiders, VSCodium, Cursor, Windsurf) | Extension task counters, via `npm run extract:vscode-agents` | Exact | Ships (Cline, Kilo Code, and Snapdev verified in VS Code on macOS; Roo Code, the other editors, Windows, and Linux follow the same conventions and are unverified) |
 | Anthropic API | Admin Usage Report, via `npm run extract:claude-api` with an admin key | Exact | Ships (held for a reconciliation verdict before import) |
 | OpenAI API | Organization Usage API, via `npm run extract:openai-api` with an admin key | Exact | Ships (no reconciliation step yet; overlaps local clients that use an API key) |
-| Perplexity API | Captured from each response at call time | Exact | Tested, being ported |
+| Perplexity API | Captured from each response at call time, via the Claude Code hook or `npm run perplexity:capture` | Exact | Ships |
 | claude.ai and Claude Design | Account data export, via `npm run estimate:claude-chat` | Estimated | Ships |
 | ChatGPT | Account data export, via `npm run estimate:chatgpt` | Estimated | Ships |
 | Gemini API, Vertex AI, AI Studio, Gemini CLI | Per-request usage metadata; exports | Exact where a counter exists | Not yet supported |
@@ -68,7 +68,7 @@ Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 |---|---|---|---|---|
 | `ollama` | Local inference relayed through the shipped capture | Exact | Shipped | `scripts/ollama-capture.mjs`; counters come from the response, one receipt per call |
 | `claude_code`, `claude_cowork` | Claude Code and desktop agent sessions, local transcripts | Exact | Shipped | `DATA_CONTRACT.md` dedupe key `requestId`, latest timestamp wins |
-| `perplexity_api` | Perplexity API, captured at call time | Exact | Tested, being ported | `DATA_CONTRACT.md` dedupe key: the API response's own id |
+| `perplexity_api` | Perplexity API, captured at call time | Exact | Shipped | `scripts/perplexity-capture.mjs`; counters from each response, deduped by the response's own id, so a call captured twice counts once |
 | `typesafe_api` | TypeSafe API | Exact | Documented | `DATA_CONTRACT.md`: no request id exposed, so receipts key on a SHA-256 of the canonical response |
 | generic | Any source exposing a cumulative snapshot | Exact | Documented | `DATA_CONTRACT.md` `snapshot_key` dominance rules |
 | `claude_api`, `openai_api` | Organization usage reports for hosted provider APIs | Exact | Shipped | `scripts/extract-claude-api.js` and `scripts/extract-openai-api.js`; provider authority, account-scoped. A report covers every client using the organization's keys, so it needs a reconciliation verdict against client-side sources for the same account; Anthropic has one, OpenAI does not yet |
@@ -85,7 +85,7 @@ Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
 | n/a | Image and video generation services | Unrecoverable | Structural | No token accounting unit |
 | n/a | Deleted or rotated logs | Unrecoverable | Structural | Evidence destroyed |
 ### Reading this table honestly
-Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, estimators for the claude.ai and ChatGPT exports, and the Ollama capture, today, and the other tested extractors are being ported. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
+Every Reported and Recognized row is an open question, not a promise. A Reported row rests on secondary research about a vendor, which is the weakest evidence this file admits: it is what someone published about the product, not what anyone here observed it do. The repository ships extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, estimators for the claude.ai and ChatGPT exports, and the Perplexity and Ollama captures, today, and the other tested extractors are being ported. Adding a row's extractor requires a verified dependency closure against the store it reads and a test proving that an absent source reads as unavailable rather than as a measured zero, which is the requirement in `CONTRIBUTING.md`. Until that exists, the surface contributes nothing and the dataset says so by leaving it out.
 If you verify a surface's real behaviour, open a pull request that moves its row and cites how you established it. A row promoted without evidence is the failure this project exists to prevent.
 ## Adding a surface
 1. Establish which state the surface can reach, using the four questions above.
