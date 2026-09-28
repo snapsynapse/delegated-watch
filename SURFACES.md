@@ -30,7 +30,9 @@ What you can recover from your own machine and accounts with this repository, an
 | Cursor's and Windsurf's built-in agents, Continue, Aider, Zed, JetBrains AI | Local stores and logs, where they persist counters | Unassessed | Not yet supported |
 | llama.cpp, LM Studio, MLX, vLLM | Per-call counters, through a capture | Exact | Not yet supported |
 | Gemini app, Grok, Perplexity, Microsoft Copilot, Meta AI, NotebookLM | Exports and session history | Dates only, pending evidence of a counter | Not yet supported |
-| GitHub Copilot, Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Seat and activity analytics | Dates only | Not yet supported |
+| GitHub Copilot CLI | Session state, via `npm run extract:copilot-cli` | Exact per session, dated by session end | Ships (verified against the @github/copilot 1.0.73 SDK bundled with VS Code) |
+| GitHub Copilot Chat in VS Code | No token counts are kept on disk | None | Not recoverable locally (verified) |
+| Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Seat and activity analytics | Dates only | Not yet supported |
 | Provider-side search and research steps; image and video generation; deleted logs | Nothing a client can read | None | Not countable |
 
 If you use a service that is missing here, open an issue naming it. If you have established what it exposes, a pull request that adds the row with its evidence is better still.

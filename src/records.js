@@ -7,6 +7,7 @@ const sourceLabels = {
   claude_design: "Claude Design",
   cline: "Cline",
   codex: "Codex",
+  copilot_cli: "Copilot CLI",
   gemini_cli: "Gemini CLI",
   gemma_local: "Gemma local",
   kilo: "Kilo Code",

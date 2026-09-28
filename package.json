@@ -28,6 +28,7 @@
     "extract:claude-api": "node scripts/extract-claude-api.js",
     "extract:claude-code": "node scripts/extract-claude-code.js",
     "extract:codex": "node scripts/extract-codex.js",
+    "extract:copilot-cli": "node scripts/extract-copilot-cli.js",
     "extract:gemini-cli": "node scripts/extract-gemini-cli.js",
     "extract:goose": "node scripts/extract-goose.js",
     "extract:openai-api": "node scripts/extract-openai-api.js",
