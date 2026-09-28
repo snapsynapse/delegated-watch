@@ -39,6 +39,7 @@
     "install:perplexity-hook": "node scripts/install-perplexity-hook.mjs",
     "manifest": "node scripts/build-evidence-manifest.js",
     "ollama:capture": "node scripts/ollama-capture.mjs",
+    "openai-compatible:capture": "node scripts/openai-compatible-capture.mjs",
     "perplexity:capture": "node scripts/perplexity-capture.mjs",
     "privacy:receipts": "node scripts/privacy-check-receipts.js",
     "reconcile:claude": "node scripts/reconcile-claude.js",

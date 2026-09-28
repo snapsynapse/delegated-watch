@@ -9,16 +9,22 @@ const sourceLabels = {
   codex: "Codex",
   copilot_cli: "Copilot CLI",
   cursor: "Cursor",
+  deepseek_api: "DeepSeek API",
   gemini_cli: "Gemini CLI",
   gemma_local: "Gemma local",
+  groq_api: "Groq API",
   kilo: "Kilo Code",
+  mistral_api: "Mistral API",
   openai_api: "OpenAI API",
+  openrouter_api: "OpenRouter API",
   perplexity_api: "Perplexity API",
   qwen_code: "Qwen Code",
   qwen_local: "Qwen local",
   roo_code: "Roo Code",
   snapdev: "Snapdev",
+  together_api: "Together API",
   typesafe_api: "TypeSafe API",
+  xai_api: "xAI API",
   zed_agent: "Zed agent"
 };
 

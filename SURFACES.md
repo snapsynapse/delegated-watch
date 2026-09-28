@@ -65,8 +65,8 @@ Verification, for rows that ship:
 | OpenAI API | Organization Usage API, `npm run extract:openai-api` | Exact | Ships | Real data (same responses as the tested version) |
 | Perplexity API | Counters captured from each response, the Claude Code hook or `npm run perplexity:capture` | Exact | Ships | Real data (same responses as the tested version) |
 | TypeSafe API | Counters captured from each response, the same hook or `npm run typesafe:capture` | Exact | Ships | Real data (same responses as the tested version) |
-| OpenRouter | Account and generation usage API, covering every model routed through it | Exact | Planned | |
-| xAI, Mistral, DeepSeek, Groq, and other OpenAI-compatible APIs | Usage object in each response, through one OpenAI-compatible capture | Exact | Planned | |
+| OpenRouter | Per-call through `npm run openai-compatible:capture`; account-wide through its usage API | Exact | Ships per call; account-wide Planned | Synthetic |
+| xAI, Mistral, DeepSeek, Groq, Together, and other OpenAI-compatible APIs | Usage object in each response, `npm run openai-compatible:capture` | Exact | Ships | Synthetic |
 | Gemini API, Vertex AI, AI Studio | Usage metadata in each response; Cloud billing export | Exact where a counter exists | Planned | |
 | Azure OpenAI | Usage object in each response; Azure Monitor metrics | Exact for consumption | Planned | |
 | Amazon Bedrock | Usage in each response; CloudWatch metrics | Exact for consumption | Planned | |
@@ -77,7 +77,7 @@ Verification, for rows that ship:
 | Surface | Evidence, and how to run it | Fidelity | Status | Verification |
 |---|---|---|---|---|
 | Ollama | Counters relayed through `npm run ollama:capture` | Exact | Ships | Real data |
-| LM Studio, llama.cpp server, vLLM, MLX server | Usage object in each OpenAI-compatible response, through the same capture as the hosted APIs | Exact | Planned | |
+| LM Studio, llama.cpp server, vLLM, MLX server | Usage object in each OpenAI-compatible response, `npm run openai-compatible:capture` | Exact | Ships | Synthetic |
 
 ### Seat-metered assistants, and what nothing can count
 

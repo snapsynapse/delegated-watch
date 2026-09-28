@@ -60,6 +60,15 @@ Literal
 
 Every extractor can also be run on its own, as the commands below list. The Claude Code extractor reads the transcript store read-only (`$CLAUDE_CONFIG_DIR/projects`, or `~/.claude/projects`) and the desktop app's session stores, writes one receipt file per source under `scratch/receipts/`, and reports each store as read, not found, or unreadable. Unreadable exits 3, because that usage is unknown rather than zero. Point `--root` at a backup of the transcript store to recover days the CLI has since pruned. The Codex extractor reads `$CODEX_HOME` (or `~/.codex`) the same way, counting non-cached input plus output; to read a backup or a store copied from another machine, pass `--sessions DIR` with `--local-store` for your own store or `--tag ORIGIN` for someone else's. The goose extractor opens goose's `sessions.db` read-only through Node's built-in SQLite, so no `sqlite3` program is needed; it maps local models to their family (`qwen_local`, `gemma_local`) and labels calls goose routed to a hosted provider as `goose_<provider>`. Ledger rows with cache reads need `--cache-convention`, because whether goose's input count includes them varies by provider. The VS Code agents extractor reads Cline, Roo Code, Kilo Code, and Snapdev task stores in VS Code, VS Code Insiders, VSCodium, Cursor, and Windsurf; records whose cache counters fit both counting conventions need `--token-convention legacy` or `inclusive`, which depends on the provider the extension was pointed at, and can be given per source as `SOURCE=legacy` or `SOURCE=inclusive`.
 
+For a local runner or a hosted API that speaks the OpenAI chat completions shape, relay each scripted call through one capture. It passes the request and response through unchanged and keeps only the model and the counters. Presets cover LM Studio, llama.cpp, vLLM, and MLX locally, and xAI, Mistral, DeepSeek, Groq, OpenRouter, and Together hosted, each reading its key from its own environment variable, such as `XAI_API_KEY`:
+
+Literal
+```bash
+npm run openai-compatible:capture -- --provider lmstudio < request.json
+```
+
+For any other endpoint, pass `--base-url` with `--source`, and `--key-env` naming the variable that holds its key. OpenAI itself is left to its organization usage report, so its calls are never counted twice.
+
 For any other source, write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. For local inference through Ollama, relay calls through the capture: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
 Literal
 ```bash
@@ -131,6 +140,7 @@ Every command below is documented at the top of its script.
 - `npm run install:perplexity-hook`: register the Perplexity capture hook in Claude Code settings, with a private backup; `-- --check` reports what is registered.
 - `npm run manifest`: validate and report the accepted-evidence ledger; exits nonzero until an import has accepted evidence, because there is nothing to report before that.
 - `npm run ollama:capture`: capture exact token counts from a local Ollama call without persisting the prompt or the response.
+- `npm run openai-compatible:capture`: relay one chat completions request to an OpenAI-compatible endpoint, a local runner or a hosted API, and capture its usage counters, never the messages or the answer.
 - `npm run perplexity:capture`: relay one Perplexity request from stdin and capture its usage counters, never the query or answer.
 - `npm run privacy:receipts`: scan retained receipts and labels for private-shaped content.
 - `npm run reconcile:claude`: compare Anthropic API-reported usage against transcript-derived usage and recommend additive or overlapping.
