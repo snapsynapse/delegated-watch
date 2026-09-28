@@ -11,10 +11,13 @@ Status:
 - **Not recoverable**: checked, and the surface keeps no usage anywhere a client can read.
 - **Not countable**: no extractor can recover a token figure, for the structural reasons below.
 
-Verification, for rows that ship:
-- **Real data**: run against real stores or exports and matched, day by day, against an independently tested version.
-- **Tool's own code**: the format is read from the tool's own recording code or schema on a real install, but that install held no usage to count yet.
-- **Synthetic**: tested only against synthetic fixtures, because no install was available.
+Verification, for rows that ship. Only the first level means this release has counted someone's actual usage:
+- **Real data**: this release was run against real stores or exports and matched, day by day, against an independently tested version.
+- **Parity**: given identical inputs, this release produces the same receipts as a version that runs against the live service, but this release has not itself been run against the live service.
+- **Tool's own code**: the format was read from the tool's own recording code or schema on a real install, but that install held no usage to count, so the counting has not been checked against real usage.
+- **Synthetic**: tested only against synthetic fixtures.
+
+Every verification so far was on macOS. Windows and Linux store locations follow each tool's documented conventions and are untested. Planned surfaces are installed and tested before they ship, per `ROADMAP.md`.
 
 ### Coding agents and CLIs
 
@@ -37,7 +40,7 @@ Verification, for rows that ship:
 
 | Surface | Evidence, and how to run it | Fidelity | Status | Verification |
 |---|---|---|---|---|
-| Cline | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real data (store read; its records need `--token-convention`) |
+| Cline | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real store read; not yet counted, because its records need a `--token-convention` choice |
 | Kilo Code | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real data |
 | Snapdev | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real data |
 | Roo Code | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Synthetic |
@@ -61,10 +64,10 @@ Verification, for rows that ship:
 
 | Surface | Evidence, and how to run it | Fidelity | Status | Verification |
 |---|---|---|---|---|
-| Anthropic API | Admin Usage Report, `npm run extract:claude-api`, held for a reconciliation verdict | Exact | Ships | Real data (same responses as the tested version) |
-| OpenAI API | Organization Usage API, `npm run extract:openai-api` | Exact | Ships | Real data (same responses as the tested version) |
-| Perplexity API | Counters captured from each response, the Claude Code hook or `npm run perplexity:capture` | Exact | Ships | Real data (same responses as the tested version) |
-| TypeSafe API | Counters captured from each response, the same hook or `npm run typesafe:capture` | Exact | Ships | Real data (same responses as the tested version) |
+| Anthropic API | Admin Usage Report, `npm run extract:claude-api`, held for a reconciliation verdict | Exact | Ships | Parity |
+| OpenAI API | Organization Usage API, `npm run extract:openai-api` | Exact | Ships | Parity |
+| Perplexity API | Counters captured from each response, the Claude Code hook or `npm run perplexity:capture` | Exact | Ships | Parity |
+| TypeSafe API | Counters captured from each response, the same hook or `npm run typesafe:capture` | Exact | Ships | Parity |
 | OpenRouter | Per-call through `npm run openai-compatible:capture`; account-wide through its usage API | Exact | Ships per call; account-wide Planned | Synthetic |
 | xAI, Mistral, DeepSeek, Groq, Together, and other OpenAI-compatible APIs | Usage object in each response, `npm run openai-compatible:capture` | Exact | Ships | Synthetic |
 | Gemini API, Vertex AI, AI Studio | Usage metadata in each response; Cloud billing export | Exact where a counter exists | Planned | |
@@ -76,7 +79,7 @@ Verification, for rows that ship:
 
 | Surface | Evidence, and how to run it | Fidelity | Status | Verification |
 |---|---|---|---|---|
-| Ollama | Counters relayed through `npm run ollama:capture` | Exact | Ships | Real data |
+| Ollama | Counters relayed through `npm run ollama:capture` | Exact | Ships | Synthetic |
 | LM Studio, llama.cpp server, vLLM, MLX server | Usage object in each OpenAI-compatible response, `npm run openai-compatible:capture` | Exact | Ships | Synthetic |
 
 ### Seat-metered assistants, and what nothing can count
@@ -86,7 +89,7 @@ Verification, for rows that ship:
 | Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Seat and activity analytics, no token counts | Dates only | Researching | |
 | Provider-side search and research steps; image and video generation; deleted logs | Nothing a client can read | None | Not countable | |
 
-If you use a surface that is missing here, open an issue naming it. If you have established what it exposes, a pull request that adds the row with its evidence is better still. Rows marked Tool's own code or Synthetic move to Real data when someone runs them against a real store and reports the result.
+If you use a surface that is missing here, open an issue naming it. If you have established what it exposes, a pull request that adds the row with its evidence is better still. A row moves to Real data only when this release is run against a real store and matched; a report of that from anyone who uses the surface is welcome.
 ## The four recovery states
 A surface is not simply queryable or not. The record distinguishes four states, because collapsing them is how a dashboard ends up reporting absence as zero.
 | State | What exists | How it lands in the dataset |
