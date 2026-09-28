@@ -94,6 +94,7 @@ const sourceLabels = {
   claude_code: "Claude Code",
   claude_cowork: "Claude Cowork",
   claude_design: "Claude Design",
+  cline: "Cline",
   codex: "Codex",
   deepseek_local: "DeepSeek local",
   gemini: "Gemini",
@@ -110,6 +111,7 @@ const sourceLabels = {
   perplexity_api: "Perplexity API",
   perplexity_chat: "Perplexity Chat",
   qwen_local: "Qwen local",
+  roo_code: "Roo Code",
   snapdev: "Snapdev",
   typesafe_api: "TypeSafe API",
   local_qwen: "Qwen local"

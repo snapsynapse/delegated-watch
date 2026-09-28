@@ -5,12 +5,14 @@ const sourceLabels = {
   claude_code: "Claude Code",
   claude_cowork: "Claude Cowork",
   claude_design: "Claude Design",
+  cline: "Cline",
   codex: "Codex",
   gemma_local: "Gemma local",
   kilo: "Kilo Code",
   openai_api: "OpenAI API",
   perplexity_api: "Perplexity API",
   qwen_local: "Qwen local",
+  roo_code: "Roo Code",
   snapdev: "Snapdev",
   typesafe_api: "TypeSafe API"
 };
