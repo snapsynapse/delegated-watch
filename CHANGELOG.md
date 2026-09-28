@@ -9,6 +9,8 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - The CI reproducibility check hashes `docs/sitemap.xml` alongside both pages, so a committed sitemap that a build would change fails the job.
 - `eval:code` scans `src/` as well as `scripts/`, because dashboard source is baked into the served page. The inline-personal-constant rule flags any IANA timezone literal rather than one named zone.
 ### Fixed
+- `npm ci` works from a fresh clone. The landing page and the assistant guide both run it, and it refused with EUSAGE because no lockfile existed. `package-lock.json` records the empty dependency set and is inventoried; the guide's bytes, manifest, and DNS anchor are unchanged.
+- The `--fresh-history` test disables commit signing for its fixture commits, so the suite passes for a contributor with `commit.gpgsign` set and a locked key.
 - The dashboard's legacy-row fallback reads the timezone from the profile instead of a hard-coded zone.
 - Code comments, an error-message example, a test fixture, and a configuration note no longer carry details of the author's own record: a former timezone, a real token figure, the earliest recovered day, a local account name, or the name of the private producer repository.
 

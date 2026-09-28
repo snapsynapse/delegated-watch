@@ -439,7 +439,9 @@ test("--json writes the inventory hash, the per-file hashes and the verdict", as
 test("--fresh-history accepts one local commit and rejects two, a remote, or a dirty tree", async (t) => {
   const prepare = async () => {
     const fixture = await buildCandidate(t);
-    const git = (...args) => execFileSync("git", ["-C", fixture.candidate, ...args], { encoding: "utf8" });
+    // Signing is disabled per call so a contributor with commit.gpgsign and a
+    // locked key still runs the suite; the fixture commits are throwaway.
+    const git = (...args) => execFileSync("git", ["-C", fixture.candidate, "-c", "commit.gpgsign=false", ...args], { encoding: "utf8" });
     git("init", "-q", "-b", "main");
     git("config", "user.email", "fixture@example.invalid");
     git("config", "user.name", "Fixture");
