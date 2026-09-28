@@ -103,3 +103,28 @@ test("settings that are not valid JSON are refused and left exactly as they were
   assert.equal((await stat(fresh)).mode & 0o777, 0o600);
   assert.equal(install(repo, ["--bogus"]).status, 64);
 });
+
+test("the hook sends each API's output to its own capture and ignores everything else", async () => {
+  const root = await mkdtemp(join(tmpdir(), "hook-dispatch-"));
+  const copy = await specialRepo(root);
+  const hook = join(copy, "scripts", "perplexity-capture-hook.sh");
+  const envelope = (host, body) => JSON.stringify({
+    tool_input: { command: `curl -s https://${host}/` },
+    tool_response: { stdout: JSON.stringify(body) }
+  });
+  const runHook = (input) => spawnSync("sh", [hook], { input, encoding: "utf8" });
+
+  assert.equal(runHook(envelope("api.perplexity.ai", {
+    id: "p-1", model: "sonar", created: 1767355200, usage: { prompt_tokens: 3, completion_tokens: 4, total_tokens: 7 }
+  })).status, 0);
+  assert.equal(runHook(envelope("api.typesafe.ai", {
+    model: "jev-test", answers: { is_synthetic: { type: "noul", noul: 0.9 } }, usage: { input_tokens: 5, output_tokens: 6 }
+  })).status, 0);
+  assert.equal(runHook(envelope("example.com", { usage: { prompt_tokens: 1, completion_tokens: 1 } })).status, 0);
+  assert.equal(runHook("not json at all").status, 0, "a capture problem never fails the command");
+
+  const receipts = join(copy, "scratch", "receipts");
+  assert.deepEqual((await readdir(receipts)).sort(), ["perplexity-api.jsonl", "typesafe-api.jsonl"]);
+  assert.equal(JSON.parse(await readFile(join(receipts, "perplexity-api.jsonl"), "utf8")).tokens, 7);
+  assert.equal(JSON.parse(await readFile(join(receipts, "typesafe-api.jsonl"), "utf8")).tokens, 11);
+});

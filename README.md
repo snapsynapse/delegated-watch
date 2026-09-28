@@ -81,14 +81,14 @@ npm run estimate:claude-chat; npm run estimate:chatgpt
 
 The claude.ai estimate counts everything that entered or left the model, including thinking, tool calls, tool results, and attachment text, but not the context each turn re-sends, so it is a floor. Overlapping exports dedupe by message. A ChatGPT ZIP is read with the `unzip` program; where that is missing, extract it and point the estimator at the extracted files. The record starts at `window_start` in `config/profile.json`, 2022-11-30 by default, which is ChatGPT's public launch; set it earlier only if your history predates it.
 
-Perplexity publishes no usage endpoint: the usage object in each API response is the only count that will ever exist for a call, and it is gone once the response is discarded. If you call Perplexity from Claude Code, register the capture hook once per machine, then restart Claude Code:
+Perplexity and TypeSafe publish no usage endpoint: the usage object in each API response is the only count that will ever exist for a call, and it is gone once the response is discarded. If you call either from Claude Code, register the capture hook once per machine, then restart Claude Code; one hook covers both:
 
 Literal
 ```bash
 npm run install:perplexity-hook
 ```
 
-It edits your Claude Code `settings.json` with a private backup, preserves everything else in it, and refuses a file it cannot parse; `npm run install:perplexity-hook -- --check` reports what is registered. The hook keeps the counters and never the query or answer. It can only capture what a command printed, so a command that prints just the answer text discards the usage object first: print the raw response, or at least its `id`, `model`, `created`, and `usage` fields. For scripted calls outside Claude Code, relay a request body through `npm run perplexity:capture`, which returns the response unchanged. Writing an extractor for a service that is not yet supported is covered in `CONTRIBUTING.md`.
+It edits your Claude Code `settings.json` with a private backup, preserves everything else in it, and refuses a file it cannot parse; `npm run install:perplexity-hook -- --check` reports what is registered. The hook keeps the counters and never the query or answer. It can only capture what a command printed, so a command that prints just the answer text discards the usage object first: print the raw response, or at least its `id`, `model`, `created`, and `usage` fields. For scripted calls outside Claude Code, relay a request body through `npm run perplexity:capture` or `npm run typesafe:capture`, which return the response unchanged. A TypeSafe response carries no request id, so its receipts key on a hash of the response; two byte-identical responses on one day count once. Writing an extractor for a service that is not yet supported is covered in `CONTRIBUTING.md`.
 ## Commands
 Every command below is documented at the top of its script.
 - `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
@@ -119,6 +119,7 @@ Every command below is documented at the top of its script.
 - `npm run ollama:capture`: capture exact token counts from a local Ollama call without persisting the prompt or the response.
 - `npm run install:perplexity-hook`: register the Perplexity capture hook in Claude Code settings, with a private backup; `-- --check` reports what is registered.
 - `npm run perplexity:capture`: relay one Perplexity request from stdin and capture its usage counters, never the query or answer.
+- `npm run typesafe:capture`: relay one TypeSafe request from stdin and capture its usage counters, never the state, questions, or answers.
 - `npm run privacy:receipts`: scan retained receipts and labels for private-shaped content.
 - `npm run reconcile:claude`: compare Anthropic API-reported usage against transcript-derived usage and recommend additive or overlapping.
 - `npm run test`: run the test suite against synthetic fixtures.
@@ -127,7 +128,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, estimators for the claude.ai and ChatGPT exports, and the Perplexity and Ollama captures; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, estimators for the claude.ai and ChatGPT exports, and the Perplexity, TypeSafe, and Ollama captures; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution

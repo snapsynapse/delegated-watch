@@ -39,6 +39,7 @@
     "privacy:receipts": "node scripts/privacy-check-receipts.js",
     "reconcile:claude": "node scripts/reconcile-claude.js",
     "test": "npm run check:runtime && node --test tests/*.test.js",
+    "typesafe:capture": "node scripts/typesafe-capture.mjs",
     "validate": "node scripts/validate-data.js",
     "verify:candidate": "node scripts/verify-public-candidate.js"
   }
