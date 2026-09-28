@@ -2,42 +2,91 @@
 Every place delegated work happens, and what can be recovered from each. This file is the authoritative list; the home page links it from the FAQ.
 A surface is where the interaction happened. A provider is whose model answered. They are separate dimensions: an IDE extension is a surface, and the model behind it is a provider. One provider reaches you through several surfaces, and one surface routes to several providers.
 ## Supported services
-What you can recover from your own machine and accounts with this repository, and what you cannot yet. The target is every surface; this list says honestly where the release stands against it. The detailed register further down gives the recovery state and evidence for each row.
+Every agentic surface this project knows about, in one list: what ships today, what is planned next and how, what is still being researched, and what can never be counted. The target is every surface; this list says honestly where the release stands against it. The detailed register further down gives the recovery state and evidence for each source id.
 
-- **Ships**: an extractor or capture is in this release. Run it now.
-- **Tested, being ported**: an extractor exists and has been run against real stores on macOS, but has not yet cleared the release bar in `CONTRIBUTING.md` (opt-in source selection, platform paths, an absent-source test). It ships as soon as it does.
-- **Not yet supported**: no extractor yet. The receipt contract in `DATA_CONTRACT.md` is enough to write one, and contributions are welcome.
-- **Not countable**: no extractor can recover a token figure, for the structural reasons listed below.
+Status:
+- **Ships**: an extractor, estimator, or capture is in this release. Run it now.
+- **Planned**: the evidence is known to exist and the method is decided; it is on `ROADMAP.md`.
+- **Researching**: no script-readable counter has been found yet. Evidence that one exists moves the row to Planned.
+- **Not recoverable**: checked, and the surface keeps no usage anywhere a client can read.
+- **Not countable**: no extractor can recover a token figure, for the structural reasons below.
 
-| Service | Where the evidence lives | Fidelity | Status |
-|---|---|---|---|
-| Ollama | Local inference relayed through `npm run ollama:capture` | Exact | Ships |
-| Claude Code and the Claude desktop app's agent sessions | Local transcripts, via `npm run extract:claude-code` | Exact | Ships (desktop sessions verified on macOS; Windows and Linux paths follow platform convention and are unverified) |
-| Codex CLI and IDE | Local rollout files, via `npm run extract:codex` | Exact | Ships |
-| goose, and the local models it runs | goose's local usage ledger, via `npm run extract:goose` | Exact | Ships (verified on macOS; `GOOSE_PATH_ROOT` and the Windows location follow goose's documentation and are unverified) |
-| Cline, Roo Code, Kilo Code, Snapdev (in VS Code, Insiders, VSCodium, Cursor, Windsurf) | Extension task counters, via `npm run extract:vscode-agents` | Exact | Ships (Cline, Kilo Code, and Snapdev verified in VS Code on macOS; Roo Code, the other editors, Windows, and Linux follow the same conventions and are unverified) |
-| Anthropic API | Admin Usage Report, via `npm run extract:claude-api` with an admin key | Exact | Ships (held for a reconciliation verdict before import) |
-| OpenAI API | Organization Usage API, via `npm run extract:openai-api` with an admin key | Exact | Ships (no reconciliation step yet; overlaps local clients that use an API key) |
-| Perplexity API | Captured from each response at call time, via the Claude Code hook or `npm run perplexity:capture` | Exact | Ships |
-| TypeSafe API | Captured from each response at call time, via the same hook or `npm run typesafe:capture` | Exact | Ships |
-| claude.ai and Claude Design | Account data export, via `npm run estimate:claude-chat` | Estimated | Ships |
-| ChatGPT | Account data export, via `npm run estimate:chatgpt` | Estimated | Ships |
-| Gemini CLI and Qwen Code | Local chat sessions, via `npm run extract:gemini-cli` | Exact | Ships (Gemini CLI verified against its 0.58.0 recording code; Qwen Code follows the same format and is unverified) |
-| Gemini API, Vertex AI, AI Studio | Per-request usage metadata; billing exports | Exact where a counter exists | Not yet supported |
-| xAI, Mistral, DeepSeek, and other hosted APIs | Per-request usage metadata | Exact | Not yet supported |
-| Azure OpenAI, Amazon Bedrock | Cloud billing and service telemetry | Exact for consumption, coarser per request | Not yet supported |
-| OpenRouter, LiteLLM, Helicone, Langfuse, and other gateways | Request-level records | Exact for everything routed through them | Not yet supported |
-| Zed agent | Local thread database, via `npm run extract:zed-agent` | Exact per thread, dated by thread creation | Ships (field names verified in Zed 1.20.2 on macOS; Windows and Linux locations unverified) |
-| Cursor | Local chat and agent history, via `npm run extract:cursor` | Exact as Cursor reports it | Ships (storage verified in Cursor 3.17.21 on macOS; whether its input count includes cached context is not visible in the client) |
-| Windsurf's built-in agent, Continue, Aider, JetBrains AI | Local stores and logs, where they persist counters | Unassessed | Not yet supported |
-| llama.cpp, LM Studio, MLX, vLLM | Per-call counters, through a capture | Exact | Not yet supported |
-| Gemini app, Grok, Perplexity, Microsoft Copilot, Meta AI, NotebookLM | Exports and session history | Dates only, pending evidence of a counter | Not yet supported |
-| GitHub Copilot CLI | Session state, via `npm run extract:copilot-cli` | Exact per session, dated by session end | Ships (verified against the @github/copilot 1.0.73 SDK bundled with VS Code) |
-| GitHub Copilot Chat in VS Code | No token counts are kept on disk | None | Not recoverable locally (verified) |
-| Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Seat and activity analytics | Dates only | Not yet supported |
-| Provider-side search and research steps; image and video generation; deleted logs | Nothing a client can read | None | Not countable |
+Verification, for rows that ship:
+- **Real data**: run against real stores or exports and matched, day by day, against an independently tested version.
+- **Tool's own code**: the format is read from the tool's own recording code or schema on a real install, but that install held no usage to count yet.
+- **Synthetic**: tested only against synthetic fixtures, because no install was available.
 
-If you use a service that is missing here, open an issue naming it. If you have established what it exposes, a pull request that adds the row with its evidence is better still.
+### Coding agents and CLIs
+
+| Surface | Evidence, and how to run it | Fidelity | Status | Verification |
+|---|---|---|---|---|
+| Claude Code | Local transcripts, `npm run extract:claude-code` | Exact | Ships | Real data |
+| Codex CLI and IDE | Local rollout files, `npm run extract:codex` | Exact | Ships | Real data |
+| goose, and the local models it runs | Local usage ledger, `npm run extract:goose` | Exact | Ships | Real data |
+| Gemini CLI | Local chat sessions, `npm run extract:gemini-cli` | Exact | Ships | Tool's own code (0.58.0) |
+| Qwen Code | Local chat sessions in Gemini CLI's format, `npm run extract:gemini-cli` | Exact | Ships | Synthetic |
+| GitHub Copilot CLI | Session state, increase at each session end, `npm run extract:copilot-cli` | Exact per session | Ships | Tool's own code (SDK 1.0.73) |
+| OpenCode | Local session store under its data directory | Exact | Planned | |
+| Amp | Local thread store | Exact | Planned | |
+| Factory Droid | Local session logs | Exact | Planned | |
+| Kimi CLI | Local session logs | Exact | Planned | |
+| Grok Build CLI | Local session logs | Exact | Planned | |
+| Crush, Aider, Warp, Kiro | No persisted per-request counter found | Unassessed | Researching | |
+
+### Editors and editor extensions
+
+| Surface | Evidence, and how to run it | Fidelity | Status | Verification |
+|---|---|---|---|---|
+| Cline | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real data (store read; its records need `--token-convention`) |
+| Kilo Code | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real data |
+| Snapdev | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Real data |
+| Roo Code | Extension task counters, `npm run extract:vscode-agents` | Exact | Ships | Synthetic |
+| Those four inside VS Code Insiders, VSCodium, Cursor, and Windsurf | The same task counters, read from each editor | Exact | Ships | Synthetic |
+| Cursor's own chat and agent | Local history database, `npm run extract:cursor` | Exact as Cursor reports it | Ships | Tool's own code (3.17.21) |
+| Zed agent | Local thread database, dated by thread creation, `npm run extract:zed-agent` | Exact per thread | Ships | Tool's own code (1.20.2) |
+| GitHub Copilot Chat in VS Code | No token counts are kept on disk | None | Not recoverable | Checked on a real install |
+| Google Antigravity | Local conversations, stored as protobuf without a published schema | Unassessed | Researching | |
+| Windsurf's own agent, Continue, JetBrains AI Assistant and Junie | No persisted per-request counter found | Unassessed | Researching | |
+
+### Desktop and chat apps
+
+| Surface | Evidence, and how to run it | Fidelity | Status | Verification |
+|---|---|---|---|---|
+| Claude desktop app, agent sessions | Local session stores, `npm run extract:claude-code` | Exact | Ships | Real data |
+| claude.ai and Claude Design | Account data export, `npm run estimate:claude-chat` | Estimated, a floor | Ships | Real data |
+| ChatGPT | Account data export, `npm run estimate:chatgpt` | Estimated | Ships | Real data |
+| Gemini app, Grok, Perplexity, Microsoft Copilot, Meta AI, NotebookLM | Exports and session history, with no counter found | Dates only | Researching | |
+
+### Hosted APIs and gateways
+
+| Surface | Evidence, and how to run it | Fidelity | Status | Verification |
+|---|---|---|---|---|
+| Anthropic API | Admin Usage Report, `npm run extract:claude-api`, held for a reconciliation verdict | Exact | Ships | Real data (same responses as the tested version) |
+| OpenAI API | Organization Usage API, `npm run extract:openai-api` | Exact | Ships | Real data (same responses as the tested version) |
+| Perplexity API | Counters captured from each response, the Claude Code hook or `npm run perplexity:capture` | Exact | Ships | Real data (same responses as the tested version) |
+| TypeSafe API | Counters captured from each response, the same hook or `npm run typesafe:capture` | Exact | Ships | Real data (same responses as the tested version) |
+| OpenRouter | Account and generation usage API, covering every model routed through it | Exact | Planned | |
+| xAI, Mistral, DeepSeek, Groq, and other OpenAI-compatible APIs | Usage object in each response, through one OpenAI-compatible capture | Exact | Planned | |
+| Gemini API, Vertex AI, AI Studio | Usage metadata in each response; Cloud billing export | Exact where a counter exists | Planned | |
+| Azure OpenAI | Usage object in each response; Azure Monitor metrics | Exact for consumption | Planned | |
+| Amazon Bedrock | Usage in each response; CloudWatch metrics | Exact for consumption | Planned | |
+| LiteLLM, Helicone, Langfuse | Request-level records in the gateway's own store | Exact for what was routed through them | Planned | |
+
+### Local model runners
+
+| Surface | Evidence, and how to run it | Fidelity | Status | Verification |
+|---|---|---|---|---|
+| Ollama | Counters relayed through `npm run ollama:capture` | Exact | Ships | Real data |
+| LM Studio, llama.cpp server, vLLM, MLX server | Usage object in each OpenAI-compatible response, through the same capture as the hosted APIs | Exact | Planned | |
+
+### Seat-metered assistants, and what nothing can count
+
+| Surface | Evidence, and how to run it | Fidelity | Status | Verification |
+|---|---|---|---|---|
+| Microsoft 365 Copilot, Amazon Q, Gemini Code Assist | Seat and activity analytics, no token counts | Dates only | Researching | |
+| Provider-side search and research steps; image and video generation; deleted logs | Nothing a client can read | None | Not countable | |
+
+If you use a surface that is missing here, open an issue naming it. If you have established what it exposes, a pull request that adds the row with its evidence is better still. Rows marked Tool's own code or Synthetic move to Real data when someone runs them against a real store and reports the result.
 ## The four recovery states
 A surface is not simply queryable or not. The record distinguishes four states, because collapsing them is how a dashboard ends up reporting absence as zero.
 | State | What exists | How it lands in the dataset |
