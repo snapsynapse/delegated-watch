@@ -117,7 +117,8 @@ const sourceLabels = {
   qwen_local: "Qwen local",
   roo_code: "Roo Code",
   snapdev: "Snapdev",
-  typesafe_api: "TypeSafe API"
+  typesafe_api: "TypeSafe API",
+  zed_agent: "Zed agent"
 };
 
 const formatTokens = (value) => {

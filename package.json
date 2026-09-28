@@ -33,6 +33,7 @@
     "extract:goose": "node scripts/extract-goose.js",
     "extract:openai-api": "node scripts/extract-openai-api.js",
     "extract:vscode-agents": "node scripts/extract-vscode-agents.js",
+    "extract:zed-agent": "node scripts/extract-zed-agent.js",
     "import": "node scripts/import-daily-burn.js",
     "install:perplexity-hook": "node scripts/install-perplexity-hook.mjs",
     "manifest": "node scripts/build-evidence-manifest.js",

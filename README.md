@@ -116,6 +116,7 @@ Every command below is documented at the top of its script.
 - `npm run extract:goose`: extract exact daily usage from goose's usage ledger, local models by family and hosted providers labelled as goose traffic.
 - `npm run extract:openai-api`: extract exact daily text-token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`.
 - `npm run extract:vscode-agents`: extract exact daily usage from Cline, Roo Code, Kilo Code, and Snapdev task counters in every VS Code-family editor.
+- `npm run extract:zed-agent`: extract exact usage from Zed's agent threads, each thread dated by the day it was created.
 - `npm run import`: merge receipt JSONL into the dataset, enforcing the cutoff, no-decrease, and reconciliation gates.
 - `npm run install:perplexity-hook`: register the Perplexity capture hook in Claude Code settings, with a private backup; `-- --check` reports what is registered.
 - `npm run manifest`: validate and report the accepted-evidence ledger; exits nonzero until an import has accepted evidence, because there is nothing to report before that.
