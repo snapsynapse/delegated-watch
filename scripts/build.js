@@ -8,21 +8,28 @@ await assertNoPendingAcceptance();
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { renderStaticDashboard } from "./lib/static-dashboard.js";
+import { EMPTY_KNOWN_ACTIVITY, emptyIntervals, readRecordJson, recordPaths } from "./lib/record-paths.js";
 
 // Where the built page lands is configuration, not a hardcoded path, so a
 // checkout that stages its page outside the served tree and one that serves it
 // from docs/ run the same build. A config without the key keeps the staging
 // default.
 const DEFAULT_BUILD_OUTPUT = "docs2B/index.html";
-const site = JSON.parse(await readFile("config/site.json", "utf8"));
-const buildOutput = site.build_output ?? DEFAULT_BUILD_OUTPUT;
+const configuredSite = JSON.parse(await readFile("config/site.json", "utf8"));
+const paths = recordPaths();
+// A person's own record builds to its own ignored directory, and renders as a
+// measured record: no demo banner, no demo window, no demo anchor date.
+const site = paths.mode === "record"
+  ? { ...configuredSite, dataset: "measured", as_of: undefined, window_start: undefined }
+  : configuredSite;
+const buildOutput = paths.dashboard ?? site.build_output ?? DEFAULT_BUILD_OUTPUT;
 
 const [dailyBurn, githubSummary, observedIntervals, knownActivity, evidenceManifest] = await Promise.all([
-  readFile("public/data/daily-burn.json", "utf8"),
-  readFile("public/data/github-summary.json", "utf8").catch(() => null),
-  readFile("config/observed-intervals.json", "utf8"),
-  readFile("config/known-activity.json", "utf8"),
-  readFile("public/data/evidence-manifest.json", "utf8").catch(() => null)
+  readFile(paths.dataset, "utf8"),
+  readFile(paths.githubSummary, "utf8").catch(() => null),
+  readRecordJson(paths.intervals, emptyIntervals("UTC")).then((value) => JSON.stringify(value)),
+  readRecordJson(paths.knownActivity, EMPTY_KNOWN_ACTIVITY).then((value) => JSON.stringify(value)),
+  readFile(paths.manifest, "utf8").catch(() => null)
 ]);
 
 // The page needs the recovery window, not just the rows, or "all" silently

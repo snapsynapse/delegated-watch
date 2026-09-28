@@ -14,9 +14,10 @@ import { basename, dirname, join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { isCalendarDate } from "./dataset-validation.js";
 import { normalizeReceipt, snapshotKeyOf } from "./receipt-schema.js";
+import { recordPaths } from "./record-paths.js";
 
-export const ACCEPTED_DATA_PATH = "public/data/daily-burn.json";
-export const ACCEPTED_MANIFEST_PATH = "public/data/evidence-manifest.json";
+export const ACCEPTED_DATA_PATH = recordPaths().dataset;
+export const ACCEPTED_MANIFEST_PATH = recordPaths().manifest;
 export const ACCEPTANCE_LOCK_PATH = "scratch/accepted-evidence.lock";
 export const ACCEPTANCE_JOURNAL_PATH =
   "scratch/accepted-evidence-transaction.json";

@@ -14,19 +14,21 @@ await assertNoPendingAcceptance();
 
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { EMPTY_KNOWN_ACTIVITY, emptyIntervals, readRecordJson, recordPaths } from "./lib/record-paths.js";
 
 // Matches the default in scripts/build.js, so an older config without
 // build_output is judged against the same path the build actually uses.
 const DEFAULT_BUILD_OUTPUT = "docs2B/index.html";
 const TEMPLATE_FILE = "src/index.html";
-const DATA_FILE = "public/data/daily-burn.json";
-const INTERVALS_FILE = "config/observed-intervals.json";
-const KNOWN_ACTIVITY_FILE = "config/known-activity.json";
-const MANIFEST_FILE = "public/data/evidence-manifest.json";
+const paths = recordPaths();
+const DATA_FILE = paths.dataset;
+const INTERVALS_FILE = paths.intervals;
+const KNOWN_ACTIVITY_FILE = paths.knownActivity;
+const MANIFEST_FILE = paths.manifest;
 const SITE_FILE = "config/site.json";
 
 const site = JSON.parse(await readFile(SITE_FILE, "utf8"));
-const BUILD_FILE = site.build_output ?? DEFAULT_BUILD_OUTPUT;
+const BUILD_FILE = paths.dashboard ?? site.build_output ?? DEFAULT_BUILD_OUTPUT;
 
 const strict = process.argv.includes("--strict");
 const results = [];
@@ -38,8 +40,8 @@ const [built, template, rows, observed, knownActivity, manifest] = await Promise
   readFile(BUILD_FILE, "utf8").catch(() => null),
   readFile(TEMPLATE_FILE, "utf8"),
   readFile(DATA_FILE, "utf8").then(JSON.parse),
-  readFile(INTERVALS_FILE, "utf8").then(JSON.parse),
-  readFile(KNOWN_ACTIVITY_FILE, "utf8").then(JSON.parse),
+  readRecordJson(INTERVALS_FILE, emptyIntervals("UTC")),
+  readRecordJson(KNOWN_ACTIVITY_FILE, EMPTY_KNOWN_ACTIVITY),
   // No ledger exists until an import has accepted evidence; ENOENT is that
   // state, not a broken read, and everything else still surfaces.
   readFile(MANIFEST_FILE, "utf8").then(JSON.parse, (error) => {
@@ -140,9 +142,11 @@ const intervalSources = Object.keys(observed.sources || {}).sort();
 const manifestSources = Object.keys(manifest?.coverage || {}).sort();
 const missingIntervals = sourceIds.filter((source) => !intervalSources.includes(source));
 const missingManifest = sourceIds.filter((source) => !manifestSources.includes(source));
+// The demo declares an interval for every source it ships. A person's record
+// starts with none, which is a gap to fill rather than a broken page.
 check(
   "every retained source has interval coverage",
-  missingIntervals.length ? "FAIL" : "ok",
+  missingIntervals.length ? (paths.mode === "record" ? "WARN" : "FAIL") : "ok",
   missingIntervals.join(", ")
 );
 check(

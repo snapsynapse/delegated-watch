@@ -16,6 +16,7 @@ import { createServer } from "node:http";
 import { lstat, open, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
+import { recordPaths } from "./lib/record-paths.js";
 
 const run = promisify(execFile);
 const root = process.cwd();
@@ -29,7 +30,7 @@ const siteConfig = await readFile(join(root, "config/site.json"), "utf8").then(
   (text) => JSON.parse(text),
   (error) => { if (error.code === "ENOENT") return {}; throw error; }
 );
-const buildOutput = siteConfig.build_output ?? DEFAULT_BUILD_OUTPUT;
+const buildOutput = recordPaths().dashboard ?? siteConfig.build_output ?? DEFAULT_BUILD_OUTPUT;
 const demoPath = siteConfig.demo_path ?? "/";
 const BUILT = join(root, buildOutput);
 const BUILD_DIR = dirname(BUILT);

@@ -4,7 +4,7 @@ Items are ordered by whether they close a gap between a claim the repository alr
 ## First: every surface, from one command
 The repository's central claim is that a person can install it and recover their own record from every surface they use. `SURFACES.md` keeps the one list of every surface and where each stands. As of 2026-09-28 the tested extractors are all ported, and extractors for Gemini CLI, Qwen Code, GitHub Copilot CLI, Zed, and Cursor have been added from those tools' own code. What remains, in order:
 
-1. **One command.** `npm run refresh` runs every extractor whose store is present, imports, validates, and rebuilds, so that installing and running one command produces a dashboard.
+1. **One command.** Done as of 2026-09-28: `npm run refresh` runs every extractor, imports, exports, builds, and evaluates a person's own record in a git-ignored `record/` directory, which the first run creates. `npm run validate` still checks the demo dataset, because the assistant guide pins that script's bytes; making it follow the record waits for the next guide rotation.
 2. **Real-data verification.** Gemini CLI, Copilot CLI, Zed, and Cursor were built from the tools' own recording code on installs that held no usage yet. Each needs one run against a real session; a mismatch is a defect, not a caveat.
 3. **One OpenAI-compatible capture.** LM Studio, llama.cpp's server, vLLM, MLX's server, xAI, Mistral, DeepSeek, Groq, and most other APIs return the same usage object in each response. One call-time capture, built like the Ollama and Perplexity captures, covers all of them.
 4. **OpenRouter.** Its usage API covers every model routed through it, which makes it the highest-yield single source for anyone who uses it.

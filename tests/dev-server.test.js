@@ -38,6 +38,8 @@ const makeServerRoot = async (mode = "regular") => {
   const root = await mkdtemp(join(tmpdir(), "delegated-watch-dev-server-"));
   await mkdir(join(root, "scripts"));
   await cp(join(repo, "scripts", "dev-server.js"), join(root, "scripts", "dev-server.js"));
+  await mkdir(join(root, "scripts", "lib"), { recursive: true });
+  await cp(join(repo, "scripts", "lib", "record-paths.js"), join(root, "scripts", "lib", "record-paths.js"));
   const build = mode === "symlink"
     ? `import { mkdir, rm, symlink, writeFile } from "node:fs/promises";
        await mkdir("docs2B", { recursive: true });

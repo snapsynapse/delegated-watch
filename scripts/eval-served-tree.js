@@ -14,13 +14,15 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { recordPaths } from "./lib/record-paths.js";
 
 const SERVED_DIR = "docs";
 // Matches the default in scripts/build.js, so an older config without
 // build_output is judged against the same path the build actually uses.
 const DEFAULT_BUILD_OUTPUT = "docs2B/index.html";
-const DATA_FILE = "public/data/daily-burn.json";
-const GITHUB_FILE = "public/data/github-summary.json";
+const paths = recordPaths();
+const DATA_FILE = paths.dataset;
+const GITHUB_FILE = paths.githubSummary;
 const CONFIG = "config/site.json";
 
 const strict = process.argv.includes("--strict");
@@ -214,6 +216,23 @@ const needles = [
   "daily-burn.json",
   ...(username ? [username] : [])
 ];
+
+// A person's own record never belongs in the served tree, whatever the site's
+// posture. The demo legitimately serves source ids, dates, and the inline data
+// marker, so the needles here are ones only a real record carries: its largest
+// daily totals and its GitHub username.
+if (paths.mode === "record") {
+  const recordNeedles = [...largestTotals.filter((total) => total.length >= 5), ...(username ? [username] : [])];
+  const recordLeaks = [];
+  for (const file of servedFiles) {
+    const content = await readFile(file, "utf8").catch(() => "");
+    for (const needle of recordNeedles) {
+      if (content.includes(needle)) recordLeaks.push(`${file} contains "${needle}"`);
+    }
+  }
+  check("no record content in served tree", recordLeaks.length ? "FAIL" : "ok",
+    recordLeaks.length ? recordLeaks.slice(0, 6).join("; ") : `${recordNeedles.length} record values checked`);
+}
 
 if (config.posture === "pre-launch") {
   const leaks = [];

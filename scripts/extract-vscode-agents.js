@@ -23,8 +23,10 @@
 //   below the cache totals it contains, so the record is legacy (tokensIn is
 //   non-cached input, cacheWrites separate). Decided by the counters alone.
 // - anything else is consistent with both. --token-convention legacy|inclusive
-//   breaks that tie and only that tie. Without it, those records are counted
-//   as undecided and the source is not written.
+//   breaks that tie and only that tie, for every selected source, or
+//   --token-convention SOURCE=legacy|inclusive for one source; repeat it for
+//   several. Without one, those records are counted as undecided and the
+//   source is not written.
 // Headline tokens are input + cache writes + output. Cache reads are excluded
 // and kept in provenance, per invariant 5.
 //
@@ -89,11 +91,19 @@ if (since && !/^\d{4}-\d{2}-\d{2}$/.test(since)) {
   console.error("--since must be YYYY-MM-DD.");
   process.exit(64);
 }
-const tokenConvention = flag("--token-convention");
-if (tokenConvention && !["legacy", "inclusive"].includes(tokenConvention)) {
-  console.error("--token-convention must be legacy or inclusive.");
-  process.exit(64);
+// A bare value applies to every source; SOURCE=value applies to one.
+const conventions = new Map();
+let defaultConvention = null;
+for (const value of flagAll("--token-convention")) {
+  const [source, convention] = value.includes("=") ? value.split("=", 2) : [null, value];
+  if (!["legacy", "inclusive"].includes(convention) || (source !== null && !EXTENSIONS[source])) {
+    console.error(`--token-convention must be legacy or inclusive, optionally as SOURCE=value with SOURCE one of ${Object.keys(EXTENSIONS).join(", ")}.`);
+    process.exit(64);
+  }
+  if (source === null) defaultConvention = convention;
+  else conventions.set(source, convention);
 }
+const conventionFor = (source) => conventions.get(source) ?? defaultConvention;
 const tag = flag("--tag");
 const dryRun = args.includes("--dry-run");
 const log = dryRun ? console.error : console.log;
@@ -133,6 +143,7 @@ const isCounter = (value) => Number.isSafeInteger(value) && value >= 0;
 // Reads one source across all of its stores. Returns the per-store findings,
 // the daily buckets, and every reason the source's total cannot be trusted.
 async function extractSource(source) {
+  const tokenConvention = conventionFor(source);
   const stores = storesFor(source).map((dir) => ({ dir, state: "absent", tasks: 0, error: null }));
   const days = new Map();
   const problems = [];
@@ -312,7 +323,7 @@ for (const source of selected) {
       provenance:
         `${label} task counters; cache_read ${day.cacheRead} excluded; cache_write ${day.cacheWrite} included; ` +
         `token conventions ${[...day.conventions].sort().join(",")}` +
-        (day.tieBroken ? `; ${day.tieBroken} of ${day.calls} records tie-broken as ${tokenConvention}` : "")
+        (day.tieBroken ? `; ${day.tieBroken} of ${day.calls} records tie-broken as ${conventionFor(source)}` : "")
     };
     const errors = validateReceiptSchema(receipt, `${source} ${day.date}`);
     if (errors.length) {

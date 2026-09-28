@@ -6,6 +6,10 @@ build/
 /scratch/
 /receipts/
 /raw/
+# A person's own record and the switch that selects it. Never tracked, so a
+# clone that holds a real record cannot publish it by committing.
+/record/
+/config/record.json
 .DS_Store
 .env
 .env.*

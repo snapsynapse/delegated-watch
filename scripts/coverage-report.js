@@ -12,6 +12,7 @@
 // (for use as a deploy gate).
 
 import { readFile } from "node:fs/promises";
+import { recordPaths } from "./lib/record-paths.js";
 
 const { timezone, windowStart } = await import("./lib/profile.js");
 const TIMEZONE = await timezone();
@@ -32,7 +33,7 @@ const today = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit"
 }).format(new Date());
 
-const rows = JSON.parse(await readFile("public/data/daily-burn.json", "utf8"));
+const rows = JSON.parse(await readFile(recordPaths().dataset, "utf8"));
 const rowsByDate = new Map(rows.map((row) => [row.date, row]));
 
 const nextDay = (date) => {

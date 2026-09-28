@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { lstat, readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { privateTextFindings, receiptPrivacyFindings } from "./lib/receipt-privacy.js";
+import { recordPaths } from "./lib/record-paths.js";
 
 let failures = 0;
 let count = 0;
@@ -14,7 +15,7 @@ const fail = (where, rules) => {
 const tracked = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
 const protectedCount = tracked.filter((file) => /^(raw|scratch|receipts|handoffs)\//.test(file)).length;
 if (protectedCount) fail("Git inventory", [`${protectedCount} protected source/scratch paths are tracked`]);
-const rows = JSON.parse(await readFile("public/data/daily-burn.json", "utf8"));
+const rows = JSON.parse(await readFile(recordPaths().dataset, "utf8"));
 for (const [index, row] of rows.entries()) {
   const rules = privateTextFindings(row.evidence);
   if (typeof row.evidence === "string" && row.evidence.length > 180) rules.push("evidence exceeds 180 characters");

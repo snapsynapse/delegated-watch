@@ -10,8 +10,9 @@ import {
   assertSettledEntriesIntact,
   loadSettledSourceEntries
 } from "./lib/settled-source-entries.js";
+import { recordPaths } from "./lib/record-paths.js";
 
-const DATA_FILE = "public/data/daily-burn.json";
+const DATA_FILE = recordPaths().dataset;
 const rows = JSON.parse(await readFile(DATA_FILE, "utf8"));
 const beforeRows = structuredClone(rows);
 const exclusions = await loadSourceEntryExclusions();

@@ -13,14 +13,15 @@ await assertNoPendingAcceptance();
 // Reports every check. Exits 1 on any FAIL, or on any WARN under --strict.
 
 import { readFile } from "node:fs/promises";
+import { recordPaths } from "./lib/record-paths.js";
 
-const DATA_FILE = "public/data/daily-burn.json";
+const DATA_FILE = recordPaths().dataset;
 const APP_FILE = "src/app.js";
 // Matches the default in scripts/build.js, so an older config without
 // build_output is judged against the same path the build actually uses.
 const DEFAULT_BUILD_OUTPUT = "docs2B/index.html";
 const site = JSON.parse(await readFile("config/site.json", "utf8"));
-const BUILD_FILE = site.build_output ?? DEFAULT_BUILD_OUTPUT;
+const BUILD_FILE = recordPaths().dashboard ?? site.build_output ?? DEFAULT_BUILD_OUTPUT;
 const { timezone, windowStart } = await import("./lib/profile.js");
 const TIMEZONE = await timezone();
 const WINDOW_START = await windowStart();

@@ -21,10 +21,11 @@ import { readFile, writeFile } from "node:fs/promises";
 import { assertDataset } from "./lib/dataset-validation.js";
 import { profile } from "./lib/profile.js";
 import { calendarDay } from "./lib/import-policy.js";
+import { recordPaths } from "./lib/record-paths.js";
 
-const DATA_FILE = "public/data/daily-burn.json";
-const WIDE_FILE = "public/data/daily-burn.csv";
-const DETAIL_FILE = "public/data/daily-burn-detail.csv";
+const DATA_FILE = recordPaths().dataset;
+const WIDE_FILE = recordPaths().csvDaily;
+const DETAIL_FILE = recordPaths().csvDetail;
 const dryRun = process.argv.includes("--dry-run");
 const check = process.argv.includes("--check");
 

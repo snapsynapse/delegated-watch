@@ -15,8 +15,9 @@
 //   npm run reconcile:claude
 
 import { readFile } from "node:fs/promises";
+import { recordPaths } from "./lib/record-paths.js";
 
-const DATA_FILE = "public/data/daily-burn.json";
+const DATA_FILE = recordPaths().dataset;
 const CONFIG = "config/claude-reconciliation.json";
 const CANDIDATES = ["scratch/reconcile/claude-api.jsonl", "scratch/receipts/claude-api.jsonl"];
 const TRANSCRIPT_SOURCES = ["claude_code", "claude_cowork"];

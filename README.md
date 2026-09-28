@@ -40,16 +40,25 @@ The full surface register, every source id with the recovery state it can reach 
 Receipt JSONL, written by an extractor or a capture tool, is merged by `npm run import` under the gates described in `DATA_CONTRACT.md`. The result is `public/data/daily-burn.json`, the one dataset file. `npm run build` bakes it into `docs/demo/index.html`, a self-contained page that renders straight from disk, and renders the home page at `docs/index.html` from `src/landing.html`, with `docs/sitemap.xml` beside it. Neither served page is hand-edited, and every public URL either one names comes from `config/site.json`.
 The dataset shipped with this candidate is synthetic demonstration data, not anyone's real usage. Regenerate it with `npm run demo:data`, and walk the same importer gates a real receipt would face with `npm run demo:import`.
 ## Running it on your own record
-The goal is that you install this, point it at your own machine and accounts, and see all of your own delegated work: every surface, every provider, as far back as the evidence survives. [SURFACES.md](SURFACES.md#supported-services) lists which services ship today, which have tested extractors being ported, and which are not yet supported.
+The goal is that you install this, point it at your own machine and accounts, and see all of your own delegated work: every surface, every provider, as far back as the evidence survives. [SURFACES.md](SURFACES.md#supported-services) keeps the one list of every surface: what ships, how each was verified, what is planned, and what cannot be counted.
 
-For Claude Code, the Claude desktop app's agent sessions, Codex, goose, and the Cline family of VS Code agent extensions, extract your own local history and import it:
+One command finds every surface this machine has, imports it, and builds your dashboard:
 
 Literal
 ```bash
-npm run extract:claude-code; npm run extract:codex; npm run extract:goose; npm run extract:vscode-agents; npm run import && npm run build && npm run dev
+npm run refresh
 ```
 
-The extractor reads the transcript store read-only (`$CLAUDE_CONFIG_DIR/projects`, or `~/.claude/projects`) and the desktop app's session stores, writes one receipt file per source under `scratch/receipts/`, and reports each store as read, not found, or unreadable. Unreadable exits 3, because that usage is unknown rather than zero. Point `--root` at a backup of the transcript store to recover days the CLI has since pruned. The Codex extractor reads `$CODEX_HOME` (or `~/.codex`) the same way, counting non-cached input plus output; to read a backup or a store copied from another machine, pass `--sessions DIR` with `--local-store` for your own store or `--tag ORIGIN` for someone else's. The goose extractor opens goose's `sessions.db` read-only through Node's built-in SQLite, so no `sqlite3` program is needed; it maps local models to their family (`qwen_local`, `gemma_local`) and labels calls goose routed to a hosted provider as `goose_<provider>`. Ledger rows with cache reads need `--cache-convention`, because whether goose's input count includes them varies by provider. The VS Code agents extractor reads Cline, Roo Code, Kilo Code, and Snapdev task stores in VS Code, VS Code Insiders, VSCodium, Cursor, and Windsurf; records whose cache counters fit both counting conventions need `--token-convention legacy` or `inclusive`, which depends on the provider the extension was pointed at.
+The first run switches this checkout to a record of your own: it creates `config/record.json` and a `record/` directory, both git-ignored, so a clone holding your record cannot publish it by being committed. From then on every command works on your record instead of the shipped synthetic demo; delete `config/record.json` to go back. Your dashboard is `record/index.html`; open it directly, or run `npm run dev` and visit the address it prints. Run `npm run refresh` again whenever you want it current. `npm run validate` still checks the shipped demo dataset; the import validates your record every time it writes it.
+
+Each extractor reports every store it looks for as read, not found, or unreadable. A store that is not there writes nothing. One that cannot be read, or whose records cannot be counted without a decision from you, is reported as unknown and leaves its previous receipts alone; the rest of the run carries on and the summary says which. Decisions you make once, such as which counting convention an editor extension's ambiguous records follow, go in `config/record.json` as arguments per step:
+
+Literal
+```json
+{ "dir": "record", "options": { "extract:vscode-agents": ["--token-convention", "snapdev=inclusive"] } }
+```
+
+Every extractor can also be run on its own, as the commands below list. The Claude Code extractor reads the transcript store read-only (`$CLAUDE_CONFIG_DIR/projects`, or `~/.claude/projects`) and the desktop app's session stores, writes one receipt file per source under `scratch/receipts/`, and reports each store as read, not found, or unreadable. Unreadable exits 3, because that usage is unknown rather than zero. Point `--root` at a backup of the transcript store to recover days the CLI has since pruned. The Codex extractor reads `$CODEX_HOME` (or `~/.codex`) the same way, counting non-cached input plus output; to read a backup or a store copied from another machine, pass `--sessions DIR` with `--local-store` for your own store or `--tag ORIGIN` for someone else's. The goose extractor opens goose's `sessions.db` read-only through Node's built-in SQLite, so no `sqlite3` program is needed; it maps local models to their family (`qwen_local`, `gemma_local`) and labels calls goose routed to a hosted provider as `goose_<provider>`. Ledger rows with cache reads need `--cache-convention`, because whether goose's input count includes them varies by provider. The VS Code agents extractor reads Cline, Roo Code, Kilo Code, and Snapdev task stores in VS Code, VS Code Insiders, VSCodium, Cursor, and Windsurf; records whose cache counters fit both counting conventions need `--token-convention legacy` or `inclusive`, which depends on the provider the extension was pointed at, and can be given per source as `SOURCE=legacy` or `SOURCE=inclusive`.
 
 For any other source, write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. For local inference through Ollama, relay calls through the capture: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
 Literal
@@ -125,6 +134,7 @@ Every command below is documented at the top of its script.
 - `npm run perplexity:capture`: relay one Perplexity request from stdin and capture its usage counters, never the query or answer.
 - `npm run privacy:receipts`: scan retained receipts and labels for private-shaped content.
 - `npm run reconcile:claude`: compare Anthropic API-reported usage against transcript-derived usage and recommend additive or overlapping.
+- `npm run refresh`: extract every surface this machine has, import, export, build, and evaluate your own record in `record/`, starting it on the first run.
 - `npm run test`: run the test suite against synthetic fixtures.
 - `npm run typesafe:capture`: relay one TypeSafe request from stdin and capture its usage counters, never the state, questions, or answers.
 - `npm run validate`: validate the dataset file against the schema.

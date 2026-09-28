@@ -43,8 +43,9 @@ import {
 import { assertDataset } from "./lib/dataset-validation.js";
 import { acceptDataset, assertNoPendingAcceptance } from "./lib/accepted-evidence.js";
 import { assertHistoricalPreservation, importArguments, partitionCompleteReceipts } from "./lib/import-policy.js";
+import { recordPaths } from "./lib/record-paths.js";
 
-const DATA_FILE = "public/data/daily-burn.json";
+const DATA_FILE = recordPaths().dataset;
 const RECEIPT_DIRS = ["scratch/receipts", "receipts"];
 const { timezone, windowStart } = await import("./lib/profile.js");
 const TIMEZONE = await timezone();

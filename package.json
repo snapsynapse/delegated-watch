@@ -42,6 +42,7 @@
     "perplexity:capture": "node scripts/perplexity-capture.mjs",
     "privacy:receipts": "node scripts/privacy-check-receipts.js",
     "reconcile:claude": "node scripts/reconcile-claude.js",
+    "refresh": "node scripts/refresh.js",
     "test": "npm run check:runtime && node --test tests/*.test.js",
     "typesafe:capture": "node scripts/typesafe-capture.mjs",
     "validate": "node scripts/validate-data.js",
