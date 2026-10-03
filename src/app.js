@@ -156,6 +156,9 @@ const labelSourceHtml = (source) => text(labelSource(source));
 const fidelityClass = (value) => ["exact", "estimated", "sample"].includes(value)
   ? value
   : "estimated";
+const coverageTag = (entry) => entry.coverage === "incomplete"
+  ? `<span class="tag incomplete">incomplete coverage</span>`
+  : "";
 
 const normalizeLegacyRow = (row) => {
   if (row.sources) return row;
@@ -757,10 +760,11 @@ const renderSources = (rows) => {
   const total = sum(rows);
   const grouped = rows.reduce((acc, row) => {
     Object.entries(row.sources || {}).forEach(([source, entry]) => {
-      acc[source] = acc[source] || { tokens: 0, exact: 0, estimated: 0, sample: 0, calls: 0 };
+      acc[source] = acc[source] || { tokens: 0, exact: 0, estimated: 0, sample: 0, calls: 0, coverage: "complete" };
       acc[source].tokens += entry.tokens || 0;
       acc[source][entry.fidelity || "estimated"] += entry.tokens || 0;
       acc[source].calls += Number(entry.calls || 0);
+      if (entry.coverage === "incomplete") acc[source].coverage = "incomplete";
     });
     return acc;
   }, {});
@@ -785,7 +789,7 @@ const renderSources = (rows) => {
             <span>${formatTokens(value.tokens)} tokens${value.calls ? `, ${Number(value.calls)} calls` : ""}</span>
           </div>
           <b>${pctLabel}</b>
-          <div>${fidelity}</div>
+          <div>${fidelity}${coverageTag(value)}</div>
         </div>`;
     }).join("");
 };
@@ -1206,7 +1210,7 @@ const renderTable = (rows) => {
     const sourceCells = sources.map((source) => {
       const entry = row.sources[source];
       if (!entry) return "<td>-</td>";
-      return `<td>${formatTokens(entry.tokens)} <span class="tag ${fidelityClass(entry.fidelity)}">${text(entry.fidelity)}</span>${entry.calls ? `<span class="calls">${Number(entry.calls)} calls</span>` : ""}</td>`;
+      return `<td>${formatTokens(entry.tokens)} <span class="tag ${fidelityClass(entry.fidelity)}">${text(entry.fidelity)}</span>${coverageTag(entry)}${entry.calls ? `<span class="calls">${Number(entry.calls)} calls</span>` : ""}</td>`;
     }).join("");
     return `
       <tr>

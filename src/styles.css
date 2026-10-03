@@ -1054,6 +1054,11 @@ td {
   background: var(--rose);
 }
 
+.tag.incomplete {
+  color: #281604;
+  background: var(--amber);
+}
+
 :root[data-theme="light"] .tag.est,
 :root[data-theme="light"] .tag.estimated {
   color: #000000;

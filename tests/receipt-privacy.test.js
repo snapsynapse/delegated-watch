@@ -11,7 +11,8 @@ test("privacy accepts scrubbed legacy and v2 receipt metadata", () => {
   assert.deepEqual(receiptPrivacyFindings({ ...receipt(), schema_version: 2,
     provider: "example", surface: "api", account_alias: "primary", authority: "provider",
     interval: { start: "2026-01-01", end: "2026-01-01" }, snapshot_key: "example:request-1",
-    models: ["example/model"], correlation_keys: [`sha256:${"a".repeat(64)}`] }), []);
+    models: ["example/model"], correlation_keys: [`sha256:${"a".repeat(64)}`],
+    coverage: "incomplete", coverage_reasons: ["copied_fork_parent_missing"] }), []);
 });
 
 test("every source and nested metadata field is checked without echoing secrets", () => {

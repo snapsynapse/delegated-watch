@@ -13,6 +13,17 @@ const AUTHORITIES = new Map([
 const callsOf = (receipt) => receipt.calls ?? 0;
 const dominates = (left, right) =>
   left.tokens >= right.tokens && callsOf(left) >= callsOf(right);
+const mergeEquivalentCoverage = (left, right) => {
+  if (left.coverage !== "incomplete" && right.coverage !== "incomplete") return right;
+  return {
+    ...right,
+    coverage: "incomplete",
+    coverage_reasons: [...new Set([
+      ...(left.coverage_reasons ?? []),
+      ...(right.coverage_reasons ?? [])
+    ])].sort()
+  };
+};
 
 export const snapshotKeyOf = (receipt) =>
   receipt.snapshot_key ?? receipt.dedupe_key ?? null;
@@ -84,6 +95,25 @@ export function validateReceiptSchema(receipt, where = "receipt") {
       errors.push(`${where} correlation_keys must contain SHA-256 values`);
     }
   }
+  if ("coverage" in receipt && receipt.coverage !== "incomplete") {
+    errors.push(`${where} coverage must be incomplete when present`);
+  }
+  if ("coverage_reasons" in receipt) {
+    if (
+      !Array.isArray(receipt.coverage_reasons) ||
+      receipt.coverage_reasons.some((value) => typeof value !== "string" || !/^[a-z0-9_]+$/.test(value))
+    ) {
+      errors.push(`${where} coverage_reasons must be an array of lowercase snake_case values`);
+    } else if (JSON.stringify([...new Set(receipt.coverage_reasons)].sort()) !== JSON.stringify(receipt.coverage_reasons)) {
+      errors.push(`${where} coverage_reasons must be sorted and unique`);
+    }
+    if (receipt.coverage !== "incomplete") {
+      errors.push(`${where} coverage_reasons require incomplete coverage`);
+    }
+  }
+  if (receipt.coverage === "incomplete" && !receipt.coverage_reasons?.length) {
+    errors.push(`${where} incomplete coverage requires coverage_reasons`);
+  }
   return errors;
 }
 
@@ -122,7 +152,12 @@ export function reconcileReceipts(input) {
         errors.push(`${key} newer snapshot omits previously observed request identities`);
         continue;
       }
-      bySnapshot.set(key, receipt);
+      const equivalentCounters =
+        receipt.tokens === existing.tokens && callsOf(receipt) === callsOf(existing);
+      bySnapshot.set(
+        key,
+        equivalentCounters ? mergeEquivalentCoverage(existing, receipt) : receipt
+      );
     } else if (!dominates(existing, receipt)) {
       errors.push(
         `${key} has crossing token/call snapshots at ${existing._where} and ${receipt._where}`

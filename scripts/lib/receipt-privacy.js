@@ -4,7 +4,8 @@ const FIELDS = new Set([
   "schema_version", "date", "timezone", "source", "provider", "surface",
   "account_alias", "machine_alias", "origin", "interval", "snapshot_key",
   "dedupe_key", "authority", "models", "tokens", "calls", "fidelity",
-  "provenance", "correlation_keys", "capture_method"
+  "provenance", "correlation_keys", "capture_method", "coverage",
+  "coverage_reasons"
 ]);
 const PATTERNS = [
   ["secret-like token", /\b(?:sk-|pplx-|ghp_|github_pat_)[A-Za-z0-9_-]{16,}\b/],
@@ -41,7 +42,7 @@ export function receiptPrivacyFindings(receipt) {
       } else {
         for (const key of ["start", "end"]) text(value[key], `interval.${key}`);
       }
-    } else if (["models", "correlation_keys"].includes(field)) {
+    } else if (["models", "correlation_keys", "coverage_reasons"].includes(field)) {
       if (!Array.isArray(value)) failures.push(`${field}: expected array`);
       else for (const [index, item] of value.entries()) {
         text(item, `${field}[${index}]`);

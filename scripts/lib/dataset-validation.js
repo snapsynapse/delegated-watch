@@ -131,6 +131,25 @@ export function validateDataset(rows, options = {}) {
         if (Object.hasOwn(entry, "calls") && !isCounter(entry.calls)) {
           errors.push(`${label} source ${source} calls must be a nonnegative safe integer`);
         }
+        if (Object.hasOwn(entry, "coverage") && entry.coverage !== "incomplete") {
+          errors.push(`${label} source ${source} coverage must be incomplete when present`);
+        }
+        if (Object.hasOwn(entry, "coverage_reasons")) {
+          if (
+            !Array.isArray(entry.coverage_reasons) ||
+            entry.coverage_reasons.some((value) => typeof value !== "string" || !/^[a-z0-9_]+$/.test(value))
+          ) {
+            errors.push(`${label} source ${source} coverage_reasons must be lowercase snake_case values`);
+          } else if (JSON.stringify([...new Set(entry.coverage_reasons)].sort()) !== JSON.stringify(entry.coverage_reasons)) {
+            errors.push(`${label} source ${source} coverage_reasons must be sorted and unique`);
+          }
+          if (entry.coverage !== "incomplete") {
+            errors.push(`${label} source ${source} coverage_reasons require incomplete coverage`);
+          }
+        }
+        if (entry.coverage === "incomplete" && !entry.coverage_reasons?.length) {
+          errors.push(`${label} source ${source} incomplete coverage requires coverage_reasons`);
+        }
         if (Object.hasOwn(entry, "by_origin")) {
           if (!isRecord(entry.by_origin)) {
             errors.push(`${label} source ${source} by_origin must be an object`);
