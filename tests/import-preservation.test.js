@@ -85,6 +85,39 @@ test("snapshot reconciliation rejects scope collisions and lost request identiti
   }
 });
 
+test("equivalent snapshots retain incomplete coverage regardless of file order", () => {
+  const complete = { ...base, snapshot_key: "codex:synthetic" };
+  const incomplete = {
+    ...complete,
+    coverage: "incomplete",
+    coverage_reasons: ["copied_fork_parent_missing"]
+  };
+  for (const pair of [[complete, incomplete], [incomplete, complete]]) {
+    const result = reconcileReceipts(pair);
+    assert.deepEqual(result.errors, []);
+    assert.equal(result.receipts.length, 1);
+    assert.equal(result.receipts[0].coverage, "incomplete");
+    assert.deepEqual(result.receipts[0].coverage_reasons, ["copied_fork_parent_missing"]);
+  }
+});
+
+test("import preserves incomplete receipt coverage on the source entry", async () => {
+  const { cwd, data } = await fixture({
+    ...base,
+    coverage: "incomplete",
+    coverage_reasons: ["copied_fork_parent_missing"]
+  });
+  const result = spawnSync(
+    process.execPath,
+    [join(repo, "scripts", "import-daily-burn.js"), "input.jsonl"],
+    { cwd, encoding: "utf8" }
+  );
+  assert.equal(result.status, 0, result.stderr);
+  const [row] = JSON.parse(await readFile(data, "utf8"));
+  assert.equal(row.sources.codex.coverage, "incomplete");
+  assert.deepEqual(row.sources.codex.coverage_reasons, ["copied_fork_parent_missing"]);
+});
+
 test("pending acceptance blocks public export and dependent commands before output changes", async () => {
   const { cwd } = await fixture(base);
   await mkdir(join(cwd, "scratch"), { recursive: true });

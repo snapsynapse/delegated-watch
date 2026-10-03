@@ -45,6 +45,9 @@ const text = (value) => String(value ?? "")
 const fidelityClass = (value) => ["exact", "estimated", "sample"].includes(value)
   ? value
   : "estimated";
+const coverageTag = (entry) => entry.coverage === "incomplete"
+  ? `<span class="tag incomplete">incomplete coverage</span>`
+  : "";
 
 const THEME_KEY = "delegated-watch-theme";
 const applyTheme = (theme) => {
@@ -86,7 +89,7 @@ document.querySelector("#recordsRows").innerHTML = [...records].reverse().map((r
     ${sources.map((source) => {
       const entry = row.sources[source];
       return entry
-        ? `<td>${formatTokens(entry.tokens)} <span class="tag ${fidelityClass(entry.fidelity)}">${text(entry.fidelity)}</span></td>`
+        ? `<td>${formatTokens(entry.tokens)} <span class="tag ${fidelityClass(entry.fidelity)}">${text(entry.fidelity)}</span>${coverageTag(entry)}</td>`
         : "<td>-</td>";
     }).join("")}
     <td>${text(row.driver || "unreviewed")}</td>

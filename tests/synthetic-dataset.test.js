@@ -22,6 +22,31 @@ test("passes strict validation: requireReviewed, no sample fidelity", () => {
   assert.deepEqual(errors, []);
 });
 
+test("source coverage qualifications are constrained and self-consistent", () => {
+  const rows = generateDataset();
+  const [source] = Object.keys(rows[0].sources);
+  rows[0].sources[source].coverage = "incomplete";
+  rows[0].sources[source].coverage_reasons = ["copied_fork_parent_missing"];
+  assert.deepEqual(validateDataset(rows, {
+    timezone: "UTC",
+    windowStart: DATE_RANGE.start,
+    today: "2026-01-01",
+    requireReviewed: true,
+    allowSample: false
+  }), []);
+
+  rows[0].sources[source].coverage = "complete";
+  const invalid = validateDataset(rows, {
+    timezone: "UTC",
+    windowStart: DATE_RANGE.start,
+    today: "2026-01-01",
+    requireReviewed: true,
+    allowSample: false
+  }).join("\n");
+  assert.match(invalid, /coverage must be incomplete when present/);
+  assert.match(invalid, /coverage_reasons require incomplete coverage/);
+});
+
 test("row count is within the public-candidate bounds (150-300)", () => {
   const rows = generateDataset();
   assert.ok(rows.length >= 150, `expected at least 150 rows, got ${rows.length}`);

@@ -24,6 +24,14 @@ test("dashboard text escaping keeps injection-shaped evidence and labels literal
   assert.doesNotMatch(app, /innerHTML = `[^`]*\$\{error\.message\}/);
 });
 
+test("dashboard renders incomplete source coverage as a reader-visible qualification", async () => {
+  for (const file of ["app.js", "records.js"]) {
+    const source = await readFile(resolve(import.meta.dirname, `../src/${file}`), "utf8");
+    assert.match(source, /entry\.coverage === "incomplete"/, file);
+    assert.match(source, /incomplete coverage/, file);
+  }
+});
+
 test("recent and prior metrics use complete calendar windows anchored to the displayed end", () => {
   const rows = [
     { date: "2026-01-14", total: 70 },

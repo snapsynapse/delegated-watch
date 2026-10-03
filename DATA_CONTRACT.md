@@ -38,6 +38,8 @@ The file is a JSON array sorted by `date` ascending. Each object represents one 
 - `sources.*.tokens`: exact or estimated token count for that source on that day.
 - `sources.*.calls`: optional call count for sources that expose a useful call or session count.
 - `sources.*.fidelity`: `exact` or `estimated`. The validator accepts `sample` only under an explicit non-public allowance for synthetic fixtures; canonical validation rejects it unconditionally.
+- `sources.*.coverage`: optional `incomplete` qualification when surviving counters do not establish complete source coverage. Absence means no retained coverage limitation was reported by that receipt path; it is not a universal completeness guarantee.
+- `sources.*.coverage_reasons`: required sorted, unique lowercase reason codes when `coverage` is `incomplete`. These codes are scrubbed diagnostics, not content evidence.
 - `sources.*.by_origin`: optional token split keyed by origin. When present, its values must sum exactly to `sources.*.tokens`.
 - `total`: sum of all `sources.*.tokens`.
 - `driver`: short category explaining the main usage pattern for the day, from the reviewed vocabulary below.
@@ -52,6 +54,7 @@ Receipt JSONL is the local ingestion contract between a capture or extractor and
 - `authority`: one of `provider`, `tool`, `reconstructed`, or `estimated`
 - Optional sorted `models`
 - Optional sorted `correlation_keys`, each a one-way `sha256:` value
+- Optional `coverage: "incomplete"` with required sorted `coverage_reasons` when the measured counters survive but their surrounding evidence is incomplete
 `snapshot_key` deduplicates repeated cumulative copies of the same source snapshot; it is not a request id. `correlation_keys` identify the same inference across different sources only where a source exposes a stable request identity. Raw provider request ids must never enter a receipt.
 Evidence precedence, highest first, is provider, trusted tool counter, exact reconstruction, then estimate. Two receipts with the same complete correlation-key set collapse to the higher-authority receipt. A partial overlap or an equal-authority conflict between two receipts fails the import closed, because a daily aggregate cannot safely subtract only the overlapping requests.
 ## Gates
@@ -76,7 +79,7 @@ Documented conventions for extractors you write against this contract. The claud
 | Source convention | Key | Rule |
 |---|---|---|
 | claude_code | requestId | Latest timestamp wins. A streamed turn rewrites the same request under earlier partial counts before it settles. |
-| codex | cumulative token_count snapshot within one rollout | A repeated cumulative snapshot is skipped; each first-seen snapshot contributes its last_token_usage once. Receipts key on account, machine, and day, so a backup of one store dedupes and distinct stores sum. |
+| codex | cumulative token_count snapshot within one rollout | An adjacent repeated cumulative snapshot is skipped. A copied fork is excluded only when `forked_from_id` resolves to one parent and the complete inherited prefix is bounded by `forked_from_ordinal_exclusive` or a child-owned `thread_settings_applied` record. A missing response-item id assigned during fork persistence is the only normalized structural difference; two present unequal ids never match. Referenced forks remain additive for their local records. Missing, ambiguous, or unverified lineage retains surviving child evidence with durable `incomplete` coverage reasons as well as console warnings. Copied evidence with a missing parent can duplicate inherited usage and its reserialized timestamps do not establish the original usage date. Unrelated events are never deduped by equal token counts. Receipts key on account, machine, and day, so a backup of one store dedupes and distinct stores sum. |
 | goose | usage_ledger row, one per call | Receipts key on origin, source, and day. Local models take their family source id; calls goose routed to a hosted provider become `goose_<provider>` and may overlap that provider's own usage API. |
 | cline, roo_code, kilo, snapdev | hash of task id, request timestamp, and request index | Receipts key on account, machine, and day. Cache reads are excluded; a record whose counters fit both the legacy and inclusive conventions is refused unless `--token-convention` breaks the tie. |
 | claude_api, openai_api | account and day | One account-scoped receipt per day from the provider's organization report, with provider authority. Cache reads and cached input are excluded. The report overlaps client-side sources that used the same organization's keys; `claude_api` is quarantined until a reconciliation verdict is recorded. |

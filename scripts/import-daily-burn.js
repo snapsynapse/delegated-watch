@@ -8,7 +8,8 @@
 // Rules:
 // - Receipts are aggregated by date + source across all input files
 //   (tokens and calls sum; fidelity downgrades to estimated if any
-//   contributing receipt is estimated).
+//   contributing receipt is estimated). Incomplete receipt coverage and its
+//   scrubbed reason codes survive on the source entry.
 // - Imported entries replace same-source entries on existing rows.
 //   Sample rows lose their sample sources entirely when any real data
 //   arrives for that day.
@@ -131,6 +132,8 @@ for (const receipt of receipts) {
     calls: 0,
     hasCalls: false,
     fidelity: "exact",
+    coverage: "complete",
+    coverageReasons: new Set(),
     drivers: new Set(),
     // Which (machine, profile) or account each token came from. Kept alongside
     // the sum so a day worked on several machines can still be broken down.
@@ -145,6 +148,8 @@ for (const receipt of receipts) {
     bucket.hasCalls = true;
   }
   if (receipt.fidelity === "estimated") bucket.fidelity = "estimated";
+  if (receipt.coverage === "incomplete") bucket.coverage = "incomplete";
+  for (const reason of receipt.coverage_reasons ?? []) bucket.coverageReasons.add(reason);
   if (receipt.driver) bucket.drivers.add(receipt.driver);
   buckets.set(key, bucket);
 }
@@ -173,6 +178,10 @@ for (const bucket of buckets.values()) {
   }
   touchedDates.add(bucket.date);
   const entry = { tokens: bucket.tokens, fidelity: bucket.fidelity };
+  if (bucket.coverage === "incomplete") {
+    entry.coverage = "incomplete";
+    entry.coverage_reasons = [...bucket.coverageReasons].sort();
+  }
   if (bucket.hasCalls) entry.calls = bucket.calls;
   // Always recorded once origin is known, so the dataset is self-describing and
   // the dashboard can attribute a day without re-reading receipts. An empty map
