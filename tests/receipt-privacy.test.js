@@ -12,7 +12,14 @@ test("privacy accepts scrubbed legacy and v2 receipt metadata", () => {
     provider: "example", surface: "api", account_alias: "primary", authority: "provider",
     interval: { start: "2026-01-01", end: "2026-01-01" }, snapshot_key: "example:request-1",
     models: ["example/model"], correlation_keys: [`sha256:${"a".repeat(64)}`],
-    coverage: "incomplete", coverage_reasons: ["copied_fork_parent_missing"] }), []);
+    coverage: "incomplete", coverage_reasons: ["copied_fork_parent_missing"],
+    token_components: {
+      schema_version: 1,
+      input_tokens: 100,
+      cached_input_tokens: 40,
+      output_tokens: 20,
+      reasoning_tokens: 0
+    } }), []);
 });
 
 test("every source and nested metadata field is checked without echoing secrets", () => {
@@ -31,7 +38,9 @@ test("every source and nested metadata field is checked without echoing secrets"
 
 test("metadata rejects content-bearing shapes and unhashed correlation keys", () => {
   for (const extra of [{ models: [{ prompt: "secret" }] }, { correlation_keys: ["raw-request"] },
-    { tokens: { prompt: "secret" } }, { provenance: null }, { interval: [] }]) {
+    { tokens: { prompt: "secret" } }, { provenance: null }, { interval: [] },
+    { token_components: { schema_version: 1, input_tokens: { prompt: "secret" } } },
+    { token_components: { schema_version: 1, input_tokens: 10, prompt: "hidden" } }]) {
     assert(receiptPrivacyFindings({ ...receipt(), ...extra }).length);
   }
   for (const text of ["/home/example/private", "C:\\Users\\example\\private", "https://example.org/private", "Bearer secret", "person@example.org", "<script>alert(1)</script>"]) {

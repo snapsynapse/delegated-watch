@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmod, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { appendFile, chmod, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
@@ -80,9 +80,8 @@ test("non-cached input plus output, cumulative snapshots deduped, counter resets
     tokenCount("2026-01-02T07:30:00Z", usage(100, 40, 20), usage(100, 40, 20)),
     tokenCount("2026-01-02T07:31:00Z", usage(100, 40, 20), usage(100, 40, 20)), // repeated snapshot
     tokenCount("2026-01-02T07:32:00Z", usage(100, 0, 0), usage(200, 40, 20, 220)),
-    tokenCount("2026-01-02T07:33:00Z", usage(100, 40, 20), usage(100, 40, 20)), // cumulative fell: reset
-    "{not-json"
-  ].join("\n"));
+    tokenCount("2026-01-02T07:33:00Z", usage(100, 40, 20), usage(100, 40, 20)) // cumulative fell: reset
+  ].join("\n") + "\n");
 
   const result = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop", "--dry-run"]);
   assert.equal(result.status, 0, result.stderr);
@@ -96,10 +95,143 @@ test("non-cached input plus output, cumulative snapshots deduped, counter resets
   assert.equal(receipt.tokens, 80 + 100 + 80);
   assert.equal(receipt.calls, 3);
   assert.deepEqual(receipt.models, ["test-model"]);
+  assert.deepEqual(receipt.token_components, {
+    schema_version: 1,
+    input_tokens: 300,
+    output_tokens: 40,
+    cached_input_tokens: 80
+  });
   assert.match(receipt.provenance, /cached_input 80 excluded/);
   assert.match(receipt.provenance, /1 counter resets observed/);
   assert.match(result.stderr, /1 duplicates skipped, 0 inherited fork events skipped, 1 counter resets/);
-  assert.match(result.stderr, /1 unparseable Codex JSONL line/);
+});
+
+test("token components retain explicit zero and omit a component missing from any counted event", async () => {
+  const { cwd, env } = await sandbox("codex-token-components-");
+  const sessions = join(cwd, "sessions");
+  await mkdir(sessions);
+  const fullyMeasured = {
+    input_tokens: 10,
+    cached_input_tokens: 0,
+    cache_write_input_tokens: 0,
+    output_tokens: 2,
+    reasoning_output_tokens: 0,
+    total_tokens: 12
+  };
+  const partiallyMeasured = { input_tokens: 5, output_tokens: 1, total_tokens: 6 };
+  await writeFile(join(sessions, "rollout-components.jsonl"), [
+    tokenCount("2026-01-02T07:30:00Z", fullyMeasured, fullyMeasured),
+    tokenCount(
+      "2026-01-03T07:30:00Z",
+      fullyMeasured,
+      { ...fullyMeasured, input_tokens: 20, output_tokens: 4, total_tokens: 24 }
+    ),
+    tokenCount(
+      "2026-01-03T07:31:00Z",
+      partiallyMeasured,
+      { input_tokens: 25, output_tokens: 5, total_tokens: 30 }
+    )
+  ].join("\n") + "\n");
+
+  const result = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop", "--dry-run"]);
+  assert.equal(result.status, 0, result.stderr);
+  const [complete, partial] = receiptsIn(result.stdout);
+  assert.deepEqual(complete.token_components, {
+    schema_version: 1,
+    input_tokens: 10,
+    output_tokens: 2,
+    cached_input_tokens: 0,
+    cache_write_tokens: 0,
+    reasoning_tokens: 0
+  });
+  assert.deepEqual(partial.token_components, {
+    schema_version: 1,
+    input_tokens: 15,
+    output_tokens: 3
+  });
+  assert.match(partial.provenance, /cached_input unavailable for some counted events/);
+  assert.doesNotMatch(partial.provenance, /cached_input 0 excluded/);
+});
+
+test("a corrupt interior record fails closed and preserves known-good receipts", async () => {
+  const { cwd, env } = await sandbox("codex-corrupt-interior-");
+  const sessions = join(cwd, "sessions");
+  const output = join(cwd, "scratch", "receipts", "codex-example-laptop.jsonl");
+  await mkdir(sessions, { recursive: true });
+  await mkdir(join(cwd, "scratch", "receipts"), { recursive: true });
+  await writeFile(output, "known-good receipts\n");
+  const lostUsage = tokenCount(
+    "2026-01-02T07:31:00Z",
+    usage(50, 0, 0),
+    usage(150, 0, 0)
+  );
+  await writeFile(join(sessions, "rollout-corrupt.jsonl"), [
+    JSON.stringify({ type: "turn_context", payload: { model: "model-before-corruption" } }),
+    tokenCount("2026-01-02T07:30:00Z", usage(100, 0, 0), usage(100, 0, 0)),
+    lostUsage.slice(0, -1),
+    JSON.stringify({ type: "turn_context", payload: { model: "model-after-corruption" } })
+  ].join("\n") + "\n");
+
+  const result = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop"]);
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stderr, /malformed interior Codex JSONL record/);
+  assert.match(result.stderr, /coverage is INCOMPLETE, not zero/);
+  assert.match(result.stdout, /not written.*unchanged/);
+  assert.equal(await readFile(output, "utf8"), "known-good receipts\n");
+});
+
+test("a truncated final line on first import is deferred with an active-append diagnostic", async () => {
+  const { cwd, env } = await sandbox("codex-truncated-final-");
+  const sessions = join(cwd, "sessions");
+  const output = join(cwd, "scratch", "receipts", "codex-example-laptop.jsonl");
+  await mkdir(sessions, { recursive: true });
+  await writeFile(join(sessions, "rollout-growing.jsonl"), [
+    JSON.stringify({ type: "turn_context", payload: { model: "model-before-append" } }),
+    tokenCount("2026-01-02T07:30:00Z", usage(100, 0, 0), usage(100, 0, 0)),
+    '{"timestamp":"2026-01-02T07:31:00Z","payload":'
+  ].join("\n"));
+
+  const result = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop"]);
+  assert.equal(result.status, 3, result.stderr);
+  assert.match(result.stderr, /incomplete final Codex JSONL record/);
+  assert.match(result.stderr, /may still be actively appended.*retry/);
+  assert.doesNotMatch(result.stderr, /malformed interior Codex JSONL record/);
+  assert.match(result.stdout, /not written.*unchanged/);
+  await assert.rejects(readFile(output, "utf8"), { code: "ENOENT" });
+});
+
+test("a completed append succeeds on retry with full calls and models", async () => {
+  const { cwd, env } = await sandbox("codex-append-retry-");
+  const sessions = join(cwd, "sessions");
+  const rollout = join(sessions, "rollout-growing.jsonl");
+  await mkdir(sessions, { recursive: true });
+  const secondEvent = tokenCount(
+    "2026-01-02T07:31:00Z",
+    usage(50, 10, 20),
+    usage(150, 10, 20, 170)
+  );
+  await writeFile(rollout, [
+    JSON.stringify({ type: "turn_context", payload: { model: "model-before-append" } }),
+    tokenCount("2026-01-02T07:30:00Z", usage(100, 0, 0), usage(100, 0, 0)),
+    JSON.stringify({ type: "turn_context", payload: { model: "model-after-append" } }),
+    secondEvent.slice(0, -1)
+  ].join("\n"));
+
+  const deferred = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop"]);
+  assert.equal(deferred.status, 3, deferred.stderr);
+  assert.match(
+    deferred.stderr,
+    /observed but unpublished: 1 complete usage event.*models: model-before-append/
+  );
+
+  await appendFile(rollout, secondEvent.slice(-1) + "\n");
+  const retried = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop"]);
+  assert.equal(retried.status, 0, retried.stderr);
+  const output = join(cwd, "scratch", "receipts", "codex-example-laptop.jsonl");
+  const receipt = JSON.parse(await readFile(output, "utf8"));
+  assert.equal(receipt.tokens, 160);
+  assert.equal(receipt.calls, 2);
+  assert.deepEqual(receipt.models, ["model-after-append", "model-before-append"]);
 });
 
 test("copied fork history counts inherited token events once", async () => {
