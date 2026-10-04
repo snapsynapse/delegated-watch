@@ -5,7 +5,15 @@ const FIELDS = new Set([
   "account_alias", "machine_alias", "origin", "interval", "snapshot_key",
   "dedupe_key", "authority", "models", "tokens", "calls", "fidelity",
   "provenance", "correlation_keys", "capture_method", "coverage",
-  "coverage_reasons"
+  "coverage_reasons", "token_components"
+]);
+const TOKEN_COMPONENT_FIELDS = new Set([
+  "schema_version",
+  "input_tokens",
+  "output_tokens",
+  "cached_input_tokens",
+  "cache_write_tokens",
+  "reasoning_tokens"
 ]);
 const PATTERNS = [
   ["secret-like token", /\b(?:sk-|pplx-|ghp_|github_pat_)[A-Za-z0-9_-]{16,}\b/],
@@ -41,6 +49,21 @@ export function receiptPrivacyFindings(receipt) {
         failures.push("interval: expected start/end object");
       } else {
         for (const key of ["start", "end"]) text(value[key], `interval.${key}`);
+      }
+    } else if (field === "token_components") {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        failures.push("token_components: expected object");
+      } else {
+        if (Object.keys(value).some((key) => !TOKEN_COMPONENT_FIELDS.has(key))) {
+          failures.push("token_components: unapproved field");
+        }
+        for (const [key, counter] of Object.entries(value)) {
+          if (!TOKEN_COMPONENT_FIELDS.has(key)) continue;
+          if (typeof counter !== "number" || !Number.isSafeInteger(counter) || counter < 0) {
+            failures.push("token_components: expected nonnegative safe integers");
+            break;
+          }
+        }
       }
     } else if (["models", "correlation_keys", "coverage_reasons"].includes(field)) {
       if (!Array.isArray(value)) failures.push(`${field}: expected array`);

@@ -3,9 +3,22 @@ export const tokenUsageForResult = (result) => {
   const cached =
     result.input_cached_tokens ?? result.cached_input_tokens ?? 0;
   const output = result.output_tokens ?? 0;
+  const components = {};
+  if (Number.isSafeInteger(result.input_tokens) && result.input_tokens >= 0) {
+    components.input_tokens = result.input_tokens;
+  }
+  if (Number.isSafeInteger(result.output_tokens) && result.output_tokens >= 0) {
+    components.output_tokens = result.output_tokens;
+  }
+  if (Number.isSafeInteger(result.input_cached_tokens) && result.input_cached_tokens >= 0) {
+    components.cached_input_tokens = result.input_cached_tokens;
+  } else if (Number.isSafeInteger(result.cached_input_tokens) && result.cached_input_tokens >= 0) {
+    components.cached_input_tokens = result.cached_input_tokens;
+  }
   return {
     tokens: Math.max(0, input - cached) + output,
-    cached
+    cached,
+    components
   };
 };
 export const nextUsagePage = (body) => {

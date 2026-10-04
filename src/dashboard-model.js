@@ -81,6 +81,12 @@ export const sourceTotal = (row) =>
     0
   );
 
+const sourceHasMeasuredActivity = (source) =>
+  Number(source?.calls || 0) > 0 ||
+  Object.entries(source?.token_components || {}).some(
+    ([field, value]) => field !== "schema_version" && Number(value) > 0
+  );
+
 export const filtersAreActive = (filters) =>
   Object.values(filters).some((value) => value !== "all");
 
@@ -93,13 +99,14 @@ export const filterDashboardRows = (rows, filters) =>
           if (filters.fidelity !== "all" && entry.fidelity !== filters.fidelity) return [];
 
           if (filters.origin === "all") return [[source, entry]];
-          const tokens = entry.by_origin?.[filters.origin];
-          if (!tokens) return [];
+          if (!Object.hasOwn(entry.by_origin || {}, filters.origin)) return [];
+          const tokens = entry.by_origin[filters.origin];
 
           const originTotal = Object.values(entry.by_origin).reduce(
             (total, value) => total + value,
             0
           );
+          if (tokens === 0 && (originTotal !== 0 || !sourceHasMeasuredActivity(entry))) return [];
           const filteredEntry = {
             ...entry,
             tokens,
@@ -115,7 +122,9 @@ export const filterDashboardRows = (rows, filters) =>
       );
       return { ...row, sources, total: sourceTotal({ sources }) };
     })
-    .filter((row) => row.total > 0);
+    .filter(
+      (row) => row.total > 0 || Object.values(row.sources).some(sourceHasMeasuredActivity)
+    );
 
 export const summarizeDashboardRows = (rows, start, end) => {
   const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);

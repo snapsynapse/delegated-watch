@@ -1,4 +1,5 @@
 import { validateLabelProvenance } from "./driver-evidence.js";
+import { validateTokenComponents } from "./receipt-schema.js";
 
 const SOURCE_PATTERN = /^[a-z0-9_]+$/;
 const ORIGIN_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/;
@@ -106,6 +107,7 @@ export function validateDataset(rows, options = {}) {
     }
 
     let sourceSum = 0;
+    let hasMeasuredActivity = false;
     if (!isRecord(row.sources) || Object.keys(row.sources).length === 0) {
       errors.push(`${label} sources must be a nonempty object`);
     } else {
@@ -131,6 +133,7 @@ export function validateDataset(rows, options = {}) {
         if (Object.hasOwn(entry, "calls") && !isCounter(entry.calls)) {
           errors.push(`${label} source ${source} calls must be a nonnegative safe integer`);
         }
+        if (isCounter(entry.calls) && entry.calls > 0) hasMeasuredActivity = true;
         if (Object.hasOwn(entry, "coverage") && entry.coverage !== "incomplete") {
           errors.push(`${label} source ${source} coverage must be incomplete when present`);
         }
@@ -149,6 +152,22 @@ export function validateDataset(rows, options = {}) {
         }
         if (entry.coverage === "incomplete" && !entry.coverage_reasons?.length) {
           errors.push(`${label} source ${source} incomplete coverage requires coverage_reasons`);
+        }
+        if (Object.hasOwn(entry, "token_components")) {
+          errors.push(
+            ...validateTokenComponents(
+              entry.token_components,
+              `${label} source ${source} token_components`
+            )
+          );
+          if (
+            isRecord(entry.token_components) &&
+            Object.entries(entry.token_components).some(
+              ([field, value]) => field !== "schema_version" && isCounter(value) && value > 0
+            )
+          ) {
+            hasMeasuredActivity = true;
+          }
         }
         if (Object.hasOwn(entry, "by_origin")) {
           if (!isRecord(entry.by_origin)) {
@@ -185,7 +204,11 @@ export function validateDataset(rows, options = {}) {
     if (!isCounter(row.total)) {
       errors.push(`${label} total must be a nonnegative safe integer`);
     } else {
-      if (row.total === 0) errors.push(`${label} total must be positive; unknown days must be absent`);
+      if (row.total === 0 && !hasMeasuredActivity) {
+        errors.push(
+          `${label} zero total requires positive measured activity evidence; unknown days must be absent`
+        );
+      }
       if (row.total !== sourceSum) {
         errors.push(`${label} total ${row.total} does not equal source sum ${sourceSum}`);
       }

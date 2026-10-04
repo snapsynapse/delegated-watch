@@ -28,7 +28,8 @@
 //   would silently inherit this machine's identity.
 //
 // Output: scratch/receipts/codex-<origin>.jsonl, overwritten on each run. A
-// store that cannot be read leaves the previous file untouched.
+// store that cannot be read or contains malformed evidence leaves the previous
+// file untouched.
 //
 // Every store is reported as read, not found, or unreadable. Not found writes
 // nothing. Unreadable is unknown, not zero: the run exits 3.
@@ -42,7 +43,7 @@ import { RECEIPT_SCHEMA_VERSION, validateReceiptSchema } from "./lib/receipt-sch
 import { dayOf, profile, timezone } from "./lib/profile.js";
 import { localOrigin } from "./lib/origin.js";
 
-const EXIT_UNREADABLE = 3;
+const EXIT_UNKNOWN = 3;
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -132,6 +133,29 @@ const usageSignature = (usage) =>
     usage.total_tokens ?? 0
   ].join(":");
 
+const TOKEN_COMPONENT_FIELDS = [
+  ["input_tokens", "input_tokens"],
+  ["output_tokens", "output_tokens"],
+  ["cached_input_tokens", "cached_input_tokens"],
+  ["cache_write_tokens", "cache_write_input_tokens"],
+  ["reasoning_tokens", "reasoning_output_tokens"]
+];
+const addTokenComponents = (day, usage) => {
+  for (const [field, usageField] of TOKEN_COMPONENT_FIELDS) {
+    if (
+      Object.hasOwn(usage, usageField) &&
+      Number.isSafeInteger(usage[usageField]) &&
+      usage[usageField] >= 0 &&
+      !day.unavailableTokenComponents.has(field)
+    ) {
+      day.tokenComponents[field] = (day.tokenComponents[field] ?? 0) + usage[usageField];
+    } else {
+      day.unavailableTokenComponents.add(field);
+      delete day.tokenComponents[field];
+    }
+  }
+};
+
 // Copied forks reserialize inherited RolloutItems, so their outer line timestamp
 // and ordinal can change. Hash the complete persisted item instead of its token
 // tuple, and compare it only inside an explicit parent/child lineage.
@@ -165,7 +189,8 @@ let usageEvents = 0;
 let duplicateEvents = 0;
 let inheritedEvents = 0;
 let counterResets = 0;
-let parseFailures = 0;
+let malformedInteriorRecords = 0;
+let incompleteFinalRecords = 0;
 let missingCopiedForkParents = 0;
 let missingReferencedForkParents = 0;
 let ambiguousCopiedForkParents = 0;
@@ -188,13 +213,16 @@ for (const { path, finding } of uniqueRollouts) {
   let metadata = null;
   let metadataRecordIndex = null;
   let currentModel = null;
-  for (const line of content.split("\n")) {
+  const lines = content.split("\n");
+  for (const [lineIndex, line] of lines.entries()) {
     if (!line.trim()) continue;
     let entry;
     try {
       entry = JSON.parse(line);
     } catch {
-      parseFailures += 1;
+      const incompleteFinal = lineIndex === lines.length - 1 && !content.endsWith("\n");
+      if (incompleteFinal) incompleteFinalRecords += 1;
+      else malformedInteriorRecords += 1;
       continue;
     }
 
@@ -366,13 +394,16 @@ for (const rollout of rollouts) {
       counterResets: 0,
       models: new Set(),
       coverageReasons: new Set(),
-      copiedPrefixVerified: false
+      copiedPrefixVerified: false,
+      tokenComponents: {},
+      unavailableTokenComponents: new Set()
     };
     day.tokens += Math.max(0, input - cachedInput) + output;
     day.cachedInput += cachedInput;
     if (wasReset) day.counterResets += 1;
     day.calls += 1;
     if (model) day.models.add(model);
+    addTokenComponents(day, usage);
     for (const reason of rollout.coverageReasons) day.coverageReasons.add(reason);
     if (rollout.copiedPrefixVerified) day.copiedPrefixVerified = true;
     days.set(date, day);
@@ -382,6 +413,9 @@ for (const rollout of rollouts) {
 const receipts = [];
 for (const day of [...days.values()].sort((a, b) => a.date.localeCompare(b.date))) {
   if (day.tokens <= 0) continue;
+  const cachedInputProvenance = day.unavailableTokenComponents.has("cached_input_tokens")
+    ? "cached_input unavailable for some counted events"
+    : `cached_input ${day.cachedInput} excluded`;
   const receipt = {
     schema_version: RECEIPT_SCHEMA_VERSION,
     date: day.date,
@@ -400,7 +434,7 @@ for (const day of [...days.values()].sort((a, b) => a.date.localeCompare(b.date)
     authority: "tool",
     models: [...day.models].sort(),
     provenance:
-      `Codex rollout token_count; cached_input ${day.cachedInput} excluded; adjacent cumulative snapshots deduped` +
+      `Codex rollout token_count; ${cachedInputProvenance}; adjacent cumulative snapshots deduped` +
       (day.copiedPrefixVerified ? `; lineage-confirmed copied-fork prefixes excluded` : "") +
       (day.coverageReasons.size ? `; unverified fork evidence retained` : "") +
       (day.counterResets ? `; ${day.counterResets} counter resets observed` : "")
@@ -408,6 +442,9 @@ for (const day of [...days.values()].sort((a, b) => a.date.localeCompare(b.date)
   if (day.coverageReasons.size) {
     receipt.coverage = "incomplete";
     receipt.coverage_reasons = [...day.coverageReasons].sort();
+  }
+  if (Object.keys(day.tokenComponents).length) {
+    receipt.token_components = { schema_version: 1, ...day.tokenComponents };
   }
   const errors = validateReceiptSchema(receipt, `codex ${day.date}`);
   if (errors.length) {
@@ -431,7 +468,17 @@ const summary =
   `${uniqueRollouts.length} rollout file(s), ${usageEvents} usage events, ` +
   `${duplicateEvents} duplicates skipped, ${inheritedEvents} inherited fork events skipped, ` +
   `${counterResets} counter resets`;
-if (parseFailures) console.error(`WARNING: ${parseFailures} unparseable Codex JSONL line(s) skipped.`);
+if (malformedInteriorRecords) {
+  console.error(
+    `ERROR: ${malformedInteriorRecords} malformed interior Codex JSONL record(s) made coverage incomplete.`
+  );
+}
+if (incompleteFinalRecords) {
+  console.error(
+    `ERROR: ${incompleteFinalRecords} incomplete final Codex JSONL record(s) may still be actively appended; ` +
+      `retry after the append completes.`
+  );
+}
 if (missingCopiedForkParents) {
   console.error(
     `WARNING: ${missingCopiedForkParents} Codex copied fork(s) referenced a missing parent rollout; ` +
@@ -468,7 +515,19 @@ if (findings.some((finding) => finding.state === "unreadable")) {
   console.error("");
   console.error("WARNING: a Codex store exists but could not be read. Its usage is UNKNOWN, not zero.");
   console.error("Run the extractor as the user who owns it, or grant read access, then run it again.");
-  process.exit(EXIT_UNREADABLE);
+  process.exit(EXIT_UNKNOWN);
+}
+if (malformedInteriorRecords || incompleteFinalRecords) {
+  log(`codex: not written, because rollout evidence is incomplete; ${OUTPUT} is unchanged.`);
+  console.error("");
+  console.error("WARNING: Codex coverage is INCOMPLETE, not zero; no receipts were published.");
+  const observedCalls = receipts.reduce((sum, receipt) => sum + receipt.calls, 0);
+  const observedModels = [...new Set(receipts.flatMap((receipt) => receipt.models))].sort();
+  console.error(
+    `observed but unpublished: ${observedCalls} complete usage event(s); ` +
+      `models: ${observedModels.length ? observedModels.join(", ") : "unavailable"}.`
+  );
+  process.exit(EXIT_UNKNOWN);
 }
 if (!receipts.length) {
   log(`codex: no usage found (${summary}); nothing written.`);

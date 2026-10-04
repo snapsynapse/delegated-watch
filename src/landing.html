@@ -426,10 +426,10 @@
       </div>
       <div class="pillar">
         <h3>All of time</h3>
-        <p>As far back as any log, transcript, or usage API still reaches. Not a rolling window. The record grows backwards as extractors recover history, and a request already counted is never counted twice.</p>
+        <p>As far back as any log, transcript, or usage API still reaches. Not a rolling window. The record grows backwards as extractors recover history. Recognized request identities deduplicate across receipts; unresolved cross-route overlap remains quarantined or documented rather than inferred from matching totals.</p>
       </div>
     </div>
-    <p>A token here is the unit a language model consumes when it reads and writes, the same unit every provider counts against you. It is not a cryptocurrency, and nothing in this project is denominated in one. The unit is the token, not the dollar, and the record is yours: it lives on your disk, no shipped command uploads it, and publishing any part of it is a separate decision you make deliberately.</p>
+    <p>A token here is the unit a language model consumes when it reads and writes, the same unit every provider counts against you. It is not a cryptocurrency, and nothing in this project is denominated in one. The unit is the token, not the dollar, and the record is yours: receipts and the assembled dataset live on your disk and are never uploaded by the tool. Hosted captures send requests only to the endpoint you select, and publishing any part of the record is a separate decision you make deliberately.</p>
   </div>
 </section>
 
@@ -441,7 +441,7 @@
     <div class="pillars">
       <div class="pillar">
         <h3>Unknown is never zero</h3>
-        <p>A day with no recovered evidence is absent from the dataset entirely, not written in as a zero. The dashboard renders the two states differently and the dataset check fails on any row whose total is exactly zero.</p>
+        <p>A day with no recovered evidence is absent from the dataset entirely, not written in as a zero. A zero-token row is valid only when positive call activity or measured token components prove that the source reported it, and the dashboard renders that evidence differently from an absent day.</p>
       </div>
       <div class="pillar">
         <h3>The day is not counted until it has ended</h3>
@@ -485,7 +485,8 @@ npm run dev</code></pre>
       step, a <a href="/.well-known/assistant-guide-manifest.txt">sidecar manifest</a> pinning
       the guide's exact bytes, and that same hash cross-published as a DNS TXT record at
       <code>_assistant-guide.delegated.watch</code>, an independent control plane. The hosted
-      verifier reported Level 4 with zero blocking findings on 2026-09-22. Check it yourself at
+      repository tests verify the guide's form, pins, and manifest before release; the live guide
+      and its rotated DNS anchor must still be checked together. Check it yourself at
       <a href="https://guidecheck.org/verify" target="_blank" rel="noopener">guidecheck.org/verify</a>,
       or with any conformant verifier. Conformance is a claim about form, not about safety:
       it means you can read the whole instruction surface before an assistant acts on it, and
@@ -511,7 +512,7 @@ npm run dev</code></pre>
       <li><strong>Not a cost model.</strong> There is no unit conversion from tokens to a currency anywhere in the schema or the code, by construction rather than as a display flag.</li>
       <li><strong>Not a budget or an alert.</strong> Nothing here watches a number and tells you to stop.</li>
       <li><strong>Not a leaderboard.</strong> A day's total is not ranked against anyone else's.</li>
-      <li><strong>Not a service.</strong> No backend, no cloud sync. Receipts and the dataset live on disk and no shipped command uploads them anywhere.</li>
+      <li><strong>Not a service.</strong> No backend, no cloud sync. Receipts and the dataset live on disk and are never uploaded by the tool; hosted captures send only the inference request the operator directs to the selected endpoint.</li>
       <li><strong>Not a transcript store.</strong> No prompt text ever enters the record. Extractors read counters, identifiers, and timestamps; the schema has no field for prompt or response content.</li>
     </ul>
   </div>
@@ -535,11 +536,11 @@ npm run dev</code></pre>
       </details>
       <details>
         <summary>Does any of my data leave the machine?</summary>
-        <p>No shipped command uploads anything. There is no backend and no cloud sync; receipts and the dataset live on your disk. Extractors read provider logs and usage APIs read-only and idempotently. Prompt and response text never enters the record at any point, because the schema has no field for it: extractors read counters, identifiers, and timestamps. Publishing any part of your record is a separate decision you make deliberately.</p>
+        <p>There is no backend and no cloud sync; receipts and the dataset live on your disk and are never uploaded by the tool. Hosted captures relay an inference request to the endpoint you select, while usage extractors read provider reports through explicitly authorized requests. Prompt and response text never enters the record at any point, because the schema has no field for it: extractors retain counters, identifiers, and timestamps. Publishing any part of your record is a separate decision you make deliberately.</p>
       </details>
       <details>
         <summary>How far back does the record go?</summary>
-        <p>As far as the evidence survives, which is different for every surface and is not a setting. The record grows backwards as extractors recover history, and a request already counted is never counted twice. A day with nothing recovered stays absent rather than becoming a zero, so a sparse early history reads as a sparse early history rather than as a quiet period.</p>
+        <p>As far as the evidence survives, which is different for every surface and is not a setting. The record grows backwards as extractors recover history. Recognized request identities deduplicate across receipts, while unresolved cross-route overlap remains quarantined or documented. A day with nothing recovered stays absent rather than becoming a zero, so a sparse early history reads as a sparse early history rather than as a quiet period.</p>
       </details>
       <details>
         <summary>Why tokens and not money?</summary>

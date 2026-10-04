@@ -19,7 +19,8 @@ import {
   acceptDataset,
   assertNoPendingAcceptance,
   checkEvidenceOverlap,
-  recoverDataAcceptance
+  recoverDataAcceptance,
+  validateAcceptedManifest
 } from "../scripts/lib/accepted-evidence.js";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -107,6 +108,87 @@ test("acceptance initializes a durable ledger and retains identities after recei
   await acceptDataset({ beforeRows, rows: beforeRows, receipts: [], root });
   const second = await readJson(root, ACCEPTED_MANIFEST_PATH);
   assert.deepEqual(second.entries, first.entries);
+});
+
+test("ledger version 2 manifests written before active-history summaries remain valid", async (t) => {
+  const root = await makeFixture();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const rows = await readJson(root, "public/data/daily-burn.json");
+  await acceptDataset({ beforeRows: rows, rows, receipts: [receipt()], root });
+  const legacy = await readJson(root, ACCEPTED_MANIFEST_PATH);
+  delete legacy.ledger.superseded_history_receipts;
+  for (const coverage of Object.values(legacy.coverage)) {
+    delete coverage.active_receipts;
+    delete coverage.superseded_history_receipts;
+  }
+
+  assert.doesNotThrow(() => validateAcceptedManifest(legacy));
+  assert.doesNotThrow(() => validateAcceptedManifest({
+    note: "test",
+    dedupe_levels: {},
+    ledger_version: 2,
+    receipts: 0,
+    identified_requests: 0,
+    malformed_receipt_lines: 0,
+    coverage: {},
+    ledger: {
+      accepted_receipts: 0,
+      legacy_unverified_receipts: 0,
+      corrections: []
+    },
+    entries: []
+  }));
+});
+
+test("accepted evidence retains token components through replay and raw receipt disappearance", async (t) => {
+  const tokenComponents = {
+    schema_version: 1,
+    input_tokens: 1000,
+    cached_input_tokens: 600,
+    output_tokens: 200,
+    reasoning_tokens: 50,
+    cache_write_tokens: 0
+  };
+  const rows = [
+    {
+      ...row("2026-01-01", "codex", 600),
+      sources: {
+        codex: {
+          tokens: 600,
+          calls: 1,
+          fidelity: "exact",
+          token_components: tokenComponents
+        }
+      },
+      total: 600
+    }
+  ];
+  const root = await makeFixture({ rows });
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const incoming = receipt({ tokens: 600 });
+  incoming.token_components = tokenComponents;
+
+  await acceptDataset({ beforeRows: rows, rows, receipts: [incoming], root });
+  const firstText = await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8");
+  const first = JSON.parse(firstText);
+  assert.deepEqual(first.entries[0].token_components, tokenComponents);
+
+  await acceptDataset({ beforeRows: rows, rows, receipts: [incoming], root });
+  assert.equal(await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8"), firstText);
+
+  await acceptDataset({ beforeRows: rows, rows, receipts: [], root });
+  const withoutRaw = await readJson(root, ACCEPTED_MANIFEST_PATH);
+  assert.deepEqual(withoutRaw.entries[0].token_components, tokenComponents);
+
+  withoutRaw.entries[0].token_components.cached_input_tokens = 1001;
+  await writeFile(
+    join(root, ACCEPTED_MANIFEST_PATH),
+    JSON.stringify(withoutRaw, null, 2) + "\n"
+  );
+  await assert.rejects(
+    acceptDataset({ beforeRows: rows, rows, receipts: [], root }),
+    /cached_input_tokens.*input_tokens/
+  );
 });
 
 test("legacy identities remain labelled unverified while new accepted evidence is added", async (t) => {

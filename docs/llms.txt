@@ -14,7 +14,7 @@ cites the originating post by name and means AI inference consumption.
 This is also not delegated.to, a different company in the AI-agent workforce
 category.
 
-Updated: 2026-09-22
+Updated: 2026-10-03
 
 ## What this is
 
@@ -56,8 +56,10 @@ about form, not safety.
    coverage for a period is absent, not empty.
 2. Fidelity is declared per source entry as `exact` or `estimated`. Placeholder
    data may not exist in committed data.
-3. Each inference request is counted once, deduped on a stable request id, and
-   the most authoritative exact counter wins.
+3. Each inference request is counted once when stable identity evidence
+   supports the match, and the most authoritative exact counter wins. Equal
+   token counts alone never establish identity; unresolved overlap stays
+   quarantined or explicitly incomplete.
 4. Raw logs never enter the repository. Only scrubbed aggregates are committed.
    Evidence describes a work family or review source, never prompt text,
    customer data, private URLs, secrets, or transcripts.

@@ -1,6 +1,14 @@
 import { createHash } from "node:crypto";
 
 export const RECEIPT_SCHEMA_VERSION = 2;
+export const TOKEN_COMPONENT_SCHEMA_VERSION = 1;
+export const TOKEN_COMPONENT_FIELDS = [
+  "input_tokens",
+  "output_tokens",
+  "cached_input_tokens",
+  "cache_write_tokens",
+  "reasoning_tokens"
+];
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const AUTHORITIES = new Map([
@@ -9,6 +17,15 @@ const AUTHORITIES = new Map([
   ["tool", 3],
   ["provider", 4]
 ]);
+
+export const authorityRankOf = (receipt) => AUTHORITIES.get(receipt?.authority) ?? 0;
+
+export const sameAuthorityScope = (left, right) =>
+  left?.date === right?.date &&
+  typeof left?.provider === "string" &&
+  left.provider === right?.provider &&
+  typeof left?.account_alias === "string" &&
+  left.account_alias === right?.account_alias;
 
 const callsOf = (receipt) => receipt.calls ?? 0;
 const dominates = (left, right) =>
@@ -40,6 +57,97 @@ export function normalizeReceipt(receipt) {
     return { ...receipt, surface: "api", capture_method: receipt.surface };
   }
   return receipt;
+}
+
+export function validateTokenComponents(components, where = "token_components") {
+  const errors = [];
+  if (!components || typeof components !== "object" || Array.isArray(components)) {
+    return [`${where} must be an object`];
+  }
+  if (components.schema_version !== TOKEN_COMPONENT_SCHEMA_VERSION) {
+    errors.push(`${where} schema_version must be ${TOKEN_COMPONENT_SCHEMA_VERSION}`);
+  }
+  const unknown = Object.keys(components).filter(
+    (field) => field !== "schema_version" && !TOKEN_COMPONENT_FIELDS.includes(field)
+  );
+  if (unknown.length) {
+    errors.push(`${where} has unknown fields: ${unknown.sort().join(", ")}`);
+  }
+  const present = TOKEN_COMPONENT_FIELDS.filter((field) => field in components);
+  if (!present.length) {
+    errors.push(`${where} requires at least one measured component`);
+  }
+  for (const field of present) {
+    if (!Number.isSafeInteger(components[field]) || components[field] < 0) {
+      errors.push(`${where} ${field} must be a nonnegative safe integer`);
+    }
+  }
+  if (
+    Number.isSafeInteger(components.cached_input_tokens) &&
+    Number.isSafeInteger(components.input_tokens) &&
+    components.cached_input_tokens > components.input_tokens
+  ) {
+    errors.push(`${where} cached_input_tokens must not exceed input_tokens`);
+  }
+  if (
+    Number.isSafeInteger(components.reasoning_tokens) &&
+    Number.isSafeInteger(components.output_tokens) &&
+    components.reasoning_tokens > components.output_tokens
+  ) {
+    errors.push(`${where} reasoning_tokens must not exceed output_tokens`);
+  }
+  return errors;
+}
+
+export function normalizeTokenComponents(components) {
+  if (components === undefined) return undefined;
+  const normalized = { schema_version: TOKEN_COMPONENT_SCHEMA_VERSION };
+  for (const field of TOKEN_COMPONENT_FIELDS) {
+    if (Object.hasOwn(components, field)) normalized[field] = components[field];
+  }
+  return normalized;
+}
+
+export function reconcileTokenComponents(left, right, where = "token_components") {
+  const normalizedLeft = normalizeTokenComponents(left);
+  const normalizedRight = normalizeTokenComponents(right);
+  if (!normalizedLeft && !normalizedRight) {
+    return { token_components: undefined, errors: [] };
+  }
+  if (!normalizedLeft || !normalizedRight) {
+    return {
+      token_components: normalizedLeft ?? normalizedRight,
+      errors: []
+    };
+  }
+  const tokenComponents = { schema_version: TOKEN_COMPONENT_SCHEMA_VERSION };
+  const errors = [];
+  for (const field of TOKEN_COMPONENT_FIELDS) {
+    const leftPresent = Object.hasOwn(normalizedLeft, field);
+    const rightPresent = Object.hasOwn(normalizedRight, field);
+    if (leftPresent && rightPresent && normalizedLeft[field] !== normalizedRight[field]) {
+      errors.push(`${where} ${field} conflicts between equivalent measurements`);
+      continue;
+    }
+    if (leftPresent || rightPresent) {
+      tokenComponents[field] = leftPresent ? normalizedLeft[field] : normalizedRight[field];
+    }
+  }
+  if (!errors.length) errors.push(...validateTokenComponents(tokenComponents, where));
+  return { token_components: tokenComponents, errors };
+}
+
+export function aggregateTokenComponents(values) {
+  if (!values.length) return undefined;
+  const components = values.map((value) => value?.token_components);
+  const aggregate = { schema_version: TOKEN_COMPONENT_SCHEMA_VERSION };
+  let measured = 0;
+  for (const field of TOKEN_COMPONENT_FIELDS) {
+    if (!components.every((value) => value && Object.hasOwn(value, field))) continue;
+    aggregate[field] = components.reduce((sum, value) => sum + value[field], 0);
+    measured += 1;
+  }
+  return measured ? aggregate : undefined;
 }
 
 export function validateReceiptSchema(receipt, where = "receipt") {
@@ -114,6 +222,9 @@ export function validateReceiptSchema(receipt, where = "receipt") {
   if (receipt.coverage === "incomplete" && !receipt.coverage_reasons?.length) {
     errors.push(`${where} incomplete coverage requires coverage_reasons`);
   }
+  if ("token_components" in receipt) {
+    errors.push(...validateTokenComponents(receipt.token_components, `${where} token_components`));
+  }
   return errors;
 }
 
@@ -154,10 +265,23 @@ export function reconcileReceipts(input) {
       }
       const equivalentCounters =
         receipt.tokens === existing.tokens && callsOf(receipt) === callsOf(existing);
-      bySnapshot.set(
-        key,
-        equivalentCounters ? mergeEquivalentCoverage(existing, receipt) : receipt
+      if (!equivalentCounters) {
+        bySnapshot.set(key, receipt);
+        continue;
+      }
+      const components = reconcileTokenComponents(
+        existing.token_components,
+        receipt.token_components,
+        `${key} token_components`
       );
+      if (components.errors.length) {
+        errors.push(...components.errors);
+        continue;
+      }
+      const merged = mergeEquivalentCoverage(existing, receipt);
+      if (components.token_components) merged.token_components = components.token_components;
+      else delete merged.token_components;
+      bySnapshot.set(key, merged);
     } else if (!dominates(existing, receipt)) {
       errors.push(
         `${key} has crossing token/call snapshots at ${existing._where} and ${receipt._where}`
@@ -194,8 +318,14 @@ export function reconcileReceipts(input) {
         );
         continue;
       }
-      const leftRank = AUTHORITIES.get(left.authority) ?? 0;
-      const rightRank = AUTHORITIES.get(right.authority) ?? 0;
+      if (!sameAuthorityScope(left, right)) {
+        errors.push(
+          `identical request set crosses accounting scope between ${left._where} and ${right._where}`
+        );
+        continue;
+      }
+      const leftRank = authorityRankOf(left);
+      const rightRank = authorityRankOf(right);
       if (leftRank === rightRank) {
         errors.push(
           `identical request set has equal authority at ${left._where} and ${right._where}`

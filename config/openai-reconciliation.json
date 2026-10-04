@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "default_mode": "unset",
+  "accounts": {},
+  "note": "Organization Usage API totals can overlap API-key clients. Each accounts entry binds a display account_alias to an explicit stable, non-secret organization_scope supplied as OPENAI_ORGANIZATION_SCOPE. Reusing a display alias across scopes is allowed because receipts use a scope fingerprint. Decisions require dated human scope evidence; subscription Codex is not presumed overlapping.",
+  "modes": {
+    "unset": "Quarantine the full organization total in scratch/reconcile/. Equal aggregates do not establish overlap.",
+    "additive": "Human evidence establishes this organization's usage is outside every counted client scope. Write to scratch/receipts/.",
+    "overlapping": "Human evidence establishes overlap. Keep the full organization total quarantined without partial subtraction."
+  }
+}

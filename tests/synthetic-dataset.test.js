@@ -47,6 +47,82 @@ test("source coverage qualifications are constrained and self-consistent", () =>
   assert.match(invalid, /coverage_reasons require incomplete coverage/);
 });
 
+test("dataset token components preserve measured zero and validate containment", () => {
+  const rows = generateDataset();
+  const [source] = Object.keys(rows[0].sources);
+  const entry = rows[0].sources[source];
+  entry.token_components = {
+    schema_version: 1,
+    input_tokens: 1000,
+    cached_input_tokens: 600,
+    output_tokens: 200,
+    reasoning_tokens: 50,
+    cache_write_tokens: 0
+  };
+  const options = {
+    timezone: "UTC",
+    windowStart: DATE_RANGE.start,
+    today: "2026-01-01",
+    requireReviewed: true,
+    allowSample: false
+  };
+  assert.deepEqual(validateDataset(rows, options), []);
+  assert.equal(entry.token_components.cache_write_tokens, 0);
+  assert.equal(Object.hasOwn(entry.token_components, "unavailable_component"), false);
+
+  entry.token_components.cached_input_tokens = 1001;
+  assert.match(validateDataset(rows, options).join("\n"), /cached_input_tokens.*input_tokens/);
+});
+
+test("dataset distinguishes measured-zero activity from an unknown or meaningless zero day", () => {
+  const options = {
+    timezone: "UTC",
+    windowStart: "2026-01-01",
+    today: "2026-01-03",
+    allowSample: false
+  };
+  const measured = [{
+    date: "2026-01-02",
+    timezone: "UTC",
+    sources: {
+      openai_api: {
+        tokens: 0,
+        calls: 5,
+        fidelity: "exact",
+        token_components: {
+          schema_version: 1,
+          input_tokens: 750,
+          cached_input_tokens: 750,
+          output_tokens: 0
+        }
+      }
+    },
+    total: 0,
+    driver: "unreviewed",
+    evidence: "synthetic measured cached-only activity"
+  }];
+
+  assert.deepEqual(validateDataset(measured, options), []);
+
+  for (const source of [
+    { tokens: 0, fidelity: "exact" },
+    { tokens: 0, calls: 0, fidelity: "exact" },
+    {
+      tokens: 0,
+      calls: 0,
+      fidelity: "exact",
+      token_components: { schema_version: 1, input_tokens: 0, output_tokens: 0 }
+    }
+  ]) {
+    const meaningless = structuredClone(measured);
+    meaningless[0].sources.openai_api = source;
+    assert.match(
+      validateDataset(meaningless, options).join("\n"),
+      /zero total requires positive measured activity evidence; unknown days must be absent/
+    );
+  }
+});
+
 test("row count is within the public-candidate bounds (150-300)", () => {
   const rows = generateDataset();
   assert.ok(rows.length >= 150, `expected at least 150 rows, got ${rows.length}`);
@@ -114,9 +190,8 @@ test("at least one whole weekday is absent (unknown is never zero)", () => {
     cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
   }
   assert.ok(sawAbsentWeekday, "expected at least one absent weekday in the generated range");
-  // And the flip side: no row has a zero total, which validateDataset already
-  // enforces, but is worth asserting directly against the invariant it exists
-  // to protect ("unknown is never zero").
+  // This generator does not model measured-zero activity, so every generated
+  // row remains positive. Unknown days are absent rather than synthesized.
   for (const row of rows) assert.ok(row.total > 0);
 });
 
