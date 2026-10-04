@@ -17,7 +17,7 @@ npm run dev
 The install path an assistant follows is `docs/.well-known/assistant-guide.txt`, served at [delegated.watch/.well-known/assistant-guide.txt](https://delegated.watch/.well-known/assistant-guide.txt). It conforms to the [GuideCheck](https://guidecheck.org/) Human-Verifiable Assistant Guide profile 2.0.0 at Level 4, the highest level a guide file can reach: strict ASCII under 8 KiB, an explicit scope and non-goals, one structured action block per step with an approval gate on every networked and code-executing command, a sidecar manifest pinning the guide's exact bytes, and that hash cross-published as a DNS TXT record at `_assistant-guide.delegated.watch` so you can confirm through a second channel that the bytes you read are the bytes being served. Point an assistant at it rather than at this README, and have it verify the guide and report the level before it runs anything.
 `tests/assistant-guide.test.js` asserts the byte profile, the approval gates, every `exec-sha256` pin, and the manifest against the guide's actual bytes on every CI job. A pinned script that changes fails the build, because a stale pin reads as provenance while binding bytes that no longer exist.
 ## Three invariants
-- Unknown is never zero. A day with no recovered evidence is absent from the dataset entirely, not written in as a zero; the dashboard renders the two states differently and the dataset check fails on any row whose total is exactly zero.
+- Unknown is never zero. A day with no recovered evidence is absent from the dataset entirely, not written in as a zero. A zero-token row is valid only when the source reports positive call activity or measured token components, and the dashboard renders that evidence differently from an absent day.
 - The day is not counted until it has ended. A row describes a whole calendar day in the configured timezone, so the importer holds back any receipt dated the day still in progress and imports it only once that day has fully elapsed.
 - A blocked regression is evidence loss, not a correction. The importer refuses to lower an already-committed exact value, because a number that falls usually means the source log disappeared rather than that the original count was wrong; lowering it on purpose requires an explicit flag, a confirmation, and a written reason.
 ## What this is
@@ -27,7 +27,7 @@ A chain of receipts, one deterministic importer, one JSON dataset, and one stati
 - No budgets or alerts. Nothing here watches a number and tells you to stop.
 - No leaderboard or scoreboard. A day's total is not ranked against anyone else's.
 - No backend. The dashboard is a static page built from one JSON file.
-- No cloud sync. Receipts and the dataset live on disk; nothing is uploaded anywhere by any shipped command.
+- No cloud sync. Receipts and the dataset live on disk and are never uploaded by the tool. Hosted captures send the inference request only to the endpoint the operator selects, and usage extractors make explicitly authorized read-only requests to provider reporting APIs.
 - No prompt text ever enters the record. Extractors and captures read only counters, identifiers, and timestamps; the schema has no field for prompt or response content.
 ## What it cannot see
 The full surface register, every source id with the recovery state it can reach and the basis for that classification, is in [SURFACES.md](SURFACES.md). It distinguishes four states rather than two: exact, estimated, dates only, and unrecoverable. The classes below are the structural ones, where no extractor can change the answer.
@@ -58,7 +58,7 @@ Literal
 { "dir": "record", "options": { "extract:vscode-agents": ["--token-convention", "snapdev=inclusive"] } }
 ```
 
-Every extractor can also be run on its own, as the commands below list. The Claude Code extractor reads the transcript store read-only (`$CLAUDE_CONFIG_DIR/projects`, or `~/.claude/projects`) and the desktop app's session stores, writes one receipt file per source under `scratch/receipts/`, and reports each store as read, not found, or unreadable. Unreadable exits 3, because that usage is unknown rather than zero. Point `--root` at a backup of the transcript store to recover days the CLI has since pruned. The Codex extractor reads `$CODEX_HOME` (or `~/.codex`) the same way, counting non-cached input plus output; to read a backup or a store copied from another machine, pass `--sessions DIR` with `--local-store` for your own store or `--tag ORIGIN` for someone else's. The goose extractor opens goose's `sessions.db` read-only through Node's built-in SQLite, so no `sqlite3` program is needed; it maps local models to their family (`qwen_local`, `gemma_local`) and labels calls goose routed to a hosted provider as `goose_<provider>`. Ledger rows with cache reads need `--cache-convention`, because whether goose's input count includes them varies by provider. The VS Code agents extractor reads Cline, Roo Code, Kilo Code, and Snapdev task stores in VS Code, VS Code Insiders, VSCodium, Cursor, and Windsurf; records whose cache counters fit both counting conventions need `--token-convention legacy` or `inclusive`, which depends on the provider the extension was pointed at, and can be given per source as `SOURCE=legacy` or `SOURCE=inclusive`.
+Every extractor can also be run on its own, as the commands below list. The Claude Code extractor reads the transcript store read-only (`$CLAUDE_CONFIG_DIR/projects`, or `~/.claude/projects`) and the desktop app's session stores, writes one receipt file per source under `scratch/receipts/`, and reports each store as read, not found, or unreadable. Unreadable exits 3, because that usage is unknown rather than zero. Point `--root` at a backup of the transcript store to recover days the CLI has since pruned. The Codex extractor reads `$CODEX_HOME` (or `~/.codex`) the same way, counting non-cached input plus output; to read a backup or a store copied from another machine, pass `--sessions DIR` with `--local-store` for your own store or `--tag ORIGIN` for someone else's. A malformed interior JSONL record or an incomplete final append exits 3 and preserves the last known-good receipt set, because a partial exact result would turn missing evidence into a lower count. The goose extractor opens goose's `sessions.db` read-only through Node's built-in SQLite, so no `sqlite3` program is needed; it maps local models to their family (`qwen_local`, `gemma_local`) and labels calls goose routed to a hosted provider as `goose_<provider>`. Ledger rows with cache reads need `--cache-convention`, because whether goose's input count includes them varies by provider. The VS Code agents extractor reads Cline, Roo Code, Kilo Code, and Snapdev task stores in VS Code, VS Code Insiders, VSCodium, Cursor, and Windsurf; records whose cache counters fit both counting conventions need `--token-convention legacy` or `inclusive`, which depends on the provider the extension was pointed at, and can be given per source as `SOURCE=legacy` or `SOURCE=inclusive`.
 
 For a local runner or a hosted API that speaks the OpenAI chat completions shape, relay each scripted call through one capture. It passes the request and response through unchanged and keeps only the model and the counters. Presets cover LM Studio, llama.cpp, vLLM, and MLX locally, and xAI, Mistral, DeepSeek, Groq, OpenRouter, and Together hosted, each reading its key from its own environment variable, such as `XAI_API_KEY`:
 
@@ -67,7 +67,7 @@ Literal
 npm run openai-compatible:capture -- --provider lmstudio < request.json
 ```
 
-For any other endpoint, pass `--base-url` with `--source`, and `--key-env` naming the variable that holds its key. OpenAI itself is left to its organization usage report, so its calls are never counted twice.
+For any other endpoint, pass `--base-url` with `--source`, and `--key-env` naming the variable that holds its key. Direct OpenAI calls are excluded from this capture and are measured through the organization usage report. That report remains quarantined until its configured scope decision establishes whether it is additive, so exclusion from this capture alone is not a universal no-double-count guarantee.
 
 For any other source, write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. For local inference through Ollama, relay calls through the capture: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
 Literal
@@ -81,14 +81,14 @@ Literal
 read -rs ANTHROPIC_ADMIN_KEY && export ANTHROPIC_ADMIN_KEY && npm run extract:claude-api
 ```
 
-The same for OpenAI: paste the organization admin key, which is not shown, and press Return.
+OpenAI also requires a stable, non-secret organization scope because a display alias alone cannot distinguish two organizations. Before running the extractor, add exactly one matching account entry to `config/openai-reconciliation.json`. The entry must provide `account_alias`, `organization_scope`, and `mode`; a non-`unset` mode also requires `decided_on` and human-reviewed `evidence`. Each organization scope may appear in only one entry, although separate scopes may share a display alias. Set `OPENAI_ACCOUNT_ALIAS` to the configured alias, or leave it unset for `primary`. After this command starts, the shell first prompts `OpenAI organization scope: `; enter the configured non-secret scope and press Return. It then waits silently; paste the organization admin key, which is not shown, and press Return.
 
 Literal
 ```bash
-read -rs OPENAI_ADMIN_KEY && export OPENAI_ADMIN_KEY && npm run extract:openai-api
+read -rp "OpenAI organization scope: " OPENAI_ORGANIZATION_SCOPE && export OPENAI_ORGANIZATION_SCOPE && read -rs OPENAI_ADMIN_KEY && export OPENAI_ADMIN_KEY && npm run extract:openai-api
 ```
 
-An organization report covers every client that used its keys, so it can overlap a local extractor that counted the same calls: Claude Code or Codex signed in with an API key, or an editor extension or agent pointed at the same organization. Anthropic receipts are therefore held in `scratch/reconcile/` until `npm run reconcile:claude` compares them with your Claude Code record and you record a verdict in `config/claude-reconciliation.json`. OpenAI has no reconciliation step yet; if your local OpenAI clients use an API key rather than a ChatGPT sign-in, leave `openai_api` out rather than count those calls twice.
+An organization report covers every client that used its keys, so it can overlap a local extractor that counted the same calls: Claude Code or Codex signed in with an API key, or an editor extension or agent pointed at the same organization. Anthropic receipts are held in `scratch/reconcile/` until `npm run reconcile:claude` compares them with your Claude Code record and you record a verdict in `config/claude-reconciliation.json`. OpenAI organization receipts also default to `scratch/reconcile/`; `config/openai-reconciliation.json` must record account-specific human scope evidence before an `additive` decision makes them importer-visible. Equal daily totals do not prove overlap, subscription Codex is not presumed to use an organization's API keys, and an `overlapping` decision keeps the full organization report as non-additive evidence rather than subtracting an estimated portion.
 
 Consumer chat products report no token counts, but their account data exports hold the conversations, so usage can be estimated at about four characters per token. Request an export from claude.ai (Settings, Privacy, Export data) or ChatGPT (Settings, Data controls, Export data), unzip a claude.ai export into `raw/claude-export-<date>/`, and place a ChatGPT export ZIP, manifest, or `conversations.json` anywhere under `raw/`, which is never committed. Then:
 
@@ -124,7 +124,7 @@ Every command below is documented at the top of its script.
 - `npm run eval:code`: statically check that a failed read is never treated as no evidence.
 - `npm run eval:dashboard`: check the built dashboard's interpretation controls and its privacy-reduced projections.
 - `npm run eval:served`: check that no dataset content has reached the served tree.
-- `npm run eval`: check dataset invariants such as zero-total rows, placeholder fidelity, and cross-footed totals.
+- `npm run eval`: check dataset invariants such as evidence-backed zero-total rows, placeholder fidelity, and cross-footed totals.
 - `npm run export:csv`: export the dataset as two CSV files, one row per day and one row per day, source, and origin.
 - `npm run extract:claude-api`: extract exact daily usage from the Anthropic Admin Usage Report, quarantined until a reconciliation verdict is recorded. Needs `ANTHROPIC_ADMIN_KEY`.
 - `npm run extract:claude-code`: extract exact daily usage from Claude Code transcripts and the Claude desktop app's agent sessions, excluding cache reads from the headline.
@@ -133,7 +133,7 @@ Every command below is documented at the top of its script.
 - `npm run extract:cursor`: extract daily usage from Cursor's chat and agent history, as Cursor reports each message's token count.
 - `npm run extract:gemini-cli`: extract exact daily usage from Gemini CLI and Qwen Code chat sessions, excluding cached input from the headline.
 - `npm run extract:goose`: extract exact daily usage from goose's usage ledger, local models by family and hosted providers labelled as goose traffic.
-- `npm run extract:openai-api`: extract exact daily text-token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`.
+- `npm run extract:openai-api`: extract reported daily token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`, `OPENAI_ORGANIZATION_SCOPE`, and a matching account binding in `config/openai-reconciliation.json`.
 - `npm run extract:vscode-agents`: extract exact daily usage from Cline, Roo Code, Kilo Code, and Snapdev task counters in every VS Code-family editor.
 - `npm run extract:zed-agent`: extract exact usage from Zed's agent threads, each thread dated by the day it was created.
 - `npm run import`: merge receipt JSONL into the dataset, enforcing the cutoff, no-decrease, and reconciliation gates.
@@ -152,7 +152,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.2.1. The first public release was 0.1.0, on the same day. This release ships the importer, its gates, the dashboard, extractors for Claude Code, Codex, goose, the Cline family of VS Code agent extensions, and the Anthropic and OpenAI usage APIs, estimators for the claude.ai and ChatGPT exports, and the Perplexity, TypeSafe, and Ollama captures; the tested extractors are being ported, per `ROADMAP.md`. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.3.0. This release expands the local-first record across CLI agents, editor agents, consumer exports, local inference, OpenAI-compatible endpoints, and organization usage APIs. It preserves token components where an extractor emits them, reconciles provider and tool authority without treating equal counts as identity, and keeps incomplete or ambiguous evidence visible rather than converting it to zero. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution

@@ -68,11 +68,18 @@ const inProgress = rows.filter((row) => row.date === today);
 check("no in-progress day row", inProgress.length ? "FAIL" : "ok",
   inProgress.map((row) => `${row.date} is not a complete day yet`).join(", "));
 
-// Zero is a measurement, not an absence. An unknown day must be missing from
-// the file entirely, never present with a zero total.
-const zeroRows = rows.filter((row) => row.total === 0);
-check("no zero-total rows", zeroRows.length ? "FAIL" : "ok",
-  zeroRows.map((row) => row.date).join(", "));
+// A zero headline is admissible only when the source retained affirmative
+// measured activity such as calls or positive token components. An unknown day
+// has no such evidence and must remain absent rather than becoming a zero row.
+const hasMeasuredActivity = (row) => Object.values(row.sources ?? {}).some((entry) =>
+  Number(entry.calls ?? 0) > 0 ||
+  Object.entries(entry.token_components ?? {}).some(
+    ([field, value]) => field !== "schema_version" && Number(value) > 0
+  )
+);
+const unsupportedZeroRows = rows.filter((row) => row.total === 0 && !hasMeasuredActivity(row));
+check("no unsupported zero-total rows", unsupportedZeroRows.length ? "FAIL" : "ok",
+  unsupportedZeroRows.map((row) => row.date).join(", "));
 
 // A day-boundary migration leaves duplicates behind. When the profile timezone
 // changes, every session near the old day boundary moves to a neighbouring day;

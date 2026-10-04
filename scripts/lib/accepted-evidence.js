@@ -13,7 +13,16 @@ import { hostname } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { isCalendarDate } from "./dataset-validation.js";
-import { normalizeReceipt, snapshotKeyOf } from "./receipt-schema.js";
+import {
+  aggregateTokenComponents,
+  authorityRankOf,
+  normalizeReceipt,
+  normalizeTokenComponents,
+  reconcileTokenComponents,
+  sameAuthorityScope,
+  snapshotKeyOf,
+  validateTokenComponents
+} from "./receipt-schema.js";
 import { recordPaths } from "./record-paths.js";
 
 export const ACCEPTED_DATA_PATH = recordPaths().dataset;
@@ -200,6 +209,9 @@ const normalizedEntry = (entry, inherited = false) => {
     authority: normalized.authority ?? null,
     tokens: normalized.tokens,
     calls: Number.isInteger(normalized.calls) ? normalized.calls : null,
+    ...(normalized.token_components
+      ? { token_components: normalizeTokenComponents(normalized.token_components) }
+      : {}),
     correlation_keys: stableKeys(normalized.correlation_keys),
     acceptance:
       entry.acceptance === "accepted" ? "accepted" : "legacy-unverified",
@@ -209,6 +221,7 @@ const normalizedEntry = (entry, inherited = false) => {
       : {}),
     ...(entry.correction ? { correction: entry.correction } : {}),
     ...(entry.disposition ? { disposition: entry.disposition } : {}),
+    ...(entry.superseded_by ? { superseded_by: entry.superseded_by } : {}),
     ...(inherited && !entry.acceptance
       ? { legacy_note: "Inherited from the pre-ledger manifest; acceptance was not recorded." }
       : entry.legacy_note
@@ -262,6 +275,62 @@ export function summarizeCoverage(entries) {
     }
     const summary = bySource.get(entry.source) ?? {
       receipts: 0,
+      active_receipts: 0,
+      tokens: 0,
+      identified_requests: 0,
+      with_snapshot_key: 0,
+      accepted_receipts: 0,
+      legacy_unverified_receipts: 0,
+      superseded_history_receipts: 0,
+      excluded_identity_receipts: 0,
+      first: entry.date,
+      last: entry.date,
+      _identified_requests: new Set()
+    };
+    summary.receipts += 1;
+    if (isActiveEntry(entry)) {
+      summary.active_receipts += 1;
+      summary.tokens += entry.tokens;
+      for (const key of stableKeys(entry.correlation_keys)) {
+        summary._identified_requests.add(key);
+      }
+      if (entry.snapshot_key) summary.with_snapshot_key += 1;
+      if (entry.acceptance === "accepted") summary.accepted_receipts += 1;
+      else summary.legacy_unverified_receipts += 1;
+    }
+    if (entry.disposition === "superseded") summary.superseded_history_receipts += 1;
+    if (entry.disposition === "excluded") summary.excluded_identity_receipts += 1;
+    if (entry.date < summary.first) summary.first = entry.date;
+    if (entry.date > summary.last) summary.last = entry.date;
+    bySource.set(entry.source, summary);
+  }
+  return Object.fromEntries(
+    [...bySource]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([source, summary]) => {
+        const { _identified_requests: identities, ...publicSummary } = summary;
+        return [
+          source,
+          {
+            ...publicSummary,
+            identified_requests: identities.size,
+            dedupe: identities.size
+              ? "request-level"
+              : summary.active_receipts > 0 &&
+                  summary.with_snapshot_key === summary.active_receipts
+                ? "day-level"
+                : "none"
+          }
+        ];
+      })
+  );
+}
+
+const summarizeLegacyCoverage = (entries) => {
+  const bySource = new Map();
+  for (const entry of entries) {
+    const summary = bySource.get(entry.source) ?? {
+      receipts: 0,
       tokens: 0,
       identified_requests: 0,
       with_snapshot_key: 0,
@@ -297,7 +366,7 @@ export function summarizeCoverage(entries) {
         }
       ])
   );
-}
+};
 
 export function validateAcceptedManifest(manifest) {
   if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
@@ -306,8 +375,17 @@ export function validateAcceptedManifest(manifest) {
   if (!Array.isArray(manifest.entries)) {
     throw new Error("Evidence manifest entries must be an array");
   }
+  for (const entry of manifest.entries) {
+    if (!Object.hasOwn(entry, "token_components")) continue;
+    const componentErrors = validateTokenComponents(
+      entry.token_components,
+      `${entry.date}/${entry.source} token_components`
+    );
+    if (componentErrors.length) throw new Error(componentErrors.join("\n"));
+  }
   const entries = manifest.entries.map((entry) => normalizedEntry(entry, true));
   const coverage = summarizeCoverage(entries);
+  const legacyCoverage = summarizeLegacyCoverage(entries);
   for (const field of [
     "receipts",
     "identified_requests",
@@ -321,25 +399,48 @@ export function validateAcceptedManifest(manifest) {
     throw new Error("Evidence manifest coverage must be an object");
   }
   if (manifest.ledger_version === 2) {
-    const identified = entries.reduce(
+    const active = entries.filter(isActiveEntry);
+    const identified = new Set(
+      active.flatMap((entry) => entry.correlation_keys)
+    ).size;
+    const accepted = active.filter((entry) => entry.acceptance === "accepted").length;
+    const legacy = active.length - accepted;
+    const superseded = entries.filter(
+      (entry) => entry.disposition === "superseded"
+    ).length;
+    const legacyIdentified = entries.reduce(
       (sum, entry) => sum + entry.correlation_keys.length,
       0
     );
-    const accepted = entries.filter((entry) => entry.acceptance === "accepted").length;
+    const legacyAccepted = entries.filter(
+      (entry) => entry.acceptance === "accepted"
+    ).length;
     if (manifest.receipts !== entries.length) {
       throw new Error("Evidence manifest receipts does not match entries length");
     }
-    if (manifest.identified_requests !== identified) {
-      throw new Error("Evidence manifest identified_requests does not match entries");
-    }
-    if (!isDeepStrictEqual(manifest.coverage, coverage)) {
+    const activeSummary = isDeepStrictEqual(manifest.coverage, coverage);
+    const legacySummary = isDeepStrictEqual(manifest.coverage, legacyCoverage);
+    const activeSummaryFormat =
+      Object.hasOwn(manifest.ledger ?? {}, "superseded_history_receipts") ||
+      Object.values(manifest.coverage).some((summary) =>
+        Object.hasOwn(summary, "active_receipts")
+      );
+    if (activeSummaryFormat ? !activeSummary : !legacySummary) {
       throw new Error("Evidence manifest coverage does not match entries");
     }
-    if (
-      manifest.ledger?.accepted_receipts !== accepted ||
-      manifest.ledger?.legacy_unverified_receipts !== entries.length - accepted ||
-      !Array.isArray(manifest.ledger?.corrections)
-    ) {
+    const summaryMatches = activeSummaryFormat
+      ? manifest.identified_requests === identified &&
+        manifest.ledger?.accepted_receipts === accepted &&
+        manifest.ledger?.legacy_unverified_receipts === legacy &&
+        manifest.ledger?.superseded_history_receipts === superseded
+      : manifest.identified_requests === legacyIdentified &&
+        manifest.ledger?.accepted_receipts === legacyAccepted &&
+        manifest.ledger?.legacy_unverified_receipts === entries.length - legacyAccepted &&
+        manifest.ledger?.superseded_history_receipts === undefined;
+    if (!summaryMatches) {
+      throw new Error("Evidence manifest ledger summary does not match entries");
+    }
+    if (!Array.isArray(manifest.ledger?.corrections)) {
       throw new Error("Evidence manifest ledger summary does not match entries");
     }
   }
@@ -357,6 +458,7 @@ const emptyManifest = () => ({
   ledger: {
     accepted_receipts: 0,
     legacy_unverified_receipts: 0,
+    superseded_history_receipts: 0,
     corrections: []
   },
   entries: []
@@ -375,21 +477,26 @@ const manifestFromEntries = (previous, entries, correction = null) => {
       recorded_at: new Date().toISOString()
     });
   }
-  const accepted = entries.filter((entry) => entry.acceptance === "accepted").length;
+  const active = entries.filter(isActiveEntry);
+  const accepted = active.filter((entry) => entry.acceptance === "accepted").length;
+  const identified = new Set(
+    active.flatMap((entry) => entry.correlation_keys)
+  ).size;
+  const superseded = entries.filter(
+    (entry) => entry.disposition === "superseded"
+  ).length;
   return {
     note: NOTE,
     dedupe_levels: DEDUPE_LEVELS,
     ledger_version: 2,
     receipts: entries.length,
-    identified_requests: entries.reduce(
-      (sum, entry) => sum + entry.correlation_keys.length,
-      0
-    ),
+    identified_requests: identified,
     malformed_receipt_lines: previous.malformed_receipt_lines ?? 0,
     coverage,
     ledger: {
       accepted_receipts: accepted,
-      legacy_unverified_receipts: entries.length - accepted,
+      legacy_unverified_receipts: active.length - accepted,
+      superseded_history_receipts: superseded,
       corrections
     },
     entries
@@ -402,11 +509,50 @@ const priorVersions = (entry) =>
 const exactVersion = (version, incoming) =>
   version.tokens === incoming.tokens &&
   callsOf(version) === callsOf(incoming) &&
-  equalKeySets(version.correlation_keys, incoming.correlation_keys);
+  equalKeySets(version.correlation_keys, incoming.correlation_keys) &&
+  isDeepStrictEqual(
+    normalizeTokenComponents(version.token_components),
+    normalizeTokenComponents(incoming.token_components)
+  );
+
+const equivalentVersionCounters = (left, right) =>
+  left.tokens === right.tokens &&
+  callsOf(left) === callsOf(right) &&
+  equalKeySets(left.correlation_keys, right.correlation_keys);
+
+const withReconciledTokenComponents = (left, right, where) => {
+  if (!equivalentVersionCounters(left, right)) return right;
+  const reconciled = reconcileTokenComponents(
+    left.token_components,
+    right.token_components,
+    where
+  );
+  if (reconciled.errors.length) throw new Error(reconciled.errors.join("\n"));
+  const merged = { ...right };
+  if (reconciled.token_components) {
+    merged.token_components = reconciled.token_components;
+  } else {
+    delete merged.token_components;
+  }
+  return merged;
+};
+
+const snapshotVersion = (entry) => ({
+  tokens: entry.tokens,
+  calls: callsOf(entry),
+  correlation_keys: stableKeys(entry.correlation_keys),
+  ...(entry.token_components
+    ? { token_components: normalizeTokenComponents(entry.token_components) }
+    : {})
+});
 
 const addAcceptedEntry = (entries, incoming, correction) => {
-  const accepted = entries.filter((entry) => entry.acceptance === "accepted");
-  const legacy = entries.filter((entry) => entry.acceptance !== "accepted");
+  const accepted = entries.filter(
+    (entry) => entry.acceptance === "accepted" && isActiveEntry(entry)
+  );
+  const legacy = entries.filter(
+    (entry) => entry.acceptance !== "accepted" && isActiveEntry(entry)
+  );
   const snapshot = incoming.snapshot_key;
 
   if (!snapshot && !incoming.correlation_keys.length) {
@@ -431,11 +577,7 @@ const addAcceptedEntry = (entries, incoming, correction) => {
       // already accepted.
       const superseded = [
         ...priorVersions(prior),
-        {
-          tokens: prior.tokens,
-          calls: callsOf(prior),
-          correlation_keys: stableKeys(prior.correlation_keys)
-        }
+        snapshotVersion(prior)
       ];
       Object.assign(prior, incoming, {
         acceptance: "accepted",
@@ -470,6 +612,11 @@ const addAcceptedEntry = (entries, incoming, correction) => {
           `Historic snapshot ${snapshot} overlaps a different scope or day`
         );
       }
+      incoming = withReconciledTokenComponents(
+        existing,
+        incoming,
+        `${snapshot} token_components`
+      );
       for (const other of accepted) {
         if (other === existing) continue;
         const overlap = intersection(
@@ -485,6 +632,19 @@ const addAcceptedEntry = (entries, incoming, correction) => {
             `Snapshot ${snapshot} has request identities belonging to another accepted snapshot`
           );
         }
+      }
+      if (
+        equivalentVersionCounters(existing, incoming) &&
+        !exactVersion(existing, incoming)
+      ) {
+        const enriched = normalizedEntry({
+          ...existing,
+          ...incoming,
+          acceptance: "accepted",
+          acceptance_basis: existing.acceptance_basis ?? "matched-final-dataset"
+        });
+        entries[entries.indexOf(existing)] = enriched;
+        return { kind: "updated", entry: enriched };
       }
       if (
         !correction &&
@@ -512,11 +672,7 @@ const addAcceptedEntry = (entries, incoming, correction) => {
       }
       const superseded = [
         ...priorVersions(existing),
-        {
-          tokens: existing.tokens,
-          calls: callsOf(existing),
-          correlation_keys: oldKeys
-        }
+        snapshotVersion(existing)
       ];
       Object.assign(existing, incoming, {
         correlation_keys: stableKeys([...oldKeys, ...incomingKeys]),
@@ -539,9 +695,29 @@ const addAcceptedEntry = (entries, incoming, correction) => {
     if (!overlap.length) continue;
     if (
       equalKeySets(existing.correlation_keys, incoming.correlation_keys) &&
-      sameScopeDay(existing, incoming)
+      sameAuthorityScope(existing, incoming)
     ) {
-      return { kind: "replay", entry: existing };
+      const existingRank = authorityRankOf(existing);
+      const incomingRank = authorityRankOf(incoming);
+      if (existingRank > incomingRank) {
+        return { kind: "replay", entry: existing };
+      }
+      if (existingRank === incomingRank) {
+        if (sameScopeDay(existing, incoming) && exactVersion(existing, incoming)) {
+          return { kind: "replay", entry: existing };
+        }
+        throw new Error(
+          `Equal-authority historic request overlap conflicts for ${incoming.date}/${incoming.source}`
+        );
+      }
+      existing.disposition = "superseded";
+      existing.superseded_by = {
+        source: incoming.source,
+        snapshot_key: incoming.snapshot_key,
+        authority: incoming.authority
+      };
+      entries.push(incoming);
+      return { kind: "added", entry: incoming, superseded: existing };
     }
     if (!sameScopeDay(existing, incoming)) {
       throw new Error(
@@ -608,6 +784,191 @@ const rowEntries = (rows) => {
   return result;
 };
 
+const isActiveEntry = (entry) =>
+  !["excluded", "corrected-out", "superseded"].includes(entry.disposition);
+
+const aggregateCalls = (entries) => ({
+  present: entries.some((entry) => Number.isInteger(entry.calls)),
+  value: entries.reduce(
+    (sum, entry) => sum + (Number.isInteger(entry.calls) ? entry.calls : 0),
+    0
+  )
+});
+
+const assertLedgerMatchesSourceEntry = (key, sourceEntry, entries) => {
+  const tokens = entries.reduce((sum, entry) => sum + entry.tokens, 0);
+  const calls = aggregateCalls(entries);
+  if (
+    tokens !== sourceEntry.tokens ||
+    (calls.present ? calls.value !== sourceEntry.calls : Number.isInteger(sourceEntry.calls)) ||
+    !isDeepStrictEqual(
+      aggregateTokenComponents(entries),
+      normalizeTokenComponents(sourceEntry.token_components)
+    )
+  ) {
+    throw new Error(
+      `Accepted ledger cannot atomically replace ${key}: active evidence does not match the dataset`
+    );
+  }
+  if (sourceEntry.by_origin) {
+    if (entries.some((entry) => !entry.origin)) {
+      throw new Error(
+        `Accepted ledger cannot atomically replace ${key}: origin evidence is incomplete`
+      );
+    }
+    const origins = new Map();
+    for (const entry of entries) {
+      origins.set(entry.origin, (origins.get(entry.origin) ?? 0) + entry.tokens);
+    }
+    if (!isDeepStrictEqual(Object.fromEntries([...origins].sort()), sourceEntry.by_origin)) {
+      throw new Error(
+        `Accepted ledger cannot atomically replace ${key}: origin evidence does not match the dataset`
+      );
+    }
+  }
+};
+
+const rebuildSourceEntry = (current, entries) => {
+  const rebuilt = { ...current };
+  rebuilt.tokens = entries.reduce((sum, entry) => sum + entry.tokens, 0);
+  const calls = aggregateCalls(entries);
+  if (calls.present) rebuilt.calls = calls.value;
+  else delete rebuilt.calls;
+  const components = aggregateTokenComponents(entries);
+  if (components) rebuilt.token_components = components;
+  else delete rebuilt.token_components;
+  if (entries.every((entry) => entry.origin)) {
+    const origins = new Map();
+    for (const entry of entries) {
+      origins.set(entry.origin, (origins.get(entry.origin) ?? 0) + entry.tokens);
+    }
+    rebuilt.by_origin = Object.fromEntries([...origins].sort());
+  } else {
+    delete rebuilt.by_origin;
+  }
+  return rebuilt;
+};
+
+export async function planPersistedAuthorityTransitions({
+  rows,
+  receipts,
+  root = process.cwd()
+}) {
+  const currentManifest = await readOptionalManifest(
+    pathAt(root, ACCEPTED_MANIFEST_PATH)
+  );
+  const { entries } = validateAcceptedManifest(currentManifest.value);
+  const active = entries.filter(isActiveEntry);
+  const retiring = new Set();
+  const kept = [];
+
+  for (const raw of receipts) {
+    let candidate = raw;
+    let incoming = entryFromReceipt(candidate);
+    if (incoming.snapshot_key) {
+      const sameSnapshots = active.filter(
+        (entry) => entry.snapshot_key === incoming.snapshot_key
+      );
+      if (sameSnapshots.length > 1) {
+        throw new Error(`Historic snapshot ${incoming.snapshot_key} has multiple active entries`);
+      }
+      const [sameSnapshot] = sameSnapshots;
+      if (sameSnapshot && sameScopeDay(sameSnapshot, incoming)) {
+        const merged = withReconciledTokenComponents(
+          sameSnapshot,
+          incoming,
+          `${incoming.snapshot_key} token_components`
+        );
+        candidate = { ...raw };
+        if (merged.token_components) {
+          candidate.token_components = merged.token_components;
+        } else {
+          delete candidate.token_components;
+        }
+        incoming = entryFromReceipt(candidate);
+      }
+    }
+    const keys = incoming.correlation_keys;
+    if (!keys.length) {
+      kept.push(candidate);
+      continue;
+    }
+    const hits = active.filter((entry) => {
+      if (entry.snapshot_key && entry.snapshot_key === incoming.snapshot_key) return false;
+      return intersection(entry.correlation_keys, keys).length > 0;
+    });
+    if (!hits.length) {
+      kept.push(candidate);
+      continue;
+    }
+    if (hits.length > 1) {
+      throw new Error(
+        `Historic request overlap for ${incoming.date}/${incoming.source} matches multiple active entries`
+      );
+    }
+    const [existing] = hits;
+    if (existing.acceptance !== "accepted") {
+      throw new Error(
+        `Unverified legacy identity overlaps ${incoming.date}/${incoming.source}; migrate it explicitly`
+      );
+    }
+    if (!equalKeySets(existing.correlation_keys, keys)) {
+      throw new Error(`Partial historic request overlap for ${incoming.date}/${incoming.source}`);
+    }
+    if (!sameAuthorityScope(existing, incoming)) {
+      throw new Error(
+        `Historic request overlap crosses accounting scope or day for ${incoming.date}/${incoming.source}`
+      );
+    }
+    const existingRank = authorityRankOf(existing);
+    const incomingRank = authorityRankOf(incoming);
+    if (existingRank > incomingRank) continue;
+    if (existingRank === incomingRank) {
+      if (sameScopeDay(existing, incoming)) kept.push(candidate);
+      else {
+        throw new Error(
+          `Equal-authority historic request overlap crosses source scope for ${incoming.date}/${incoming.source}`
+        );
+      }
+      continue;
+    }
+    retiring.add(existing);
+    kept.push(candidate);
+  }
+
+  if (!retiring.size) {
+    return { rows, receipts: kept, supersededSources: [] };
+  }
+
+  const adjusted = structuredClone(rows);
+  const rowsByDate = new Map(adjusted.map((row) => [row.date, row]));
+  const affected = new Set(
+    [...retiring].map((entry) => `${entry.date}/${entry.source}`)
+  );
+  for (const key of affected) {
+    const slash = key.indexOf("/");
+    const date = key.slice(0, slash);
+    const source = key.slice(slash + 1);
+    const row = rowsByDate.get(date);
+    const sourceEntry = row?.sources?.[source];
+    if (!sourceEntry) {
+      throw new Error(`Accepted ledger cannot atomically replace ${key}: dataset entry is absent`);
+    }
+    const sourceEntries = active.filter(
+      (entry) => entry.date === date && entry.source === source
+    );
+    assertLedgerMatchesSourceEntry(key, sourceEntry, sourceEntries);
+    const remaining = sourceEntries.filter((entry) => !retiring.has(entry));
+    if (remaining.length) row.sources[source] = rebuildSourceEntry(sourceEntry, remaining);
+    else delete row.sources[source];
+  }
+  return {
+    rows: adjusted,
+    receipts: kept,
+    supersededSources: [...affected].sort()
+  };
+};
+
 const acceptedReceiptBuckets = (rows, receipts, excludedSources) => {
   const finalEntries = rowEntries(rows);
   const excluded = new Set(
@@ -645,7 +1006,11 @@ const acceptedReceiptBuckets = (rows, receipts, excludedSources) => {
     if (
       finalEntry.tokens !== tokens ||
       (hasCalls && finalEntry.calls !== calls) ||
-      (!hasCalls && Number.isInteger(finalEntry.calls))
+      (!hasCalls && Number.isInteger(finalEntry.calls)) ||
+      !isDeepStrictEqual(
+        normalizeTokenComponents(finalEntry.token_components),
+        aggregateTokenComponents(bucket)
+      )
     ) {
       throw new Error(
         `Accepted receipt bucket ${key} does not match final dataset counters: ` +
@@ -667,6 +1032,7 @@ const acceptedReceiptBuckets = (rows, receipts, excludedSources) => {
         tokens: 0,
         calls: 0,
         _hasCalls: false,
+        _componentReceipts: [],
         correlation_keys: []
       };
       combined.tokens += receipt.tokens;
@@ -675,11 +1041,15 @@ const acceptedReceiptBuckets = (rows, receipts, excludedSources) => {
         combined._hasCalls = true;
       }
       if (receipt.fidelity === "estimated") combined.fidelity = "estimated";
+      combined._componentReceipts.push(receipt);
       identityFree.set(scope, combined);
     }
     for (const combined of identityFree.values()) {
       if (!combined._hasCalls) delete combined.calls;
+      const tokenComponents = aggregateTokenComponents(combined._componentReceipts);
+      if (tokenComponents) combined.token_components = tokenComponents;
       delete combined._hasCalls;
+      delete combined._componentReceipts;
       ledgerReceipts.push(combined);
     }
     buckets.set(key, ledgerReceipts);
@@ -770,7 +1140,14 @@ export function checkEvidenceOverlap(manifest, inputReceipts) {
         );
         continue;
       }
-      if (!sameScopeDay(hit, incoming)) {
+      const identicalAuthorityReplacement =
+        equalKeySets(hit.correlation_keys, keys) &&
+        sameAuthorityScope(hit, incoming) &&
+        authorityRankOf(hit) !== authorityRankOf(incoming);
+      if (identicalAuthorityReplacement) {
+        if (hit.acceptance === "accepted") counted = true;
+        else result.legacy_unverified_hits += 1;
+      } else if (!sameScopeDay(hit, incoming)) {
         result.conflicts.push(
           `${incoming.date}/${incoming.source} overlaps a different scope or day`
         );
@@ -923,8 +1300,7 @@ export async function acceptDataset({
           entry.acceptance === "accepted" &&
           entry.date === date &&
           entry.source === source &&
-          entry.disposition !== "excluded" &&
-          entry.disposition !== "corrected-out"
+          isActiveEntry(entry)
       );
       const expected = selected.finalEntries.get(key);
       const counters = (current) => ({
@@ -933,12 +1309,17 @@ export async function acceptDataset({
         calls: current.reduce(
           (sum, entry) => sum + (Number.isInteger(entry.calls) ? entry.calls : 0),
           0
-        )
+        ),
+        tokenComponents: aggregateTokenComponents(current)
       });
       let ledger = counters(active);
       const matches = () =>
         ledger.tokens === expected.tokens &&
-        (ledger.hasCalls ? ledger.calls === expected.calls : !Number.isInteger(expected.calls));
+        (ledger.hasCalls ? ledger.calls === expected.calls : !Number.isInteger(expected.calls)) &&
+        isDeepStrictEqual(
+          ledger.tokenComponents,
+          normalizeTokenComponents(expected.token_components)
+        );
       if (!matches() && confirmedCorrection) {
         const touched = touchedByBucket.get(key) ?? new Set();
         for (const entry of active) {

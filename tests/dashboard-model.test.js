@@ -112,6 +112,50 @@ test("empty summaries distinguish no evidence from measured zero fidelity", () =
   assert.equal(summary.elapsedDays, 31);
 });
 
+test("dashboard keeps measured-zero activity distinct from a filter with no matching evidence", () => {
+  const measuredZero = [{
+    date: "2026-01-02",
+    driver: "research",
+    sources: {
+      openai_api: {
+        tokens: 0,
+        calls: 5,
+        fidelity: "exact",
+        by_origin: { "account/openai": 0 },
+        token_components: {
+          schema_version: 1,
+          input_tokens: 750,
+          cached_input_tokens: 750,
+          output_tokens: 0
+        }
+      }
+    },
+    total: 0
+  }];
+
+  for (const selected of [
+    filters(),
+    filters({ source: "openai_api" }),
+    filters({ origin: "account/openai" })
+  ]) {
+    const visible = filterDashboardRows(measuredZero, selected);
+    assert.equal(visible.length, 1);
+    const summary = summarizeDashboardRows(
+      visible,
+      new Date("2026-01-02T12:00:00Z"),
+      new Date("2026-01-02T12:00:00Z")
+    );
+    assert.equal(summary.total, 0);
+    assert.equal(summary.evidenceDays, 1);
+    assert.equal(summary.peak.date, "2026-01-02");
+  }
+
+  assert.deepEqual(
+    filterDashboardRows(measuredZero, filters({ source: "codex" })),
+    []
+  );
+});
+
 test("driver attribution separates named, reviewed unknown, and unreviewed tokens", () => {
   const attribution = summarizeDriverAttribution([
     { total: 100, driver: "shipping" },

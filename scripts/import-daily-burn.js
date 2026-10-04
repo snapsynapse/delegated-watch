@@ -28,6 +28,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  aggregateTokenComponents,
   reconcileReceipts,
   validateReceiptSchema
 } from "./lib/receipt-schema.js";
@@ -42,7 +43,11 @@ import {
 } from "./lib/settled-source-entries.js";
 
 import { assertDataset } from "./lib/dataset-validation.js";
-import { acceptDataset, assertNoPendingAcceptance } from "./lib/accepted-evidence.js";
+import {
+  acceptDataset,
+  assertNoPendingAcceptance,
+  planPersistedAuthorityTransitions
+} from "./lib/accepted-evidence.js";
 import { assertHistoricalPreservation, importArguments, partitionCompleteReceipts } from "./lib/import-policy.js";
 import { recordPaths } from "./lib/record-paths.js";
 
@@ -114,8 +119,11 @@ const complete = partitionCompleteReceipts(receipts, TIMEZONE, await windowStart
 const { heldBack } = complete;
 receipts = complete.receipts;
 
-const rows = JSON.parse(await readFile(DATA_FILE, "utf8"));
+let rows = JSON.parse(await readFile(DATA_FILE, "utf8"));
 const beforeRows = structuredClone(rows);
+const authorityPlan = await planPersistedAuthorityTransitions({ rows, receipts });
+rows = authorityPlan.rows;
+receipts = authorityPlan.receipts;
 const settled = await loadSettledSourceEntries();
 assertSettledEntriesIntact(beforeRows, settled, { label: "committed dataset" });
 const settledSplit = partitionSettledReceipts(receipts, settled, beforeRows);
@@ -135,6 +143,7 @@ for (const receipt of receipts) {
     coverage: "complete",
     coverageReasons: new Set(),
     drivers: new Set(),
+    componentReceipts: [],
     // Which (machine, profile) or account each token came from. Kept alongside
     // the sum so a day worked on several machines can still be broken down.
     byOrigin: new Map()
@@ -151,6 +160,7 @@ for (const receipt of receipts) {
   if (receipt.coverage === "incomplete") bucket.coverage = "incomplete";
   for (const reason of receipt.coverage_reasons ?? []) bucket.coverageReasons.add(reason);
   if (receipt.driver) bucket.drivers.add(receipt.driver);
+  bucket.componentReceipts.push(receipt);
   buckets.set(key, bucket);
 }
 
@@ -183,6 +193,8 @@ for (const bucket of buckets.values()) {
     entry.coverage_reasons = [...bucket.coverageReasons].sort();
   }
   if (bucket.hasCalls) entry.calls = bucket.calls;
+  const tokenComponents = aggregateTokenComponents(bucket.componentReceipts);
+  if (tokenComponents) entry.token_components = tokenComponents;
   // Always recorded once origin is known, so the dataset is self-describing and
   // the dashboard can attribute a day without re-reading receipts. An empty map
   // means the receipts predate origin tagging.
@@ -202,7 +214,10 @@ for (const row of mergedBeforeExclusions) {
 const exclusions = await loadSourceEntryExclusions();
 const { rows: merged, removed: excludedSources } =
   applySourceEntryExclusions(mergedBeforeExclusions, exclusions);
-assertHistoricalPreservation(beforeRows, merged, { excludedSources, correction });
+assertHistoricalPreservation(beforeRows, merged, {
+  excludedSources: [...excludedSources, ...authorityPlan.supersededSources],
+  correction
+});
 // Postcondition, not just a precondition: nothing may leave this run having
 // altered a settled entry, whatever route it took through the merge.
 assertSettledEntriesIntact(merged, settled, { label: "merged dataset" });

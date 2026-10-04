@@ -54,6 +54,12 @@ const detail = [
     "tokens",
     "calls",
     "fidelity",
+    "input_tokens",
+    "cached_input_tokens",
+    "cache_write_tokens",
+    "output_tokens",
+    "reasoning_tokens",
+    "component_scope",
     "day_total_tokens",
     "driver",
     "evidence"
@@ -78,9 +84,21 @@ for (const record of rows) {
   );
 
   for (const [source, entry] of entries) {
+    const componentCells = (include) => {
+      const components = include ? entry.token_components : null;
+      return [
+        components?.input_tokens,
+        components?.cached_input_tokens,
+        components?.cache_write_tokens,
+        components?.output_tokens,
+        components?.reasoning_tokens,
+        components ? "source" : ""
+      ];
+    };
     const origins = entry.by_origin ? Object.entries(entry.by_origin) : null;
     if (origins?.length) {
-      for (const [origin, tokens] of origins.sort(([a], [b]) => a.localeCompare(b))) {
+      const sortedOrigins = origins.sort(([a], [b]) => a.localeCompare(b));
+      for (const [index, [origin, tokens]] of sortedOrigins.entries()) {
         // `calls` is recorded per source, not per origin, so it cannot be split
         // across origins without inventing a division. It is left blank on all
         // but the single-origin case rather than duplicated onto each row,
@@ -94,6 +112,7 @@ for (const record of rows) {
             tokens,
             origins.length === 1 ? entry.calls : "",
             entry.fidelity,
+            ...componentCells(index === 0),
             record.total,
             record.driver,
             record.evidence
@@ -111,6 +130,7 @@ for (const record of rows) {
         entry.tokens,
         entry.calls,
         entry.fidelity,
+        ...componentCells(true),
         record.total,
         record.driver,
         record.evidence
