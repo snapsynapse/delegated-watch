@@ -1,5 +1,5 @@
 import { validateLabelProvenance } from "./driver-evidence.js";
-import { validateTokenComponents } from "./receipt-schema.js";
+import { PROVIDER_COST_FIELD, validateTokenComponents } from "./receipt-schema.js";
 
 const SOURCE_PATTERN = /^[a-z0-9_]+$/;
 const ORIGIN_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/;
@@ -168,6 +168,11 @@ export function validateDataset(rows, options = {}) {
           ) {
             hasMeasuredActivity = true;
           }
+        }
+        // A provider-reported cost lives in receipt provenance only. It never
+        // enters a daily row, where it could be summed or published.
+        if (Object.hasOwn(entry, PROVIDER_COST_FIELD)) {
+          errors.push(`${label} source ${source} must not carry ${PROVIDER_COST_FIELD}`);
         }
         if (Object.hasOwn(entry, "by_origin")) {
           if (!isRecord(entry.by_origin)) {

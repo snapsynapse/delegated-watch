@@ -121,7 +121,13 @@ const provider = async (routes) => {
     const pages = routes[url.pathname] ?? [{ data: [], has_more: false }];
     const body = pages[url.searchParams.get("page") ? 1 : 0];
     res.setHeader("content-type", "application/json");
-    res.end(JSON.stringify(body));
+    if (body?.status) {
+      res.statusCode = body.status;
+      res.end("{}");
+      return;
+    }
+    // A string page is served verbatim, so a test can pin exact number text.
+    res.end(typeof body === "string" ? body : JSON.stringify(body));
   }).listen(0, "127.0.0.1");
   await new Promise((ready) => server.once("listening", ready));
   return { base: `http://127.0.0.1:${server.address().port}`, seen, close: () => server.close() };
@@ -580,9 +586,151 @@ test("OpenAI keeps exact bucket widths for UTC, whole-hour, quarter-hour, and tr
     );
 
     assert.equal(result.status, 0, `${timezone}: ${result.stderr}`);
-    const requests = await stub.requests();
+    const all = await stub.requests();
+    const requests = all.filter(({ path }) => path !== "/costs");
     assert.equal(requests.length, 3, timezone);
     assert.ok(requests.every(({ query }) => query.bucket_width === width && query.limit === limit), timezone);
+    // Provider cost is daily-only: read once under UTC, never under any other zone.
+    const costs = all.filter(({ path }) => path === "/costs");
+    assert.equal(costs.length, timezone === "UTC" ? 1 : 0, timezone);
+    assert.ok(costs.every(({ query }) => query.bucket_width === "1d"), timezone);
+  }
+});
+
+test("Anthropic receipts carry the provider's own daily charge verbatim, and nothing where it gave none", async () => {
+  const day = (d) => new Date(Date.UTC(2026, 0, d)).toISOString();
+  const api = await provider({
+    "/v1/organizations/usage_report/messages": [{
+      data: [
+        { starting_at: hour(2, 5), results: [{ model: "claude-a", uncached_input_tokens: 100, output_tokens: 20, cache_read_input_tokens: 999 }] },
+        { starting_at: hour(3, 7), results: [{ model: "claude-a", uncached_input_tokens: 10, output_tokens: 5 }] }
+      ],
+      has_more: false
+    }],
+    "/v1/organizations/cost_report": [{
+      data: [
+        { starting_at: day(1), ending_at: day(2), results: [{ amount: "1.5", currency: "USD" }] },
+        { starting_at: day(2), ending_at: day(3), results: [{ amount: "123.78912", currency: "USD" }] },
+        { starting_at: day(3), ending_at: day(4), results: [] }
+      ],
+      has_more: false
+    }]
+  });
+  try {
+    const result = await run(
+      "extract-claude-api.js",
+      ["--since", "2026-01-02", "--pace", "0", "--dry-run"],
+      { ANTHROPIC_ADMIN_KEY: KEY, ANTHROPIC_API_BASE_URL: `${api.base}/v1/organizations/usage_report/messages` },
+      await workdir("additive")
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const receipts = receiptsIn(result.stdout);
+    assert.deepEqual(receipts.map(({ date, tokens }) => ({ date, tokens })), [
+      { date: "2026-01-02", tokens: 120 },
+      { date: "2026-01-03", tokens: 15 }
+    ]);
+    // Cents as a decimal string, exactly as sent; never converted to dollars.
+    assert.deepEqual(receipts[0].provider_reported_cost, {
+      schema_version: 1,
+      basis: "anthropic_cost_report_day",
+      amount: "123.78912",
+      currency: "USD",
+      unit: "minor",
+      currency_basis: "reported"
+    });
+    // An empty bucket is no statement of cost: no field, never a zero.
+    assert.ok(!Object.hasOwn(receipts[1], "provider_reported_cost"));
+    for (const receipt of receipts) assert.deepEqual(validateReceiptSchema(receipt), []);
+    assert.ok(!`${result.stdout}${result.stderr}`.includes(KEY));
+    const costRequest = api.seen.find(({ path }) => path === "/v1/organizations/cost_report");
+    assert.equal(costRequest.headers["x-api-key"], KEY);
+  } finally {
+    api.close();
+  }
+});
+
+test("Anthropic token receipts survive a failed cost read, which records no figure", async () => {
+  const api = await provider({
+    "/v1/organizations/usage_report/messages": [{
+      data: [{ starting_at: hour(2, 5), results: [{ model: "claude-a", uncached_input_tokens: 100, output_tokens: 20 }] }],
+      has_more: false
+    }],
+    "/v1/organizations/cost_report": [{ status: 503 }]
+  });
+  try {
+    const cwd = await workdir("additive");
+    const result = await run(
+      "extract-claude-api.js",
+      ["--since", "2026-01-02", "--pace", "0", "--dry-run"],
+      { ANTHROPIC_ADMIN_KEY: KEY, ANTHROPIC_API_BASE_URL: `${api.base}/v1/organizations/usage_report/messages` },
+      cwd
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const [receipt] = receiptsIn(result.stdout);
+    assert.equal(receipt.tokens, 120);
+    assert.ok(!Object.hasOwn(receipt, "provider_reported_cost"));
+    assert.match(result.stderr, /cost report unavailable \(HTTP 503\)/);
+
+    const skipped = await run(
+      "extract-claude-api.js",
+      ["--since", "2026-01-02", "--pace", "0", "--dry-run", "--no-cost-report"],
+      { ANTHROPIC_ADMIN_KEY: KEY, ANTHROPIC_API_BASE_URL: `${api.base}/v1/organizations/usage_report/messages` },
+      cwd
+    );
+    assert.equal(skipped.status, 0, skipped.stderr);
+    assert.equal(api.seen.filter(({ path }) => path === "/v1/organizations/cost_report").length, 1);
+  } finally {
+    api.close();
+  }
+});
+
+test("OpenAI receipts carry the provider's daily charge as the exact number text it sent", async () => {
+  const api = await provider({
+    "/org/completions": [{
+      data: [
+        { start_time: second(2), results: [{ model: "gpt-a", input_tokens: 100, output_tokens: 10, num_model_requests: 1 }] },
+        { start_time: second(3), results: [{ model: "gpt-a", input_tokens: 50, output_tokens: 5, num_model_requests: 1 }] },
+        { start_time: second(4), results: [{ model: "gpt-a", input_tokens: 5, output_tokens: 5, num_model_requests: 1 }] }
+      ],
+      has_more: false
+    }],
+    "/costs": [`{"object":"page","data":[
+      {"object":"bucket","start_time":${second(2)},"end_time":${second(3)},"results":[{"object":"organization.costs.result","amount":{"value":0.0600,"currency":"usd"}}]},
+      {"object":"bucket","start_time":${second(3)},"end_time":${second(4)},"results":[]},
+      {"object":"bucket","start_time":${second(4)},"end_time":${second(5)},"results":[{"object":"organization.costs.result","amount":{"value":"0.01","currency":"usd"}}]}
+    ],"has_more":false,"next_page":null}`]
+  });
+  try {
+    const result = await run(
+      "extract-openai-api.js",
+      ["--since", "2026-01-02", "--dry-run"],
+      { OPENAI_ADMIN_KEY: KEY, OPENAI_API_BASE_URL: `${api.base}/org` },
+      await workdir()
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const receipts = receiptsIn(result.stdout);
+    assert.deepEqual(receipts.map(({ date, tokens }) => ({ date, tokens })), [
+      { date: "2026-01-02", tokens: 110 },
+      { date: "2026-01-03", tokens: 55 },
+      { date: "2026-01-04", tokens: 10 }
+    ]);
+    // Trailing zero kept and lowercase currency kept: precision and code as given.
+    assert.deepEqual(receipts[0].provider_reported_cost, {
+      schema_version: 1,
+      basis: "openai_costs_day",
+      amount: "0.0600",
+      currency: "usd",
+      unit: "major",
+      currency_basis: "reported"
+    });
+    assert.ok(!Object.hasOwn(receipts[1], "provider_reported_cost"));
+    // A value that is not a number is malformed, never coerced.
+    assert.ok(!Object.hasOwn(receipts[2], "provider_reported_cost"));
+    assert.match(result.stderr, /2026-01-04 result was malformed/);
+    for (const receipt of receipts) assert.deepEqual(validateReceiptSchema(receipt), []);
+    assert.ok(!`${result.stdout}${result.stderr}`.includes(KEY));
+  } finally {
+    api.close();
   }
 });
 

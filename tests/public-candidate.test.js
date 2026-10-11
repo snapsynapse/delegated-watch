@@ -585,7 +585,7 @@ test("--self verifies the tree that holds the script, as the shipped copy does i
   // plain paths there and the inventory itself is checked structurally.
   const inventory = {
     ...INVENTORY,
-    producer_files: ["scripts/build.js", "scripts/verify-public-candidate.js", "scripts/lib/receipt-privacy.js"],
+    producer_files: ["scripts/build.js", "scripts/verify-public-candidate.js", "scripts/lib/receipt-privacy.js", "scripts/lib/receipt-schema.js"],
     overlay_files: { ...INVENTORY.overlay_files, "config/public-candidate.json": "candidate/config/public-candidate.json" },
     scan_exempt_files: ["config/public-candidate.json"]
   };
@@ -594,6 +594,8 @@ test("--self verifies the tree that holds the script, as the shipped copy does i
   await mkdir(join(fixture.candidate, "config"), { recursive: true });
   await cp(command, join(fixture.candidate, "scripts/verify-public-candidate.js"));
   await cp(join(repo, "scripts/lib/receipt-privacy.js"), join(fixture.candidate, "scripts/lib/receipt-privacy.js"));
+  // receipt-privacy.js validates the provider-reported cost through receipt-schema.js.
+  await cp(join(repo, "scripts/lib/receipt-schema.js"), join(fixture.candidate, "scripts/lib/receipt-schema.js"));
   const { forbidden_terms, forbidden_script_fragments, source_revision, ...projected } = inventory;
   projected.note_projection = "projected";
   await writeFile(join(fixture.candidate, "config/public-candidate.json"), JSON.stringify(projected, null, 2) + "\n");

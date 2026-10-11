@@ -59,7 +59,7 @@ Unranked against items 1 through 8 until someone wants it. It is listed because 
 
 ## Decided against, permanently
 Recorded here so they are not re-proposed. Each follows from a scope boundary or an invariant in `INTENT.md`.
-- **Cost fields of any kind**, including a currency amount, a pricing version, or an estimated spend. Tokens are the unit. There is no conversion in the schema or the code, by construction rather than as a display flag.
+- **Cost fields of any kind in the dataset**, including a currency amount, a pricing version, or an estimated spend. Tokens are the unit. There is no conversion in the schema or the code, by construction rather than as a display flag. The one narrowing, recorded in `INTENT.md` on 2026-10-11: a charge the provider itself computed is kept verbatim on the local receipt as `provider_reported_cost`. It is not converted, not summed, never enters a daily row or the page, and no price table backs it.
 - **Prompt hashes and transcript pointers.** A hash of prompt text is a correlatable fingerprint of prompt text, and a pointer is a reference to it. Both defeat the guarantee that no prompt content enters the record, in the case that matters most, which is the record being shared.
 - **Raw provider request ids.** `correlation_keys` carry one-way hashes precisely so a request can be deduplicated without its identifier being retained.
 - **Organization, team, and multi-user fields.** The record is person-scoped. Chargeback and seat reporting are a different product.

@@ -17,7 +17,11 @@
 //
 // Usage:
 //   OPENAI_ADMIN_KEY=... OPENAI_ORGANIZATION_SCOPE=... node scripts/extract-openai-api.js
-//     [--since YYYY-MM-DD] [--dry-run]
+//     [--since YYYY-MM-DD] [--dry-run] [--no-cost-report]
+//
+// Each receipt also carries OpenAI's own charge for that UTC day, read from
+// the organization Costs API, as `provider_reported_cost` in provenance. It is
+// never summed into tokens or a daily row; see readCosts below.
 //
 // Output defaults to scratch/reconcile/openai-api-<account>.jsonl. Only a dated,
 // account-scoped additive decision in config/openai-reconciliation.json releases
@@ -41,6 +45,7 @@ import { createHash } from "node:crypto";
 import { readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { RECEIPT_SCHEMA_VERSION, validateReceiptSchema } from "./lib/receipt-schema.js";
+import { parseJsonWithNumberText, providerReportedCost } from "./lib/provider-cost.js";
 
 const { timezone, windowStart } = await import("./lib/profile.js");
 const { accountOrigin } = await import("./lib/origin.js");
@@ -378,6 +383,80 @@ for (const endpoint of ENDPOINTS) {
   } while (page);
 }
 
+// OpenAI's own charge for each UTC day, from the organization Costs API on the
+// same key. A tally of the figure OpenAI computed, never a modelled cost: no
+// price table exists here. `amount.value` is a JSON number, recorded as the
+// exact text OpenAI sent, with the lowercase currency code it states. It
+// covers every line item in the organization for the day, not only the token
+// endpoints above.
+//
+// Daily granularity only, UTC-aligned: under any other profile zone no figure
+// is recorded. A day with no result carries no field, never a zero. Any
+// failure is reported and leaves every receipt without the field; the token
+// counters, which are the record, are unaffected.
+const COSTS_API = new URL("costs", API_ROOT);
+// Throws with a content-free reason; readCosts reports it and records
+// nothing, so a failed read can never look like a day with no charge.
+const fetchCosts = async () => {
+  const costs = new Map();
+  let page = null;
+  do {
+    const url = new URL(COSTS_API);
+    url.searchParams.set("start_time", String(Math.floor(start.getTime() / 1000)));
+    url.searchParams.set("end_time", String(end));
+    url.searchParams.set("bucket_width", "1d");
+    url.searchParams.set("limit", "31");
+    if (page) url.searchParams.set("page", page);
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${adminKey}`, "Content-Type": "application/json" }
+    }).catch((error) => {
+      throw new Error(`request failed: ${error.cause?.code ?? error.name}`);
+    });
+    pages += 1;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    let parsed;
+    try {
+      parsed = parseJsonWithNumberText(text);
+    } catch {
+      throw new Error("response was not JSON");
+    }
+    const body = parsed.value;
+    page = nextUsagePage(body);
+    for (const apiBucket of body.data) {
+      if (!Number.isInteger(apiBucket?.start_time)) continue;
+      const date = configuredDay(apiBucket.start_time);
+      if (date < since || !Array.isArray(apiBucket.results) || !apiBucket.results.length) continue;
+      if (apiBucket.results.length !== 1) {
+        console.warn(`OpenAI Costs API: ${date} returned ${apiBucket.results.length} ungrouped results; no figure recorded for it.`);
+        continue;
+      }
+      const amount = apiBucket.results[0]?.amount;
+      const value = amount && typeof amount.value === "number" ? parsed.numberText(amount, "value") : null;
+      const cost = value && typeof amount.currency === "string"
+        ? providerReportedCost("openai_costs_day", value, amount.currency)
+        : null;
+      if (cost) costs.set(date, cost);
+      else console.warn(`OpenAI Costs API: ${date} result was malformed; no figure recorded for it.`);
+    }
+  } while (page);
+  return costs;
+};
+const readCosts = async () => {
+  if (args.includes("--no-cost-report")) return new Map();
+  if (TIMEZONE !== "UTC") {
+    console.warn(`Profile timezone is ${TIMEZONE}, not UTC: provider cost is daily-only and was not recorded.`);
+    return new Map();
+  }
+  try {
+    return await fetchCosts();
+  } catch (error) {
+    console.warn(`OpenAI Costs API unavailable (${error.message}); receipts carry no provider_reported_cost.`);
+    return new Map();
+  }
+};
+const costByDay = await readCosts();
+
 const receipts = [...buckets.values()]
   .sort((a, b) => a.date.localeCompare(b.date))
   .map((bucket) => {
@@ -403,7 +482,8 @@ const receipts = [...buckets.values()]
       origin: ORIGIN,
       ...(Object.keys(tokenComponents).length > 1 ? { token_components: tokenComponents } : {}),
       provenance:
-        `OpenAI organization Usage API (${[...bucket.endpoints].sort().join(", ")}): ${[...bucket.models].sort().join(", ") || "models not grouped"}; cached_input ${bucket.cachedInput} excluded`
+        `OpenAI organization Usage API (${[...bucket.endpoints].sort().join(", ")}): ${[...bucket.models].sort().join(", ") || "models not grouped"}; cached_input ${bucket.cachedInput} excluded`,
+      ...(costByDay.has(bucket.date) ? { provider_reported_cost: costByDay.get(bucket.date) } : {})
     };
   });
 

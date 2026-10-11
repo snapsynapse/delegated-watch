@@ -23,7 +23,7 @@ The install path an assistant follows is `docs/.well-known/assistant-guide.txt`,
 ## What this is
 A chain of receipts, one deterministic importer, one JSON dataset, and one static page that renders it. An extractor or capture tool reads a provider's own counters and writes a scrubbed receipt carrying a token count, a call count, and a provenance note. The importer merges receipts into a single local-first record, applying gates that keep the record honest as it grows. Nothing here calls out to a server at read time.
 ## What this is not
-- No cost modeling and no price table, by construction, not as a display flag you can turn back on; there is no unit conversion from tokens to a currency anywhere in the schema or the code.
+- No cost modeling and no price table, by construction, not as a display flag you can turn back on; there is no unit conversion from tokens to a currency anywhere in the schema or the code. Where a provider computes its own charge (Perplexity per call, the Anthropic and OpenAI organization cost reports per day), the local receipt keeps that figure verbatim as provenance; it never enters the dataset or the page.
 - No budgets or alerts. Nothing here watches a number and tells you to stop.
 - No leaderboard or scoreboard. A day's total is not ranked against anyone else's.
 - No backend. The dashboard is a static page built from one JSON file.

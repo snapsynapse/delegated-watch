@@ -10,6 +10,60 @@ export const TOKEN_COMPONENT_FIELDS = [
   "reasoning_tokens"
 ];
 
+// Provider-reported cost (provenance only). A figure the provider itself
+// computed, kept on the receipt and never summed into tokens, a daily row, or
+// the page. Absent means the provider gave no figure, never zero; a recorded
+// "0" means the provider reported zero. The amount is the provider's exact
+// decimal text, in the currency and unit it gave, never converted or rounded.
+export const PROVIDER_COST_FIELD = "provider_reported_cost";
+export const PROVIDER_COST_SCHEMA_VERSION = 1;
+
+// What each recorded figure is. A new basis is a reviewed addition, not a
+// free-text label, so a consumer can tell exactly which provider statement a
+// number came from.
+export const PROVIDER_COST_BASES = new Map([
+  // Perplexity chat/completions `usage.cost.total_cost`, one call. The
+  // response states no currency; Perplexity's pricing documentation states USD.
+  ["perplexity_usage_total_cost", { unit: "major", currency_basis: "documented" }],
+  // Anthropic Admin API /v1/organizations/cost_report, one UTC day, ungrouped.
+  // `amount` is a decimal string in lowest currency units (cents) and the
+  // result carries its own `currency`. Priority Tier is not included.
+  ["anthropic_cost_report_day", { unit: "minor", currency_basis: "reported" }],
+  // OpenAI /v1/organization/costs, one UTC day, ungrouped. `amount.value` is a
+  // number in the stated lowercase ISO-4217 `amount.currency`.
+  ["openai_costs_day", { unit: "major", currency_basis: "reported" }]
+]);
+
+const COST_FIELDS = ["schema_version", "basis", "amount", "currency", "unit", "currency_basis"];
+// JSON number grammar, kept as text so precision survives exactly.
+const DECIMAL = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][-+]?\d+)?$/;
+const CURRENCY = /^[A-Za-z]{3}$/;
+
+export function validateProviderReportedCost(value, where = PROVIDER_COST_FIELD) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return [`${where} must be an object`];
+  }
+  const errors = [];
+  if (Object.keys(value).some((key) => !COST_FIELDS.includes(key))) {
+    errors.push(`${where} has unapproved fields`);
+  }
+  if (value.schema_version !== PROVIDER_COST_SCHEMA_VERSION) {
+    errors.push(`${where} schema_version must be ${PROVIDER_COST_SCHEMA_VERSION}`);
+  }
+  const basis = PROVIDER_COST_BASES.get(value.basis);
+  if (!basis) errors.push(`${where} basis is not a reviewed provider cost basis`);
+  if (typeof value.amount !== "string" || !DECIMAL.test(value.amount)) {
+    errors.push(`${where} amount must be the provider's decimal text`);
+  }
+  if (typeof value.currency !== "string" || !CURRENCY.test(value.currency)) {
+    errors.push(`${where} currency must be a three-letter code as the provider gave it`);
+  }
+  if (basis && (value.unit !== basis.unit || value.currency_basis !== basis.currency_basis)) {
+    errors.push(`${where} unit and currency_basis must match its basis`);
+  }
+  return errors;
+}
+
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const AUTHORITIES = new Map([
   ["estimated", 1],
@@ -152,9 +206,14 @@ export function aggregateTokenComponents(values) {
 
 export function validateReceiptSchema(receipt, where = "receipt") {
   const errors = [];
+  // Checked whatever the schema version: unversioned claude_api receipts can
+  // carry a provider-reported cost too.
+  if (PROVIDER_COST_FIELD in receipt) {
+    errors.push(...validateProviderReportedCost(receipt[PROVIDER_COST_FIELD], `${where} ${PROVIDER_COST_FIELD}`));
+  }
   if (receipt.schema_version === undefined) return errors;
   if (receipt.schema_version !== RECEIPT_SCHEMA_VERSION) {
-    return [`${where} schema_version must be ${RECEIPT_SCHEMA_VERSION}`];
+    return [...errors, `${where} schema_version must be ${RECEIPT_SCHEMA_VERSION}`];
   }
   for (const field of [
     "provider",

@@ -2,6 +2,8 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+### Added
+- Provider-reported cost on receipts. `provider_reported_cost` records a charge the provider itself computed, verbatim: Perplexity `usage.cost.total_cost` from both capture paths, and the Anthropic Admin Cost Report and OpenAI Costs API per UTC day from the two organization extractors (`--no-cost-report` skips the extra read). No price table, no computed cost, no conversion or rounding; absent where the provider reports nothing. Never summed into tokens and rejected in daily rows. This supersedes the 0.3.0 statement that the Perplexity capture never records cost.
 ## [0.3.0] - 2026-10-03
 ### Added
 - `npm run openai-compatible:capture`, one call-time capture for every OpenAI-compatible endpoint: presets for LM Studio, llama.cpp, vLLM, and MLX locally and for xAI, Mistral, DeepSeek, Groq, OpenRouter, and Together hosted, plus `--base-url` with `--source` for any other. The request and response pass through unchanged and only the model and counters are kept; the headline is prompt minus cached prompt plus completion, reading DeepSeek's cache field too. Streaming is refused rather than rewritten. Direct OpenAI calls remain excluded and its organization report is quarantined until a scope decision establishes whether it is additive.

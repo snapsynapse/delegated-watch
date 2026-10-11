@@ -124,7 +124,59 @@ test("captures exact counters and records neither prompt nor answer", async () =
   assert.ok(!serialized.includes("example.com"));
   // Search counts are per-call units, not tokens. Present as provenance only.
   assert.ok(receipt.provenance.includes("2 search queries"));
-  assert.ok(!serialized.includes("0.048"));
+  // Perplexity's own charge is recorded beside the counters, never in them.
+  assert.deepEqual(receipt.provider_reported_cost, {
+    schema_version: 1,
+    basis: "perplexity_usage_total_cost",
+    amount: "0.048",
+    currency: "USD",
+    unit: "major",
+    currency_basis: "documented"
+  });
+});
+
+test("records the provider's cost text exactly, and no field where it gave none", async () => {
+  const receiptFile = await scratch();
+  const counters = { prompt_tokens: 40, completion_tokens: 100, total_tokens: 140 };
+  // Raw text, so the trailing zeros reach the parser as the provider sent them.
+  const exact = JSON.stringify(completion("id-precise", { ...counters, cost: { total_cost: 1 } }))
+    .replace('"total_cost":1', '"total_cost":0.00700000');
+  const result = await runHook({
+    receiptFile,
+    envelope: curl([
+      exact,
+      JSON.stringify(completion("id-no-cost", counters)),
+      JSON.stringify(completion("id-zero", { ...counters, cost: { total_cost: 0 } })),
+      JSON.stringify(completion("id-string", { ...counters, cost: { total_cost: "0.01" } })),
+      JSON.stringify(completion("id-breakdown-only", { ...counters, cost: { request_cost: 0.005 } }))
+    ].join("\n"))
+  });
+  assert.equal(result.status, 0);
+  const byKey = Object.fromEntries((await receiptsIn(receiptFile)).map((receipt) => [receipt.snapshot_key, receipt]));
+  assert.equal(Object.keys(byKey).length, 5);
+  assert.equal(byKey["perplexity:id-precise"].provider_reported_cost.amount, "0.00700000");
+  // A reported zero is a measured zero.
+  assert.equal(byKey["perplexity:id-zero"].provider_reported_cost.amount, "0");
+  // Absent, malformed, or partial: no field, never zero, and counters still captured.
+  for (const key of ["perplexity:id-no-cost", "perplexity:id-string", "perplexity:id-breakdown-only"]) {
+    assert.ok(!Object.hasOwn(byKey[key], "provider_reported_cost"), key);
+    assert.equal(byKey[key].tokens, 140, key);
+  }
+  for (const receipt of Object.values(byKey)) assert.equal(receipt.tokens, 140);
+});
+
+test("relay mode records the provider's cost text as well", async () => {
+  const receiptFile = await scratch();
+  const body = JSON.stringify(completion("id-relay-cost", {
+    prompt_tokens: 10, completion_tokens: 5, total_tokens: 15, cost: { total_cost: 1 }
+  })).replace('"total_cost":1', '"total_cost":0.0025000');
+  const result = await runRelay(receiptFile, body);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, body);
+  const [receipt] = await receiptsIn(receiptFile);
+  assert.equal(receipt.capture_method, "native_api_capture");
+  assert.equal(receipt.tokens, 15);
+  assert.equal(receipt.provider_reported_cost.amount, "0.0025000");
 });
 
 test("keeps the provider total when deep research bills beyond prompt and completion", async () => {
