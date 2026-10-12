@@ -16,6 +16,11 @@
 //   node scripts/extract-claude-api.js [--since YYYY-MM-DD] [--pace MS] [--dry-run]
 //   node scripts/extract-claude-api.js --backfill   # ignore the horizon, read all history
 //   node scripts/extract-claude-api.js --scan   # locate where usage begins, cheaply
+//   node scripts/extract-claude-api.js --no-cost-report   # tokens only
+//
+// Each receipt also carries the provider's own charge for that UTC day, read
+// from the Admin Cost Report, as `provider_reported_cost` in provenance. It is
+// never summed into tokens or a daily row; see readCostReport below.
 //
 // Output: scratch/reconcile/claude-api.jsonl until a reconciliation verdict is
 // recorded, scratch/receipts/claude-api.jsonl once it is additive; overwritten
@@ -28,6 +33,7 @@
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { accountAlias } from "./lib/openai-integrity.js";
+import { providerReportedCost } from "./lib/provider-cost.js";
 import { RECEIPT_SCHEMA_VERSION, validateReceiptSchema } from "./lib/receipt-schema.js";
 
 const { dayOf, finalizedThrough, timezone, windowStart } = await import("./lib/profile.js");
@@ -246,6 +252,75 @@ if (scan) {
   process.exit(0);
 }
 
+// Anthropic's own charge for each UTC day, from the Admin Cost Report on the
+// same key. A tally of the figure Anthropic computed, never a modelled cost:
+// no price table exists here. The amount is the provider's decimal string in
+// lowest currency units (cents) with the currency it states, kept verbatim.
+// It covers the whole organization for the day and excludes Priority Tier,
+// which the cost endpoint does not report.
+//
+// Daily granularity only, UTC-aligned: under any other profile zone a bucket
+// cannot be attributed to one calendar day and no figure is recorded. A day
+// whose bucket holds no result carries no field, never a zero. Any failure is
+// reported and leaves every receipt without the field; the token counters,
+// which are the record, are unaffected.
+const COST_API = new URL("../cost_report", API);
+// Throws with a content-free reason; readCostReport reports it and records
+// nothing, so a failed read can never look like a day with no charge.
+const fetchCostReport = async () => {
+  const costs = new Map();
+  let costPage = null;
+  do {
+    const url = new URL(COST_API);
+    url.searchParams.set("starting_at", startingAt.toISOString());
+    url.searchParams.set("bucket_width", "1d");
+    url.searchParams.set("limit", "31");
+    if (costPage) url.searchParams.set("page", costPage);
+    if (pace > 0) await new Promise((resolve) => setTimeout(resolve, pace));
+    const response = await fetch(url, {
+      headers: { "x-api-key": adminKey, "anthropic-version": "2023-06-01" }
+    }).catch((error) => {
+      throw new Error(`request failed: ${error.cause?.code ?? error.name}`);
+    });
+    requests += 1;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const body = await response.json().catch(() => {
+      throw new Error("response was not JSON");
+    });
+    if (!Array.isArray(body?.data)) throw new Error("response lacked a data array");
+    for (const bucket of body.data) {
+      const date = typeof bucket?.starting_at === "string" ? bucket.starting_at.slice(0, 10) : null;
+      if (!date || date < since || !Array.isArray(bucket.results) || !bucket.results.length) continue;
+      if (bucket.results.length !== 1) {
+        console.warn(`Anthropic cost report: ${date} returned ${bucket.results.length} ungrouped results; no figure recorded for it.`);
+        continue;
+      }
+      const [result] = bucket.results;
+      const cost = typeof result?.amount === "string" && typeof result?.currency === "string"
+        ? providerReportedCost("anthropic_cost_report_day", result.amount, result.currency)
+        : null;
+      if (cost) costs.set(date, cost);
+      else console.warn(`Anthropic cost report: ${date} result was malformed; no figure recorded for it.`);
+    }
+    costPage = body.has_more ? body.next_page : null;
+  } while (costPage);
+  return costs;
+};
+const readCostReport = async () => {
+  if (args.includes("--no-cost-report")) return new Map();
+  if (!dailyOK) {
+    console.warn(`Profile timezone is ${TIMEZONE}, not UTC: provider cost is daily-only and was not recorded.`);
+    return new Map();
+  }
+  try {
+    return await fetchCostReport();
+  } catch (error) {
+    console.warn(`Anthropic cost report unavailable (${error.message}); receipts carry no provider_reported_cost.`);
+    return new Map();
+  }
+};
+const costByDay = await readCostReport();
+
 const receipts = [...buckets.values()]
   .filter((bucket) => bucket.tokens > 0)
   .sort((a, b) => a.date.localeCompare(b.date))
@@ -264,7 +339,8 @@ const receipts = [...buckets.values()]
     snapshot_key: `claude_api:${ACCOUNT}:${bucket.date}`,
     authority: "provider",
     models: [...bucket.models].sort(),
-    provenance: `Anthropic Admin Usage Report; cache_read ${bucket.cacheRead} excluded`
+    provenance: `Anthropic Admin Usage Report; cache_read ${bucket.cacheRead} excluded`,
+    ...(costByDay.has(bucket.date) ? { provider_reported_cost: costByDay.get(bucket.date) } : {})
   }));
 for (const receipt of receipts) {
   const errors = validateReceiptSchema(receipt, `claude_api ${receipt.date}`);

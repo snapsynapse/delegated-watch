@@ -29,6 +29,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { accountAlias, machineAlias } from "./lib/openai-integrity.js";
 import { localOrigin } from "./lib/origin.js";
+import { parseJsonWithNumberText, providerReportedCost } from "./lib/provider-cost.js";
 import { dayOf, timezone } from "./lib/profile.js";
 import {
   hashCorrelationKey,
@@ -69,8 +70,8 @@ const readStdin = async () => {
 //
 // `num_search_queries` and `search_context_size` describe search work, not
 // tokens; summing them into a token total is the same mistake as summing
-// Anthropic's `server_tool_use` counters. `cost` is deliberately unused —
-// this repo models tokens, never money.
+// Anthropic's `server_tool_use` counters. `cost` is read separately by
+// costOf: recorded as the provider computed it, never modelled or summed.
 const usageOf = (usage, where) => {
   if (!usage || typeof usage !== "object") return null;
   const int = (value) => (Number.isInteger(value) && value >= 0 ? value : null);
@@ -104,7 +105,19 @@ const usageOf = (usage, where) => {
   };
 };
 
-const buildReceipt = async ({ id, model, usage, captureMethod, createdAt }) => {
+// Perplexity's own charge for the call, `usage.cost.total_cost`, kept as the
+// exact decimal text it sent. The response states no currency; Perplexity's
+// pricing documentation states USD, and the basis records that distinction.
+// Anything missing or malformed yields no field: absent, never zero, and never
+// a reason to drop the token counters.
+const costOf = (usage, numberText) => {
+  const cost = usage?.cost;
+  if (!cost || typeof cost !== "object" || typeof cost.total_cost !== "number") return null;
+  const text = numberText(cost, "total_cost");
+  return text ? providerReportedCost("perplexity_usage_total_cost", text, "USD") : null;
+};
+
+const buildReceipt = async ({ id, model, usage, cost, captureMethod, createdAt }) => {
   const date = await dayOf(createdAt);
   const origin = await localOrigin();
   const detail = [
@@ -136,7 +149,8 @@ const buildReceipt = async ({ id, model, usage, captureMethod, createdAt }) => {
     authority: "provider",
     models: [model],
     correlation_keys: [hashCorrelationKey(id)],
-    provenance: `Perplexity chat/completions usage counters: ${detail.join(", ")}`
+    provenance: `Perplexity chat/completions usage counters: ${detail.join(", ")}`,
+    ...(cost ? { provider_reported_cost: cost } : {})
   };
   const errors = validateReceiptSchema(receipt, "Perplexity capture receipt");
   if (errors.length) throw new Error(errors.join("\n"));
@@ -155,7 +169,7 @@ const writeReceipts = async (receipts) => {
 
 // A completion response, wherever it appears. Returns null when the object is
 // not one, and throws when it is one whose counters cannot be trusted.
-const captureFrom = (value, where) => {
+const captureFrom = (value, where, numberText = () => null) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   if (typeof value.id !== "string" || !value.id.trim()) return null;
   if (!value.usage) return null;
@@ -165,6 +179,7 @@ const captureFrom = (value, where) => {
     id: value.id,
     model: typeof value.model === "string" && value.model.trim() ? value.model : "unknown",
     usage,
+    cost: costOf(value.usage, numberText),
     createdAt: Number.isInteger(value.created)
       ? new Date(value.created * 1000).toISOString()
       : new Date().toISOString()
@@ -235,8 +250,9 @@ if (hookMode) {
         if (depth !== 0) continue;
         const slice = text.slice(start, index + 1);
         let parsed;
+        let numberText;
         try {
-          parsed = JSON.parse(slice);
+          ({ value: parsed, numberText } = parseJsonWithNumberText(slice));
         } catch {
           // A brace-balanced slice that is not JSON is ordinary in mixed output,
           // but it is also what a truncated or error-page response looks like.
@@ -247,7 +263,7 @@ if (hookMode) {
         }
         let capture;
         try {
-          capture = captureFrom(parsed, "hook capture");
+          capture = captureFrom(parsed, "hook capture", numberText);
         } catch (error) {
           console.error(`Perplexity capture: ${error.message}`);
           break;
@@ -343,10 +359,8 @@ if (status < 200 || status >= 300) {
 
 let capture;
 try {
-  capture = captureFrom(
-    JSON.parse(Buffer.concat(responseChunks).toString("utf8")),
-    "relay capture"
-  );
+  const parsed = parseJsonWithNumberText(Buffer.concat(responseChunks).toString("utf8"));
+  capture = captureFrom(parsed.value, "relay capture", parsed.numberText);
 } catch (error) {
   if (error instanceof SyntaxError) {
     fail("response was not valid JSON; no receipt written.");

@@ -1,3 +1,5 @@
+import { PROVIDER_COST_FIELD, validateProviderReportedCost } from "./receipt-schema.js";
+
 // Structural privacy checks supplement, rather than prove, semantic scrubbing.
 // Return field positions and rule names only, never matching source values.
 const FIELDS = new Set([
@@ -5,7 +7,7 @@ const FIELDS = new Set([
   "account_alias", "machine_alias", "origin", "interval", "snapshot_key",
   "dedupe_key", "authority", "models", "tokens", "calls", "fidelity",
   "provenance", "correlation_keys", "capture_method", "coverage",
-  "coverage_reasons", "token_components"
+  "coverage_reasons", "token_components", PROVIDER_COST_FIELD
 ]);
 const TOKEN_COMPONENT_FIELDS = new Set([
   "schema_version",
@@ -65,6 +67,9 @@ export function receiptPrivacyFindings(receipt) {
           }
         }
       }
+    } else if (field === PROVIDER_COST_FIELD) {
+      // Structure only: field positions, never the amount.
+      if (validateProviderReportedCost(value).length) failures.push(`${PROVIDER_COST_FIELD}: expected reviewed provider cost`);
     } else if (["models", "correlation_keys", "coverage_reasons"].includes(field)) {
       if (!Array.isArray(value)) failures.push(`${field}: expected array`);
       else for (const [index, item] of value.entries()) {
