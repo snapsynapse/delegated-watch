@@ -1,11 +1,11 @@
 guide-path: /.well-known/assistant-guide.txt
-guide-version: 1.2.0
-guide-sha256: 867d9616dfd4d2fb103185ae4689c66c80f96c467519f2bd8f186f907d52fac7
+guide-version: 1.3.0
+guide-sha256: 21692f4cc6730b2fe55d57a67803107e3ef9a3e1baf281291f66aaf003e2e1f8
 guide-bytes: 7026
-immutable-release-url: https://github.com/snapsynapse/delegated-watch/releases/tag/v0.3.0
+immutable-release-url: https://github.com/snapsynapse/delegated-watch/releases/tag/v0.4.0
 profile: human-verifiable-assistant-guide
 profile-version: 2.0.0
 canonical-url: https://delegated.watch/.well-known/assistant-guide.txt
 repository-url: https://github.com/snapsynapse/delegated-watch
-released-at: 2026-10-03T00:00:00Z
-changelog-url: https://github.com/snapsynapse/delegated-watch/blob/v0.3.0/CHANGELOG.md
+released-at: 2026-10-18T00:00:00Z
+changelog-url: https://github.com/snapsynapse/delegated-watch/blob/v0.4.0/CHANGELOG.md
