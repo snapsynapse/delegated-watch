@@ -517,3 +517,39 @@ test("an identity-free figure changes only under a recorded correction, and supe
   assert.equal(entry.correction.reason, "provider revised the day");
   assert.deepEqual(entry.superseded_snapshots.map((version) => version.tokens), [10]);
 });
+
+// Local-store receipts (Claude Code, Codex) carry no provider, account, or
+// snapshot. An identical re-observed request set must not read as a
+// cross-scope overlap.
+const unscoped = (overrides = {}) => {
+  const value = { ...receipt({ source: "claude_code", ...overrides }) };
+  delete value.provider;
+  delete value.account_alias;
+  delete value.snapshot_key;
+  return value;
+};
+
+test("an identical unscoped local-store replay is accepted, not a scope conflict", async (t) => {
+  const root = await makeFixture({ rows: [row("2026-01-01", "claude_code", 10)] });
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const rows = await readJson(root, "public/data/daily-burn.json");
+  await acceptDataset({ beforeRows: rows, rows, receipts: [unscoped()], root });
+  const before = await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8");
+
+  const replay = await acceptDataset({ beforeRows: rows, rows, receipts: [unscoped()], root });
+  assert.equal(replay.changes.added, 0);
+  assert.equal(await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8"), before);
+
+  const overlap = checkEvidenceOverlap(JSON.parse(before), [unscoped()]);
+  assert.deepEqual(overlap.conflicts, []);
+});
+
+test("unscoped evidence from a different origin still fails closed", async (t) => {
+  const root = await makeFixture({ rows: [row("2026-01-01", "claude_code", 10)] });
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const rows = await readJson(root, "public/data/daily-burn.json");
+  await acceptDataset({ beforeRows: rows, rows, receipts: [unscoped()], root });
+  const manifest = await readJson(root, ACCEPTED_MANIFEST_PATH);
+  const overlap = checkEvidenceOverlap(manifest, [unscoped({ origin: "machine/other" })]);
+  assert.notDeepEqual(overlap.conflicts, []);
+});

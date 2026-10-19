@@ -25,6 +25,16 @@ import {
 } from "./receipt-schema.js";
 import { recordPaths } from "./record-paths.js";
 
+// Local-store receipts (Claude Code, Codex) carry no provider or account
+// fields. The same request set on the same day, source, and origin is the
+// same evidence re-observed, not a cross-scope overlap.
+const sameEvidenceScope = (existing, incoming) =>
+  sameAuthorityScope(existing, incoming) ||
+  (existing.provider == null && incoming.provider == null &&
+    existing.account_alias == null && incoming.account_alias == null &&
+    existing.date === incoming.date && existing.source === incoming.source &&
+    existing.origin === incoming.origin);
+
 export const ACCEPTED_DATA_PATH = recordPaths().dataset;
 export const ACCEPTED_MANIFEST_PATH = recordPaths().manifest;
 export const ACCEPTANCE_LOCK_PATH = "scratch/accepted-evidence.lock";
@@ -695,7 +705,7 @@ const addAcceptedEntry = (entries, incoming, correction) => {
     if (!overlap.length) continue;
     if (
       equalKeySets(existing.correlation_keys, incoming.correlation_keys) &&
-      sameAuthorityScope(existing, incoming)
+      sameEvidenceScope(existing, incoming)
     ) {
       const existingRank = authorityRankOf(existing);
       const incomingRank = authorityRankOf(incoming);
@@ -915,7 +925,7 @@ export async function planPersistedAuthorityTransitions({
     if (!equalKeySets(existing.correlation_keys, keys)) {
       throw new Error(`Partial historic request overlap for ${incoming.date}/${incoming.source}`);
     }
-    if (!sameAuthorityScope(existing, incoming)) {
+    if (!sameEvidenceScope(existing, incoming)) {
       throw new Error(
         `Historic request overlap crosses accounting scope or day for ${incoming.date}/${incoming.source}`
       );
@@ -1142,7 +1152,7 @@ export function checkEvidenceOverlap(manifest, inputReceipts) {
       }
       const identicalAuthorityReplacement =
         equalKeySets(hit.correlation_keys, keys) &&
-        sameAuthorityScope(hit, incoming) &&
+        sameEvidenceScope(hit, incoming) &&
         authorityRankOf(hit) !== authorityRankOf(incoming);
       if (identicalAuthorityReplacement) {
         if (hit.acceptance === "accepted") counted = true;

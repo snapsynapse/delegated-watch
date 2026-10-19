@@ -17,7 +17,7 @@
 //
 // Usage:
 //   OPENAI_ADMIN_KEY=... OPENAI_ORGANIZATION_SCOPE=... node scripts/extract-openai-api.js
-//     [--since YYYY-MM-DD] [--dry-run] [--no-cost-report]
+//     [--since YYYY-MM-DD | --backfill] [--dry-run] [--no-cost-report]
 //
 // Each receipt also carries OpenAI's own charge for that UTC day, read from
 // the organization Costs API, as `provider_reported_cost` in provenance. It is
@@ -47,7 +47,7 @@ import { join } from "node:path";
 import { RECEIPT_SCHEMA_VERSION, validateReceiptSchema } from "./lib/receipt-schema.js";
 import { parseJsonWithNumberText, providerReportedCost } from "./lib/provider-cost.js";
 
-const { timezone, windowStart } = await import("./lib/profile.js");
+const { finalizedThrough, timezone, windowStart } = await import("./lib/profile.js");
 const { accountOrigin } = await import("./lib/origin.js");
 const ORIGIN = accountOrigin("openai");
 const TIMEZONE = await timezone();
@@ -63,7 +63,16 @@ const flag = (name) => {
   const index = args.indexOf(name);
   return index === -1 ? null : args[index + 1];
 };
-const since = flag("--since") ?? DEFAULT_SINCE;
+// Days older than the finalization horizon are final, as in
+// extract-claude-api.js. OpenAI also rejects usage reads older than one year
+// (reporting_lookback_exceeded, first seen 2026-10-05), so a default read from
+// the window start can no longer succeed. --backfill reaches back as far as
+// the provider allows; --since remains an explicit override.
+const backfill = args.includes("--backfill");
+const horizon = backfill ? null : await finalizedThrough();
+const requestedSince = flag("--since");
+const since = requestedSince
+  ?? (horizon && horizon > DEFAULT_SINCE ? horizon : DEFAULT_SINCE);
 const dryRun = args.includes("--dry-run");
 const adminKey = process.env.OPENAI_ADMIN_KEY;
 const displayAccountAlias = accountAlias("openai");
@@ -707,6 +716,12 @@ if (dryRun) {
     }
   }
   console.log(`Wrote ${receipts.length} daily receipts to ${OUTPUT} from ${pages} OpenAI Usage API pages.`);
+  if (horizon && !requestedSince) {
+    console.log(
+      `Read from ${since}: days before it are final and were not requested. ` +
+        `Use --backfill to read the whole history.`
+    );
+  }
   if (quarantined) {
     if (reconciliationMode === "overlapping") {
       console.warn(

@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ## [Unreleased]
 ### Added
 - Provider-reported cost on receipts. `provider_reported_cost` records a charge the provider itself computed, verbatim: Perplexity `usage.cost.total_cost` from both capture paths, and the Anthropic Admin Cost Report and OpenAI Costs API per UTC day from the two organization extractors (`--no-cost-report` skips the extra read). No price table, no computed cost, no conversion or rounding; absent where the provider reports nothing. Never summed into tokens and rejected in daily rows. This supersedes the 0.3.0 statement that the Perplexity capture never records cost.
+- `extract:openai-api --backfill` reads as far back as the provider allows; `--since` remains an explicit override.
+### Changed
+- `extract:openai-api` reads from the finalization horizon by default, as `extract:claude-api` already does. OpenAI now rejects usage reads older than one year (`reporting_lookback_exceeded`), so a default read from `window_start` could no longer succeed.
+### Fixed
+- `extract:codex` reads zstd-compressed rollouts (`rollout-*.jsonl.zst`), which Codex now writes in place of older plain rollouts. Previously that evidence silently vanished from receipts. A rollout present both plain and compressed counts once, from the plain copy; a file that fails to decompress makes its store unreadable (exit 3), never empty.
+- `extract:codex` rejects malformed usage counters (negative, fractional, or non-numeric values, cached input above input, reasoning above output) as malformed records that exit 3, rather than coercing them into the headline. Missing optional components remain unavailable, as before.
+- `extract:codex` keeps cached-only days, whose headline is a measured zero with real calls, instead of dropping them.
+- Accepted-evidence checks recognise an identical re-observed request set from a local store, which carries no provider or account, as the same evidence rather than a cross-scope overlap. Unscoped evidence from a different origin still fails closed.
 ## [0.3.0] - 2026-10-03
 ### Added
 - `npm run openai-compatible:capture`, one call-time capture for every OpenAI-compatible endpoint: presets for LM Studio, llama.cpp, vLLM, and MLX locally and for xAI, Mistral, DeepSeek, Groq, OpenRouter, and Together hosted, plus `--base-url` with `--source` for any other. The request and response pass through unchanged and only the model and counters are kept; the headline is prompt minus cached prompt plus completion, reading DeepSeek's cache field too. Streaming is refused rather than rewritten. Direct OpenAI calls remain excluded and its organization report is quarantined until a scope decision establishes whether it is additive.

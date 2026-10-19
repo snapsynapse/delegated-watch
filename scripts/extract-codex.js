@@ -31,11 +31,16 @@
 // store that cannot be read or contains malformed evidence leaves the previous
 // file untouched.
 //
+// Codex compresses older rollouts in place to rollout-*.jsonl.zst. Those are
+// the same evidence and are read alongside plain .jsonl. A compressed file that
+// fails to decompress makes its store unreadable, never empty.
+//
 // Every store is reported as read, not found, or unreadable. Not found writes
 // nothing. Unreadable is unknown, not zero: the run exits 3.
 
 import { readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { zstdDecompressSync } from "node:zlib";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import { accountAlias, atomicWriteText, machineAlias } from "./lib/openai-integrity.js";
@@ -104,7 +109,7 @@ const visit = async (dir, finding) => {
   for (const entry of entries) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) await visit(path, finding);
-    else if (entry.isFile() && entry.name.startsWith("rollout-") && entry.name.endsWith(".jsonl")) {
+    else if (entry.isFile() && entry.name.startsWith("rollout-") && (entry.name.endsWith(".jsonl") || entry.name.endsWith(".jsonl.zst"))) {
       rolloutFiles.push({ path, finding });
     }
   }
@@ -118,10 +123,17 @@ if (explicitSessions && findings[0].state === "absent") {
 }
 
 // The filename carries the stable thread id, so one copy per name is kept when
-// a rollout is caught in both sessions/ and archived_sessions/.
-const uniqueRollouts = [
-  ...new Map(rolloutFiles.sort((a, b) => a.path.localeCompare(b.path)).map((file) => [basename(file.path), file])).values()
-];
+// a rollout is caught in both sessions/ and archived_sessions/, or both plain
+// and compressed. The plain copy wins: it is the one Codex may still append to.
+const rolloutKey = (path) => basename(path).replace(/\.zst$/, "");
+const compressed = (path) => path.endsWith(".zst");
+const rolloutsByKey = new Map();
+for (const file of rolloutFiles.sort((a, b) => a.path.localeCompare(b.path))) {
+  const key = rolloutKey(file.path);
+  const kept = rolloutsByKey.get(key);
+  if (!kept || (compressed(kept.path) && !compressed(file.path))) rolloutsByKey.set(key, file);
+}
+const uniqueRollouts = [...rolloutsByKey.values()];
 
 const usageSignature = (usage) =>
   [
@@ -184,6 +196,20 @@ const recordsMatch = (child, parent) =>
     child.responseItemHasId !== parent.responseItemHasId
   );
 
+// Supplied counters must be measurements, not coercible values: a string,
+// fraction, or negative number would otherwise reach the headline. Missing
+// optional components stay unavailable; contradictory subsets fail closed.
+const COUNTER_FIELDS = ["input_tokens", "output_tokens", "cached_input_tokens", "cache_write_input_tokens", "reasoning_output_tokens", "total_tokens"];
+const validCounters = (usage) => {
+  if (typeof usage !== "object" || Array.isArray(usage)) return false;
+  for (const field of COUNTER_FIELDS) {
+    if (Object.hasOwn(usage, field) && (!Number.isSafeInteger(usage[field]) || usage[field] < 0)) return false;
+  }
+  if (Object.hasOwn(usage, "input_tokens") && Object.hasOwn(usage, "cached_input_tokens") && usage.cached_input_tokens > usage.input_tokens) return false;
+  if (Object.hasOwn(usage, "output_tokens") && Object.hasOwn(usage, "reasoning_output_tokens") && usage.reasoning_output_tokens > usage.output_tokens) return false;
+  return true;
+};
+
 const days = new Map();
 let usageEvents = 0;
 let duplicateEvents = 0;
@@ -201,7 +227,7 @@ const rollouts = [];
 for (const { path, finding } of uniqueRollouts) {
   let content;
   try {
-    content = await readFile(path, "utf8");
+    content = compressed(path) ? zstdDecompressSync(await readFile(path)).toString("utf8") : await readFile(path, "utf8");
   } catch (error) {
     finding.state = "unreadable";
     finding.error = error.code ?? String(error);
@@ -243,6 +269,10 @@ for (const { path, finding } of uniqueRollouts) {
     const usage = entry.payload.info?.last_token_usage;
     const cumulative = entry.payload.info?.total_token_usage;
     if (!usage || !cumulative) continue;
+    if (!validCounters(usage) || !validCounters(cumulative) || !Number.isFinite(Date.parse(entry.timestamp))) {
+      malformedInteriorRecords += 1;
+      continue;
+    }
 
     tokenEvents.push({ recordIndex, timestamp: entry.timestamp, usage, cumulative, model: currentModel });
   }
@@ -412,7 +442,8 @@ for (const rollout of rollouts) {
 
 const receipts = [];
 for (const day of [...days.values()].sort((a, b) => a.date.localeCompare(b.date))) {
-  if (day.tokens <= 0) continue;
+  // Cached-only activity is a measured zero with real calls, not absence.
+  if (day.tokens === 0 && day.calls === 0) continue;
   const cachedInputProvenance = day.unavailableTokenComponents.has("cached_input_tokens")
     ? "cached_input unavailable for some counted events"
     : `cached_input ${day.cachedInput} excluded`;
