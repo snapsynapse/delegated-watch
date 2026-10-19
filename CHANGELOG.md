@@ -5,6 +5,8 @@ All notable changes to this project are documented here. Format follows [Keep a 
 ### Added
 - Provider-reported cost on receipts. `provider_reported_cost` records a charge the provider itself computed, verbatim: Perplexity `usage.cost.total_cost` from both capture paths, and the Anthropic Admin Cost Report and OpenAI Costs API per UTC day from the two organization extractors (`--no-cost-report` skips the extra read). No price table, no computed cost, no conversion or rounding; absent where the provider reports nothing. Never summed into tokens and rejected in daily rows. This supersedes the 0.3.0 statement that the Perplexity capture never records cost.
 - `extract:openai-api --backfill` reads as far back as the provider allows; `--since` remains an explicit override.
+- `import-daily-burn.js --recent` skips receipts dated before the finalization horizon, so a routine run cannot re-litigate final days; omit it for a deliberate whole-history import. Opt-in; `npm run import` is unchanged.
+- `import-daily-burn.js --complete-weeks` holds back the whole Sunday-to-Saturday week in progress instead of only today, so the record ends on the last complete Saturday. Opt-in; the default hold-back is still the current day.
 ### Changed
 - `extract:openai-api` reads from the finalization horizon by default, as `extract:claude-api` already does. OpenAI now rejects usage reads older than one year (`reporting_lookback_exceeded`), so a default read from `window_start` could no longer succeed.
 ### Fixed
@@ -12,6 +14,10 @@ All notable changes to this project are documented here. Format follows [Keep a 
 - `extract:codex` rejects malformed usage counters (negative, fractional, or non-numeric values, cached input above input, reasoning above output) as malformed records that exit 3, rather than coercing them into the headline. Missing optional components remain unavailable, as before.
 - `extract:codex` keeps cached-only days, whose headline is a measured zero with real calls, instead of dropping them.
 - Accepted-evidence checks recognise an identical re-observed request set from a local store, which carries no provider or account, as the same evidence rather than a cross-scope overlap. Unscoped evidence from a different origin still fails closed.
+- A higher-authority replacement that would lower an exact accepted entry's tokens or calls, drop its calls, or downgrade its fidelity is blocked unless `--allow-decrease --confirm-correction --correction-reason` is given, both when the replacement is planned and again at acceptance.
+- Acceptance checks historical preservation against the final ledger, not the plan: if a planned authority replacement is later filtered out, the retirement it planned is refused rather than silently discarding the accepted measurement.
+- A replacement whose own source is excluded or settled can no longer retire an accepted measurement, with or without a reviewed correction.
+- Incomplete-coverage metadata (`coverage`, `coverage_reasons`) survives replay, raw receipt pruning, and merges in the evidence manifest. A complete higher-authority replacement retires the caveat with the evidence it replaces, a lower-authority replay cannot restore it, and a partial replacement rebuilds the caveat from only the surviving evidence.
 ## [0.3.0] - 2026-10-03
 ### Added
 - `npm run openai-compatible:capture`, one call-time capture for every OpenAI-compatible endpoint: presets for LM Studio, llama.cpp, vLLM, and MLX locally and for xAI, Mistral, DeepSeek, Groq, OpenRouter, and Together hosted, plus `--base-url` with `--source` for any other. The request and response pass through unchanged and only the model and counters are kept; the headline is prompt minus cached prompt plus completion, reading DeepSeek's cache field too. Streaming is refused rather than rewritten. Direct OpenAI calls remain excluded and its organization report is quarantined until a scope decision establishes whether it is additive.

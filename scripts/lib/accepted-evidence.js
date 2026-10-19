@@ -13,6 +13,8 @@ import { hostname } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { isCalendarDate } from "./dataset-validation.js";
+import { assertHistoricalPreservation } from "./import-policy.js";
+import { recordPaths } from "./record-paths.js";
 import {
   aggregateTokenComponents,
   authorityRankOf,
@@ -23,7 +25,6 @@ import {
   snapshotKeyOf,
   validateTokenComponents
 } from "./receipt-schema.js";
-import { recordPaths } from "./record-paths.js";
 
 // Local-store receipts (Claude Code, Codex) carry no provider or account
 // fields. The same request set on the same day, source, and origin is the
@@ -205,6 +206,42 @@ const counterRelation = (existing, incoming) => {
   return "crossing";
 };
 
+const assertAuthorityReplacementPreservesExact = (existing, incoming, correction, exactSources, fidelity) => {
+  if (!exactSources.has(`${existing.date}/${existing.source}`)) return;
+  const decreases = incoming.tokens < existing.tokens ||
+    (Number.isInteger(existing.calls) &&
+      (!Number.isInteger(incoming.calls) || incoming.calls < existing.calls)) ||
+    fidelity !== "exact";
+  if (decreases && !correction) {
+    throw new Error(
+      "Blocked exact historical regression: higher-authority replacement lowers accepted evidence. " +
+        "Use --allow-decrease --confirm-correction --correction-reason TEXT only after reviewing the exact correction."
+    );
+  }
+};
+
+const exactSourceKeys = (rows) => new Set(rows.flatMap((row) =>
+  Object.entries(row.sources).filter(([, entry]) => entry.fidelity === "exact")
+    .map(([source]) => `${row.date}/${source}`)
+));
+
+// Coverage caveats are measurement metadata. An equivalent replay cannot
+// establish that a previously missing lineage has become complete.
+const coverageMetadata = (entry) => {
+  if (entry.coverage === undefined && entry.coverage_reasons === undefined) return {};
+  const reasons = entry.coverage_reasons;
+  if (entry.coverage !== "incomplete" || !Array.isArray(reasons) || !reasons.length ||
+      reasons.some((reason) => typeof reason !== "string" || !/^[a-z0-9_]+$/.test(reason)) ||
+      JSON.stringify(stableKeys(reasons)) !== JSON.stringify(reasons)) {
+    throw new Error("Accepted evidence has invalid coverage metadata");
+  }
+  return { coverage: "incomplete", coverage_reasons: [...reasons] };
+};
+const aggregateCoverage = (entries) => {
+  const reasons = stableKeys(entries.flatMap((entry) => coverageMetadata(entry).coverage_reasons ?? []));
+  return reasons.length ? { coverage: "incomplete", coverage_reasons: reasons } : {};
+};
+
 const normalizedEntry = (entry, inherited = false) => {
   const normalized = normalizeReceipt({ ...entry });
   return {
@@ -218,6 +255,7 @@ const normalizedEntry = (entry, inherited = false) => {
     snapshot_key: snapshotKeyOf(normalized),
     authority: normalized.authority ?? null,
     tokens: normalized.tokens,
+    ...coverageMetadata(normalized),
     calls: Number.isInteger(normalized.calls) ? normalized.calls : null,
     ...(normalized.token_components
       ? { token_components: normalizeTokenComponents(normalized.token_components) }
@@ -520,6 +558,7 @@ const exactVersion = (version, incoming) =>
   version.tokens === incoming.tokens &&
   callsOf(version) === callsOf(incoming) &&
   equalKeySets(version.correlation_keys, incoming.correlation_keys) &&
+  isDeepStrictEqual(coverageMetadata(version), coverageMetadata(incoming)) &&
   isDeepStrictEqual(
     normalizeTokenComponents(version.token_components),
     normalizeTokenComponents(incoming.token_components)
@@ -538,7 +577,7 @@ const withReconciledTokenComponents = (left, right, where) => {
     where
   );
   if (reconciled.errors.length) throw new Error(reconciled.errors.join("\n"));
-  const merged = { ...right };
+  const merged = { ...right, ...aggregateCoverage([left, right]) };
   if (reconciled.token_components) {
     merged.token_components = reconciled.token_components;
   } else {
@@ -548,6 +587,7 @@ const withReconciledTokenComponents = (left, right, where) => {
 };
 
 const snapshotVersion = (entry) => ({
+  ...coverageMetadata(entry),
   tokens: entry.tokens,
   calls: callsOf(entry),
   correlation_keys: stableKeys(entry.correlation_keys),
@@ -556,7 +596,7 @@ const snapshotVersion = (entry) => ({
     : {})
 });
 
-const addAcceptedEntry = (entries, incoming, correction) => {
+const addAcceptedEntry = (entries, incoming, correction, exactSources, fidelity) => {
   const accepted = entries.filter(
     (entry) => entry.acceptance === "accepted" && isActiveEntry(entry)
   );
@@ -720,6 +760,7 @@ const addAcceptedEntry = (entries, incoming, correction) => {
           `Equal-authority historic request overlap conflicts for ${incoming.date}/${incoming.source}`
         );
       }
+      assertAuthorityReplacementPreservesExact(existing, incoming, correction, exactSources, fidelity);
       existing.disposition = "superseded";
       existing.superseded_by = {
         source: incoming.source,
@@ -844,6 +885,9 @@ const rebuildSourceEntry = (current, entries) => {
   const calls = aggregateCalls(entries);
   if (calls.present) rebuilt.calls = calls.value;
   else delete rebuilt.calls;
+  delete rebuilt.coverage;
+  delete rebuilt.coverage_reasons;
+  Object.assign(rebuilt, aggregateCoverage(entries));
   const components = aggregateTokenComponents(entries);
   if (components) rebuilt.token_components = components;
   else delete rebuilt.token_components;
@@ -859,11 +903,51 @@ const rebuildSourceEntry = (current, entries) => {
   return rebuilt;
 };
 
+// Planning does not establish acceptance. A later eligibility filter can remove
+// a planned replacement, so only the final ledger may authorize source removal.
+const acceptedAuthorityRetirements = (beforeEntries, entries, rows) => {
+  const beforeActive = beforeEntries.filter(isActiveEntry);
+  const newlyRetired = entries.filter((entry) => entry.disposition === "superseded" &&
+    beforeActive.some((prior) => prior.snapshot_key === entry.snapshot_key &&
+      sameScopeDay(prior, entry) && exactVersion(prior, entry)));
+  const active = entries.filter(isActiveEntry);
+  for (const retired of newlyRetired) {
+    const replacements = active.filter((entry) =>
+      entry.acceptance === "accepted" &&
+      entry.source === retired.superseded_by?.source &&
+      entry.snapshot_key === retired.superseded_by?.snapshot_key &&
+      entry.authority === retired.superseded_by?.authority &&
+      sameEvidenceScope(retired, entry) &&
+      equalKeySets(retired.correlation_keys, entry.correlation_keys) &&
+      authorityRankOf(entry) > authorityRankOf(retired));
+    if (replacements.length !== 1) {
+      throw new Error("Authority retirement requires exactly one active accepted replacement");
+    }
+  }
+  const sources = [...new Set(newlyRetired.map((entry) => `${entry.date}/${entry.source}`))];
+  const finalEntries = rowEntries(rows);
+  for (const key of sources) {
+    const remaining = active.filter((entry) => `${entry.date}/${entry.source}` === key);
+    const finalEntry = finalEntries.get(key);
+    if (!finalEntry && !remaining.length) continue;
+    if (!finalEntry) throw new Error("Authority retirement cannot discard surviving accepted evidence");
+    assertLedgerMatchesSourceEntry(key, finalEntry, remaining);
+  }
+  return sources;
+};
+
 export async function planPersistedAuthorityTransitions({
   rows,
   receipts,
+  exclusions = [],
+  settled = [],
+  correction = null,
   root = process.cwd()
 }) {
+  const confirmedCorrection = validateCorrection(correction);
+  const excluded = new Set(exclusions.map((entry) => `${entry.date}/${entry.source}`));
+  const frozen = new Set(settled.map((entry) => `${entry.date}/${entry.source}`));
+  const exactSources = exactSourceKeys(rows);
   const currentManifest = await readOptionalManifest(
     pathAt(root, ACCEPTED_MANIFEST_PATH)
   );
@@ -889,7 +973,7 @@ export async function planPersistedAuthorityTransitions({
           incoming,
           `${incoming.snapshot_key} token_components`
         );
-        candidate = { ...raw };
+        candidate = { ...raw, ...coverageMetadata(merged) };
         if (merged.token_components) {
           candidate.token_components = merged.token_components;
         } else {
@@ -942,6 +1026,17 @@ export async function planPersistedAuthorityTransitions({
       }
       continue;
     }
+    if (excluded.has(`${incoming.date}/${incoming.source}`)) {
+      throw new Error(
+        "Excluded higher-authority evidence cannot retire an accepted measurement; no transition was accepted"
+      );
+    }
+    if (frozen.has(`${incoming.date}/${incoming.source}`)) {
+      throw new Error(
+        "Settled higher-authority evidence cannot retire an accepted measurement; review the frozen source before replacement"
+      );
+    }
+    assertAuthorityReplacementPreservesExact(existing, incoming, confirmedCorrection, exactSources, candidate.fidelity);
     retiring.add(existing);
     kept.push(candidate);
   }
@@ -1056,6 +1151,7 @@ const acceptedReceiptBuckets = (rows, receipts, excludedSources) => {
     }
     for (const combined of identityFree.values()) {
       if (!combined._hasCalls) delete combined.calls;
+      Object.assign(combined, aggregateCoverage(combined._componentReceipts));
       const tokenComponents = aggregateTokenComponents(combined._componentReceipts);
       if (tokenComponents) combined.token_components = tokenComponents;
       delete combined._hasCalls;
@@ -1291,11 +1387,14 @@ export async function acceptDataset({
     );
     const changes = { added: 0, updated: 0, promoted: 0, replay: 0 };
     const touchedByBucket = new Map();
+    const exactSources = exactSourceKeys(beforeRows);
     for (const receipt of selected.accepted) {
       const result = addAcceptedEntry(
         entries,
         entryFromReceipt(receipt),
-        confirmedCorrection
+        confirmedCorrection,
+        exactSources,
+        receipt.fidelity
       );
       changes[result.kind] += 1;
       const key = `${receipt.date}/${receipt.source}`;
@@ -1355,6 +1454,18 @@ export async function acceptDataset({
       if (excludedKeys.has(`${entry.date}/${entry.source}`)) {
         entry.disposition = "excluded";
       }
+    }
+    const acceptedRetirements = acceptedAuthorityRetirements(validated.entries, entries, rows);
+    try {
+      assertHistoricalPreservation(beforeRows, rows, {
+        excludedSources: [...excludedKeys, ...acceptedRetirements],
+        correction: confirmedCorrection
+      });
+    } catch {
+      throw new Error(
+        "Blocked exact historical regression at acceptance: a planned replacement was not accepted or accepted evidence would decrease. " +
+          "Use --allow-decrease --confirm-correction --correction-reason TEXT only after reviewing the exact correction."
+      );
     }
     const nextManifest = manifestFromEntries(
       currentManifest.value,

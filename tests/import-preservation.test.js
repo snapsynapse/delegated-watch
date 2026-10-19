@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -705,3 +705,175 @@ test("pending acceptance blocks public export and dependent commands before outp
     assert.equal(await readFile(output, "utf8"), "previous reviewed output");
   }
 });
+
+test("accepted fork coverage survives raw receipt pruning and equivalent snapshot replay", async () => {
+  const cwd = await makeAuthorityFixture();
+  const complete = authorityReceipt({ authority: "tool", source: "codex", keys: [] });
+  const incomplete = { ...complete, coverage: "incomplete", coverage_reasons: ["copied_fork_parent_missing"] };
+  for (const receipts of [[incomplete], [], [complete], [incomplete]]) {
+    const result = await runImport(cwd, receipts);
+    assert.equal(result.status, 0, result.stderr);
+    const [row] = JSON.parse(await readFile(join(cwd, "public/data/daily-burn.json"), "utf8"));
+    const ledger = JSON.parse(await readFile(join(cwd, "public/data/evidence-manifest.json"), "utf8"));
+    assert.equal(row.sources.codex.coverage, "incomplete");
+    assert.deepEqual(row.sources.codex.coverage_reasons, incomplete.coverage_reasons);
+    assert.equal(ledger.entries[0].coverage, "incomplete");
+    assert.deepEqual(ledger.entries[0].coverage_reasons, incomplete.coverage_reasons);
+  }
+});
+
+test("complete higher authority retires old coverage while lower-authority replay cannot restore it", async () => {
+  const cwd = await makeAuthorityFixture();
+  const key = "sha256:" + "f".repeat(64);
+  const tool = { ...authorityReceipt({ authority: "tool", source: "codex", keys: [key] }), coverage: "incomplete", coverage_reasons: ["copied_fork_parent_missing"] };
+  const provider = authorityReceipt({ authority: "provider", source: "openai_capture", keys: [key] });
+  for (const receipt of [tool, provider, tool]) {
+    const result = await runImport(cwd, [receipt]);
+    assert.equal(result.status, 0, result.stderr);
+  }
+  const [row] = JSON.parse(await readFile(join(cwd, "public/data/daily-burn.json"), "utf8"));
+  assert.deepEqual(Object.keys(row.sources), ["openai_capture"]);
+  assert.equal(Object.hasOwn(row.sources.openai_capture, "coverage"), false);
+  const ledger = JSON.parse(await readFile(join(cwd, "public/data/evidence-manifest.json"), "utf8"));
+  assert.equal(ledger.entries.find((entry) => entry.disposition === "superseded").coverage, "incomplete");
+  assert.equal(Object.hasOwn(ledger.entries.find((entry) => !entry.disposition), "coverage"), false);
+});
+
+test("partial authority replacement rebuilds caveats from only the surviving accepted evidence", async () => {
+  for (const incompleteRemaining of [false, true]) {
+    const cwd = await makeAuthorityFixture();
+    const keys = ["sha256:" + "a".repeat(64), "sha256:" + "b".repeat(64)];
+    const makeTool = (index) => ({
+      ...authorityReceipt({ authority: "tool", source: "codex", keys: [keys[index]] }),
+      snapshot_key: `synthetic-tool-${index}`,
+      ...(index === (incompleteRemaining ? 1 : 0)
+        ? { coverage: "incomplete", coverage_reasons: ["copied_fork_parent_missing"] }
+        : {})
+    });
+    const initial = await runImport(cwd, [makeTool(0), makeTool(1)]);
+    assert.equal(initial.status, 0, initial.stderr);
+    const provider = authorityReceipt({ authority: "provider", source: "openai_capture", keys: [keys[0]] });
+    const replacement = await runImport(cwd, [provider]);
+    assert.equal(replacement.status, 0, replacement.stderr);
+    const [row] = JSON.parse(await readFile(join(cwd, "public/data/daily-burn.json"), "utf8"));
+    assert.equal(row.sources.codex.tokens, 100);
+    assert.equal(row.sources.codex.coverage === "incomplete", incompleteRemaining);
+    assert.equal(Object.hasOwn(row.sources.openai_capture, "coverage"), false);
+  }
+});
+
+// These fixtures own their configuration as well as their data. Exclusion and
+// correction behavior must not depend on anyone's real accepted record.
+const isolatedAuthorityFixture = async (t, script) => {
+  const cwd = await makeAuthorityFixture();
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  await cp(join(repo, "scripts"), join(cwd, "scripts"), { recursive: true });
+  await mkdir(join(cwd, "config"));
+  await mkdir(join(cwd, "home"));
+  await writeFile(join(cwd, "package.json"), JSON.stringify({ type: "module" }));
+  await writeFile(join(cwd, "config/profile.json"), JSON.stringify({
+    timezone: "UTC", window_start: "2026-01-01", origin: "synthetic/user", machine_alias: "synthetic-machine"
+  }));
+  for (const config of ["source-entry-exclusions", "settled-source-entries"]) {
+    await writeFile(join(cwd, "config", `${config}.json`), JSON.stringify({ entries: [] }));
+  }
+  const env = { PATH: process.env.PATH, HOME: join(cwd, "home") };
+  const run = async (receipts, flags = []) => {
+    await writeFile(join(cwd, "input.jsonl"), receipts.map((receipt) => JSON.stringify(receipt)).join("\n") + "\n");
+    return spawnSync(process.execPath, [join(cwd, "scripts", script), ...flags, "input.jsonl"], { cwd, env, encoding: "utf8" });
+  };
+  const bytes = async () => ({
+    data: await readFile(join(cwd, "public/data/daily-burn.json"), "utf8"),
+    ledger: await readFile(join(cwd, "public/data/evidence-manifest.json"), "utf8")
+  });
+  return { cwd, run, bytes };
+};
+
+for (const script of ["import-daily-burn.js", "import-openai.js"].filter(present)) {
+  test(`${script} cannot retire accepted evidence using an excluded replacement`, async (t) => {
+    const { cwd, run, bytes } = await isolatedAuthorityFixture(t, script);
+    const keys = ["sha256:" + "9".repeat(64)];
+    const tool = authorityReceipt({ authority: "tool", source: "codex", keys });
+    const provider = authorityReceipt({ authority: "provider", source: "openai_api", keys });
+    const initial = await run([tool]);
+    assert.equal(initial.status, 0, initial.stderr);
+    const before = await bytes();
+    await writeFile(join(cwd, "config/source-entry-exclusions.json"), JSON.stringify({ entries: [{
+      date: provider.date, source: provider.source, tokens: provider.tokens, calls: provider.calls,
+      reason: "synthetic excluded measurement"
+    }] }));
+    for (const flags of [[], ["--allow-decrease", "--confirm-correction", "--correction-reason", "synthetic reviewed correction"]]) {
+      const result = await run([provider], flags);
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /Excluded higher-authority evidence cannot retire/);
+      assert.deepEqual(await bytes(), before);
+    }
+  });
+
+  for (const field of ["tokens", "calls", "missing calls"]) {
+    test(`${script} requires a full reviewed correction for higher-authority ${field} decrease`, async (t) => {
+      const { run, bytes } = await isolatedAuthorityFixture(t, script);
+      const keys = ["sha256:" + "8".repeat(64)];
+      const tool = authorityReceipt({ authority: "tool", source: "codex", keys });
+      const provider = authorityReceipt({ authority: "provider", source: "openai_api", keys });
+      if (field === "missing calls") delete provider.calls;
+      else provider[field] -= 1;
+      const initial = await run([tool]);
+      assert.equal(initial.status, 0, initial.stderr);
+      const before = await bytes();
+      for (const flags of [
+        [],
+        ["--allow-decrease"],
+        ["--allow-decrease", "--confirm-correction"],
+        ["--allow-decrease", "--correction-reason", "synthetic reviewed correction"],
+        ["--confirm-correction", "--correction-reason", "synthetic reviewed correction"]
+      ]) {
+        const blocked = await run([provider], flags);
+        assert.notEqual(blocked.status, 0, `${field}: ${JSON.stringify(flags)}`);
+        assert.match(blocked.stderr, /historical regression|--allow-decrease requires/);
+        assert.deepEqual(await bytes(), before);
+      }
+      const accepted = await run([provider], ["--allow-decrease", "--confirm-correction", "--correction-reason", "synthetic reviewed correction"]);
+      assert.equal(accepted.status, 0, accepted.stderr);
+      const after = await bytes();
+      const [row] = JSON.parse(after.data);
+      assert.deepEqual(Object.keys(row.sources), ["openai_api"]);
+      assert.equal(row.sources.openai_api.tokens, provider.tokens);
+      assert.equal(row.sources.openai_api.calls, provider.calls);
+      const entries = JSON.parse(after.ledger).entries;
+      assert.equal(entries.find((entry) => entry.source === "codex").disposition, "superseded");
+      assert.equal(entries.find((entry) => entry.source === "openai_api").acceptance, "accepted");
+      const replay = await run([tool, provider]);
+      assert.equal(replay.status, 0, replay.stderr);
+      assert.deepEqual(await bytes(), after);
+    });
+  }
+}
+
+for (const script of ["import-daily-burn.js", "import-openai.js"].filter(present)) {
+  test(`${script} never retires evidence for a replacement targeting a settled source`, async (t) => {
+    const { cwd, run, bytes } = await isolatedAuthorityFixture(t, script);
+    const lower = authorityReceipt({ authority: "reconstructed", source: "chatgpt", keys: ["sha256:" + "6".repeat(64)] });
+    const frozen = authorityReceipt({ authority: "tool", source: "codex", keys: ["sha256:" + "7".repeat(64)], tokens: 200 });
+    const initial = await run([lower, frozen]);
+    assert.equal(initial.status, 0, initial.stderr);
+    const before = await bytes();
+    await writeFile(join(cwd, "config/settled-source-entries.json"), JSON.stringify({ entries: [{
+      date: frozen.date, source: frozen.source, tokens: frozen.tokens, calls: frozen.calls,
+      reason: "synthetic frozen measurement"
+    }] }));
+    const replacement = {
+      ...authorityReceipt({ authority: "tool", source: "codex", keys: lower.correlation_keys }),
+      snapshot_key: "synthetic-replacement"
+    };
+    const result = await run([replacement]);
+    if (script === "import-daily-burn.js") {
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /Dropped 1 receipt/);
+    } else {
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /Settled higher-authority evidence cannot retire/);
+    }
+    assert.deepEqual(await bytes(), before);
+  });
+}
