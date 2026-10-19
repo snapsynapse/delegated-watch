@@ -19,6 +19,7 @@ import {
   acceptDataset,
   assertNoPendingAcceptance,
   checkEvidenceOverlap,
+  planPersistedAuthorityTransitions,
   recoverDataAcceptance,
   validateAcceptedManifest
 } from "../scripts/lib/accepted-evidence.js";
@@ -516,6 +517,88 @@ test("an identity-free figure changes only under a recorded correction, and supe
   assert.equal(entry.acceptance_basis, "identity-free-correction-after-review");
   assert.equal(entry.correction.reason, "provider revised the day");
   assert.deepEqual(entry.superseded_snapshots.map((version) => version.tokens), [10]);
+});
+
+for (const decrease of ["tokens", "calls", "missing calls"]) {
+  test(`direct acceptance cannot bypass reviewed correction for same-snapshot ${decrease}`, async (t) => {
+    const root = await makeFixture({ rows: [] });
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const beforeRows = [row("2026-01-01", "codex", 10)];
+    const original = { ...receipt(), authority: "tool" };
+    await acceptDataset({ root, beforeRows: [], rows: beforeRows, receipts: [original] });
+    const beforeData = await readFile(join(root, "public/data/daily-burn.json"), "utf8");
+    const beforeLedger = await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8");
+    const rows = structuredClone(beforeRows);
+    const incoming = { ...original, authority: "provider" };
+    if (decrease === "missing calls") {
+      delete incoming.calls;
+      delete rows[0].sources.codex.calls;
+    } else {
+      incoming[decrease] -= 1;
+      rows[0].sources.codex[decrease] -= 1;
+      if (decrease === "tokens") rows[0].total -= 1;
+    }
+    await assert.rejects(acceptDataset({ root, beforeRows, rows, receipts: [incoming] }), /historical regression at acceptance|does not match final dataset counters/);
+    assert.equal(await readFile(join(root, "public/data/daily-burn.json"), "utf8"), beforeData);
+    assert.equal(await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8"), beforeLedger);
+    await acceptDataset({
+      root, beforeRows, rows, receipts: [incoming],
+      correction: { confirmed: true, reason: "synthetic reviewed correction" }
+    });
+    assert.deepEqual(await readJson(root, "public/data/daily-burn.json"), rows);
+  });
+}
+
+test("final acceptance rejects planned authority retirement when a later filter removes its replacement", async (t) => {
+  const root = await makeFixture({ rows: [] });
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const beforeRows = [row("2026-01-01", "codex", 10)];
+  const original = { ...receipt(), authority: "tool" };
+  await acceptDataset({ root, beforeRows: [], rows: beforeRows, receipts: [original] });
+  const beforeData = await readFile(join(root, "public/data/daily-burn.json"), "utf8");
+  const beforeLedger = await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8");
+  const replacement = { ...original, source: "openai_api", surface: "api", snapshot_key: "synthetic-provider", authority: "provider" };
+  const plan = await planPersistedAuthorityTransitions({ root, rows: beforeRows, receipts: [replacement] });
+  assert.deepEqual(plan.supersededSources, ["2026-01-01/codex"]);
+  await assert.rejects(acceptDataset({ root, beforeRows, rows: [], receipts: [] }), /planned replacement was not accepted/);
+  assert.equal(await readFile(join(root, "public/data/daily-burn.json"), "utf8"), beforeData);
+  assert.equal(await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8"), beforeLedger);
+});
+
+for (const list of ["exclusions", "settled"]) {
+  test(`planning refuses a higher-authority replacement whose own source is in ${list}`, async (t) => {
+    const root = await makeFixture({ rows: [] });
+    t.after(() => rm(root, { recursive: true, force: true }));
+    const beforeRows = [row("2026-01-01", "codex", 10)];
+    const original = { ...receipt(), authority: "tool" };
+    await acceptDataset({ root, beforeRows: [], rows: beforeRows, receipts: [original] });
+    const beforeLedger = await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8");
+    const replacement = { ...original, source: "openai_api", surface: "api", snapshot_key: "synthetic-provider", authority: "provider" };
+    const entry = { date: replacement.date, source: replacement.source, tokens: replacement.tokens, calls: replacement.calls, reason: "synthetic" };
+    await assert.rejects(
+      planPersistedAuthorityTransitions({ root, rows: beforeRows, receipts: [replacement], [list]: [entry] }),
+      list === "exclusions" ? /Excluded higher-authority evidence cannot retire/ : /Settled higher-authority evidence cannot retire/
+    );
+    assert.equal(await readFile(join(root, ACCEPTED_MANIFEST_PATH), "utf8"), beforeLedger);
+  });
+}
+
+test("planning blocks an unreviewed higher-authority replacement that lowers exact tokens", async (t) => {
+  const root = await makeFixture({ rows: [] });
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const beforeRows = [row("2026-01-01", "codex", 10)];
+  const original = { ...receipt(), authority: "tool" };
+  await acceptDataset({ root, beforeRows: [], rows: beforeRows, receipts: [original] });
+  const replacement = { ...original, source: "openai_api", surface: "api", snapshot_key: "synthetic-provider", authority: "provider", tokens: 9 };
+  await assert.rejects(
+    planPersistedAuthorityTransitions({ root, rows: beforeRows, receipts: [replacement] }),
+    /higher-authority replacement lowers accepted evidence/
+  );
+  const plan = await planPersistedAuthorityTransitions({
+    root, rows: beforeRows, receipts: [replacement],
+    correction: { confirmed: true, reason: "synthetic reviewed correction" }
+  });
+  assert.deepEqual(plan.supersededSources, ["2026-01-01/codex"]);
 });
 
 // Local-store receipts (Claude Code, Codex) carry no provider, account, or
