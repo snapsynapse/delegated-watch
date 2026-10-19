@@ -544,6 +544,65 @@ test("OpenAI reads from the finalization horizon by default and from the window 
   assert.equal(await earliestStart(["--since", "2026-02-01"]), Date.parse("2026-02-01T00:00:00Z"));
 });
 
+test("Claude API reads from the finalization horizon by default and from the window start with --backfill", async () => {
+  const cwd = await workdir();
+  const scriptRoot = await localOpenAIExtractor(cwd, "UTC");
+  await writeFile(join(cwd, "config", "profile.json"), JSON.stringify({
+    timezone: "UTC",
+    window_start: "2026-01-01",
+    finalize_after_days: 30
+  }));
+  const env = {
+    ANTHROPIC_ADMIN_KEY: KEY,
+    ANTHROPIC_API_BASE_URL: "https://fixture.invalid/v1/organizations/usage_report/messages",
+    TEST_SCRIPT_ROOT: scriptRoot
+  };
+  const earliestStart = async (args) => {
+    const stub = await stubbedUsagePages(cwd, {});
+    await rm(join(cwd, "usage-requests.jsonl"), { force: true });
+    const result = await run("extract-claude-api.js", [...args, "--pace", "0", "--dry-run", "--no-cost-report"], env, cwd, stub.preload);
+    assert.equal(result.status, 0, result.stderr);
+    const requests = (await stub.requests()).filter(({ path }) => path.endsWith("/messages"));
+    assert.ok(requests.length);
+    return Math.min(...requests.map(({ query }) => Date.parse(query.starting_at)));
+  };
+
+  const horizon = new Date();
+  horizon.setUTCDate(horizon.getUTCDate() - 30);
+  const horizonDay = Date.parse(`${horizon.toISOString().slice(0, 10)}T00:00:00Z`);
+  const defaultStart = await earliestStart([]);
+  assert.ok(Math.abs(defaultStart - horizonDay) <= 86_400_000, new Date(defaultStart).toISOString());
+  // The hourly read starts up to one day early to cover timezone offsets.
+  const backfillStart = await earliestStart(["--backfill"]);
+  assert.ok(Date.parse("2026-01-01T00:00:00Z") - backfillStart <= 86_400_000 && backfillStart <= Date.parse("2026-01-01T00:00:00Z"));
+  assert.ok(defaultStart - backfillStart > 86_400_000 * 2);
+});
+
+// A horizon at or beyond the shortest provider lookback would make every
+// default read fail, so the profile refuses it before any request is made.
+test("a finalization horizon outside every provider's lookback is refused before any read", async () => {
+  const cwd = await workdir();
+  const scriptRoot = await localOpenAIExtractor(cwd, "UTC");
+  const env = { OPENAI_ADMIN_KEY: KEY, OPENAI_API_BASE_URL: "https://fixture.invalid/org", TEST_SCRIPT_ROOT: scriptRoot };
+  for (const [days, accepted] of [[364, true], [0, true], [null, true], [365, false], [400, false], [1.5, false], [-1, false], ["30", false]]) {
+    await writeFile(join(cwd, "config", "profile.json"), JSON.stringify({
+      timezone: "UTC",
+      window_start: "2026-01-01",
+      finalize_after_days: days
+    }));
+    const stub = await stubbedUsagePages(cwd, {});
+    await rm(join(cwd, "usage-requests.jsonl"), { force: true });
+    const result = await run("extract-openai-api.js", ["--since", "2026-01-01", "--dry-run", "--no-cost-report"], env, cwd, stub.preload);
+    if (accepted) {
+      assert.equal(result.status, 0, `${days}: ${result.stderr}`);
+    } else {
+      assert.notEqual(result.status, 0, String(days));
+      assert.match(result.stderr, /finalize_after_days must be 0 or a whole number below 365/, String(days));
+      assert.deepEqual(await stub.requests(), [], String(days));
+    }
+  }
+});
+
 test("OpenAI uses paginated minute buckets when a fractional offset crosses the since boundary", async () => {
   const cwd = await workdir();
   const scriptRoot = await localOpenAIExtractor(cwd, "Asia/Kolkata");

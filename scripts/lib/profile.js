@@ -9,6 +9,9 @@ import { readFile } from "node:fs/promises";
 // profile is a property of the repo either way.
 const CONFIG = new URL("../../config/profile.json", import.meta.url);
 
+// The shortest provider lookback, in days. See finalize_after_days below.
+export const MAX_FINALIZE_AFTER_DAYS = 365;
+
 let cached = null;
 
 export async function profile() {
@@ -23,6 +26,14 @@ export async function profile() {
   }
   if (parsed.machine_alias && !/^[a-z0-9][a-z0-9._-]*$/.test(parsed.machine_alias)) {
     throw new Error(`config/profile.json: machine_alias is invalid`);
+  }
+  // Absent, null, or 0 means no horizon. Otherwise the horizon must fall inside
+  // every provider's lookback: OpenAI rejects usage reads older than one year
+  // (reporting_lookback_exceeded), so a horizon of 365 days or more would make
+  // every default read fail.
+  const days = parsed.finalize_after_days;
+  if (days != null && days !== 0 && !(Number.isSafeInteger(days) && days > 0 && days < MAX_FINALIZE_AFTER_DAYS)) {
+    throw new Error(`config/profile.json: finalize_after_days must be 0 or a whole number below ${MAX_FINALIZE_AFTER_DAYS}`);
   }
   // Fail loudly on a bad IANA zone rather than silently bucketing wrong.
   try {

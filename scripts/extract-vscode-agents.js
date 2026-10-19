@@ -194,10 +194,11 @@ async function extractSource(source) {
           problems.push("a usage payload is not valid JSON");
           continue;
         }
-        const input = Number(usage.tokensIn ?? 0);
-        const output = Number(usage.tokensOut ?? 0);
-        const cacheWrite = Number(usage.cacheWrites ?? 0);
-        const cacheRead = Number(usage.cacheReads ?? 0);
+        // Raw values, never Number(): it would turn "10" into 10 and true into 1.
+        const input = usage?.tokensIn ?? 0;
+        const output = usage?.tokensOut ?? 0;
+        const cacheWrite = usage?.cacheWrites ?? 0;
+        const cacheRead = usage?.cacheReads ?? 0;
         if (![input, output, cacheWrite, cacheRead].every(isCounter) || !Number.isFinite(message.ts)) {
           problems.push("a usage payload has invalid counters or no timestamp");
           continue;

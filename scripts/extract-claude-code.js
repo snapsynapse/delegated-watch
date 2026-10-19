@@ -125,6 +125,12 @@ async function* walkJsonl(dir, finding) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) yield* walkJsonl(path, finding);
     else if (entry.name.endsWith(".jsonl")) yield path;
+    // A transcript in a format this reader does not know, such as a compressed
+    // one, is evidence it would silently skip. Unknown, not empty.
+    else if (entry.isFile() && entry.name.includes(".jsonl.")) {
+      finding.state = "unreadable";
+      finding.error = `unrecognized transcript format ${entry.name.slice(entry.name.lastIndexOf(".jsonl"))}`;
+    }
   }
 }
 
@@ -135,6 +141,13 @@ let parseFailures = 0;
 // lines, so falling back to uuid can inflate. Counted so the fallback can never
 // be silently load-bearing.
 let uuidFallbacks = 0;
+// A usage counter is absent or a measurement. A string, fraction, or negative
+// value would be coerced into the headline, so the run refuses to write.
+const USAGE_COUNTERS = ["input_tokens", "cache_creation_input_tokens", "output_tokens", "cache_read_input_tokens"];
+const validUsage = (usage) =>
+  typeof usage === "object" && !Array.isArray(usage) &&
+  USAGE_COUNTERS.every((field) => usage[field] == null || (Number.isSafeInteger(usage[field]) && usage[field] >= 0));
+let malformedUsage = 0;
 
 for (const finding of findings) {
   for await (const file of walkJsonl(finding.dir, finding)) {
@@ -158,6 +171,10 @@ for (const finding of findings) {
       }
       const usage = entry.message?.usage;
       if (!usage || !entry.timestamp) continue;
+      if (!validUsage(usage)) {
+        malformedUsage += 1;
+        continue;
+      }
       usageRecords += 1;
       const requestId = entry.requestId ?? entry.message?.id;
       if (!requestId) uuidFallbacks += 1;
@@ -176,6 +193,13 @@ for (const finding of findings) {
       });
     }
   }
+}
+
+if (malformedUsage) {
+  console.error(
+    `ERROR: ${malformedUsage} usage record(s) have malformed counters; nothing was written and previous receipts are unchanged.`
+  );
+  process.exit(2);
 }
 
 const buckets = new Map();

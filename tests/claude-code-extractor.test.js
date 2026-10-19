@@ -161,3 +161,42 @@ test("an unreadable store exits 3, is reported as unknown, and leaves the previo
   }
   assert.equal(await readFile(previous, "utf8"), "previous receipts\n");
 });
+
+for (const [name, patch] of [
+  ["string input", { input_tokens: "synthetic-sensitive-counter" }],
+  ["negative cache creation", { cache_creation_input_tokens: -50 }],
+  ["fractional output", { output_tokens: 2.5 }],
+  ["boolean cache read", { cache_read_input_tokens: true }]
+]) {
+  test(`a ${name} counter fails closed, writes nothing, and is not echoed`, async () => {
+    const { cwd, env } = await sandbox("claude-code-malformed-");
+    const root = join(cwd, "projects-backup", "some-project");
+    await mkdir(root, { recursive: true });
+    const line = JSON.parse(usageLine());
+    Object.assign(line.message.usage, patch);
+    await writeFile(join(root, "session.jsonl"), `${usageLine({ requestId: "req_ok" })}\n${JSON.stringify(line)}\n`);
+
+    const result = run(cwd, env, ["--root", join(cwd, "projects-backup"), "--tag", "backup-2026-03"]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /malformed counters/);
+    assert.doesNotMatch(result.stdout + result.stderr, /synthetic-sensitive-counter/);
+    await assert.rejects(readdir(join(cwd, "scratch")), { code: "ENOENT" });
+  });
+}
+
+test("a transcript in an unrecognized format makes its store unknown, not smaller", async () => {
+  const { cwd, env } = await sandbox("claude-code-unknown-format-");
+  const projects = join(env.HOME, ".claude", "projects", "some-project");
+  await mkdir(projects, { recursive: true });
+  await writeFile(join(projects, "session.jsonl"), `${usageLine()}\n`);
+  await writeFile(join(projects, "older.jsonl.zst"), "synthetic compressed transcript");
+  const previous = join(cwd, "scratch", "receipts", "claude_code-fixture_user.jsonl");
+  await mkdir(join(cwd, "scratch", "receipts"), { recursive: true });
+  await writeFile(previous, "previous receipts\n");
+
+  const result = run(cwd, env, ["--source", "claude_code", "--tag", "fixture/user"]);
+  assert.equal(result.status, 3);
+  assert.match(result.stdout, /UNREADABLE \(unrecognized transcript format \.jsonl\.zst\)/);
+  assert.match(result.stderr, /UNKNOWN, not zero/);
+  assert.equal(await readFile(previous, "utf8"), "previous receipts\n");
+});

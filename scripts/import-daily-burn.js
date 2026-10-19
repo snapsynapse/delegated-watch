@@ -99,10 +99,8 @@ for (const file of files) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(receipt.date ?? "")) errors.push(`${where} has invalid date`);
     if (receipt.timezone !== TIMEZONE) errors.push(`${where} timezone must be ${TIMEZONE}`);
     if (!/^[a-z0-9_]+$/.test(receipt.source ?? "")) errors.push(`${where} source must be lowercase snake_case`);
-    if (!Number.isSafeInteger(receipt.tokens) || receipt.tokens < 0) errors.push(`${where} tokens must be a nonnegative integer`);
     if (!["exact", "estimated"].includes(receipt.fidelity)) errors.push(`${where} fidelity must be exact or estimated`);
     if ("origin" in receipt && !/^[a-z0-9][a-z0-9._/-]*$/.test(receipt.origin)) errors.push(`${where} origin must be lowercase alphanumeric with . _ - / separators`);
-    if ("calls" in receipt && (!Number.isSafeInteger(receipt.calls) || receipt.calls < 0)) errors.push(`${where} calls must be a nonnegative integer`);
     errors.push(...validateReceiptSchema(receipt, where));
     receipts.push({ ...receipt, _where: where });
   });

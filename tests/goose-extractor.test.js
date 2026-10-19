@@ -153,3 +153,22 @@ test("a database without a usage ledger, or one that is not SQLite, is unknown a
 
   assert.equal(run(cwd, env, ["--db", join(cwd, "typo.db")]).status, 66);
 });
+
+for (const [name, input] of [["text", "'synthetic-sensitive-counter'"], ["fractional", "1.5"], ["negative", "-1"]]) {
+  test(`a ${name} ledger counter is unknown, never coerced, and changes nothing`, async () => {
+    const { cwd, env } = await sandbox("goose-malformed-");
+    const dbPath = join(cwd, "sessions.db");
+    const writer = createDb(dbPath, { wal: false });
+    writer.exec("INSERT INTO sessions VALUES ('s1', 'ollama')");
+    writer.exec(`INSERT INTO usage_ledger (session_id, created_timestamp, model, input_tokens, output_tokens, total_tokens)
+      VALUES ('s1', ${JAN_2}, 'gemma4:31b', 200, 100, 300), ('s1', ${JAN_2 + 60}, 'gemma4:31b', ${input}, 10, 30)`);
+    writer.close();
+
+    const result = run(cwd, env, ["--db", dbPath]);
+    assert.equal(result.status, 3);
+    assert.match(result.stdout, /malformed counters/);
+    assert.match(result.stderr, /UNKNOWN, not zero/);
+    assert.doesNotMatch(result.stdout + result.stderr, /synthetic-sensitive-counter/);
+    await assert.rejects(readdir(join(cwd, "scratch")), { code: "ENOENT" });
+  });
+}

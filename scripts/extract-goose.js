@@ -149,19 +149,26 @@ const sourceFor = (model, provider) =>
     ? localModelSource(model, provider || "ollama")
     : `goose_${sanitize(provider)}`;
 
+// A ledger counter is absent (null) or a measurement. A string, fraction, or
+// negative value is never coerced into the headline: the run is unknown.
+const counterOrNull = (value) => value === null || value === undefined || (Number.isSafeInteger(value) && value >= 0);
+
 const buckets = new Map();
 let undecided = 0;
 for (const row of rows) {
-  const cacheReadTokens = Number(row.cache_read ?? 0);
+  if (![row.input, row.output, row.total, row.cache_read].every(counterOrNull)) {
+    unknown("a usage_ledger row has malformed counters");
+  }
+  const cacheReadTokens = row.cache_read ?? 0;
   let tokens;
   if (row.input === null && row.output === null) {
     if (cacheReadTokens > 0 || row.total === null) {
       undecided += 1;
       continue;
     }
-    tokens = Number(row.total);
+    tokens = row.total;
   } else {
-    let input = Number(row.input ?? 0);
+    let input = row.input ?? 0;
     if (cacheReadTokens > 0) {
       if (!cacheConvention) {
         undecided += 1;
@@ -169,7 +176,7 @@ for (const row of rows) {
       }
       if (cacheConvention === "inclusive") input = Math.max(0, input - cacheReadTokens);
     }
-    tokens = input + Number(row.output ?? 0);
+    tokens = input + (row.output ?? 0);
   }
   const date = await dayOf(new Date(Number(row.ts) * 1000).toISOString());
   if (since && date < since) continue;
