@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { appendFile, chmod, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { appendFile, chmod, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import { zstdCompressSync } from "node:zlib";
 import { reconcileReceipts, validateReceiptSchema } from "../scripts/lib/receipt-schema.js";
 
 const repo = resolve(import.meta.dirname, "..");
@@ -724,6 +725,106 @@ test("a store that does not exist is reported as not found, and nothing is writt
   assert.match(result.stdout, /archived_sessions: not found/);
   await assert.rejects(readdir(join(cwd, "scratch")), { code: "ENOENT" });
 });
+
+// Codex compresses older rollouts in place; the extractor must keep reading them.
+const compressRollout = async (dir, name) => {
+  const plain = join(dir, `rollout-${name}.jsonl`);
+  await writeFile(`${plain}.zst`, zstdCompressSync(await readFile(plain)));
+  await rm(plain);
+};
+
+test("a zstd-compressed rollout counts exactly as its plain form", async () => {
+  const { cwd, env } = await sandbox("codex-zst-");
+  env.CODEX_HOME = join(cwd, "relocated-codex");
+  const live = join(env.CODEX_HOME, "sessions", "2026", "01", "02");
+  await writeRollout(live, "thread-1", 100);
+  await writeRollout(live, "thread-2", 50);
+  await compressRollout(live, "thread-1");
+  await writeRollout(join(env.CODEX_HOME, "archived_sessions"), "thread-3", 25);
+  await compressRollout(join(env.CODEX_HOME, "archived_sessions"), "thread-3");
+
+  const result = run(cwd, env, ["--tag", "fixture/user", "--dry-run"]);
+  assert.equal(result.status, 0, result.stderr);
+  const receipts = receiptsIn(result.stdout);
+  assert.equal(receipts.reduce((sum, receipt) => sum + receipt.tokens, 0), 175);
+  assert.equal(receipts.reduce((sum, receipt) => sum + receipt.calls, 0), 3);
+});
+
+test("a rollout present both plain and compressed counts once, from the plain copy", async () => {
+  const { cwd, env } = await sandbox("codex-zst-both-");
+  env.CODEX_HOME = join(cwd, "relocated-codex");
+  const live = join(env.CODEX_HOME, "sessions", "2026", "01", "02");
+  await writeRollout(live, "thread-1", 100);
+  const plain = join(live, "rollout-thread-1.jsonl");
+  await writeFile(`${plain}.zst`, zstdCompressSync(await readFile(plain)));
+  // Codex appended to the live copy after the compressed snapshot was taken.
+  await appendFile(plain, tokenCount("2026-01-02T08:00:00Z", usage(40, 0, 0), usage(140, 0, 0)) + "\n");
+
+  const result = run(cwd, env, ["--tag", "fixture/user", "--dry-run"]);
+  assert.equal(result.status, 0, result.stderr);
+  const receipts = receiptsIn(result.stdout);
+  assert.equal(receipts.reduce((sum, receipt) => sum + receipt.tokens, 0), 140);
+  assert.equal(receipts.reduce((sum, receipt) => sum + receipt.calls, 0), 2);
+  assert.match(result.stderr, /1 rollout file\(s\)/);
+});
+
+test("a corrupt compressed rollout is unknown, not empty, and leaves previous receipts untouched", async () => {
+  const { cwd, env } = await sandbox("codex-zst-corrupt-");
+  env.CODEX_HOME = join(cwd, "relocated-codex");
+  const live = join(env.CODEX_HOME, "sessions", "2026", "01", "02");
+  await writeRollout(live, "thread-1", 100);
+  await writeFile(join(live, "rollout-thread-2.jsonl.zst"), "not zstd");
+  const previous = join(cwd, "scratch", "receipts", "codex-fixture_user.jsonl");
+  await mkdir(join(cwd, "scratch", "receipts"), { recursive: true });
+  await writeFile(previous, "previous receipts\n");
+
+  const result = run(cwd, env, ["--tag", "fixture/user"]);
+  assert.equal(result.status, 3);
+  assert.match(result.stdout, /UNREADABLE/);
+  assert.match(result.stderr, /UNKNOWN, not zero/);
+  assert.equal(await readFile(previous, "utf8"), "previous receipts\n");
+});
+
+test("cached-only Codex activity keeps its measured zero and its calls", async () => {
+  const { cwd, env } = await sandbox("codex-measured-zero-");
+  const sessions = join(cwd, "sessions");
+  await mkdir(sessions);
+  await writeFile(join(sessions, "rollout-zero.jsonl"), [
+    sessionMeta("synthetic-cached-only"),
+    tokenCount("2026-01-02T07:00:00Z", usage(100, 100, 0), usage(100, 100, 0))
+  ].join("\n") + "\n");
+  const result = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop", "--dry-run"]);
+  assert.equal(result.status, 0, result.stderr);
+  const [receipt] = receiptsIn(result.stdout);
+  assert.equal(receipt.tokens, 0);
+  assert.equal(receipt.calls, 1);
+  assert.deepEqual(validateReceiptSchema(receipt), []);
+});
+
+for (const [name, patch] of [
+  ["negative cache", { cached_input_tokens: -1 }],
+  ["cache exceeds input", { cached_input_tokens: 101 }],
+  ["noninteger input", { input_tokens: 1.5 }],
+  ["string output", { output_tokens: "synthetic-sensitive-counter" }],
+  ["reasoning exceeds output", { reasoning_output_tokens: 1 }]
+]) {
+  test(`malformed Codex ${name} fails closed without changing receipts or echoing values`, async () => {
+    const { cwd, env } = await sandbox("codex-malformed-counter-");
+    const sessions = join(cwd, "sessions");
+    await mkdir(sessions);
+    await mkdir(join(cwd, "scratch", "receipts"), { recursive: true });
+    const prior = join(cwd, "scratch", "receipts", "codex-example-laptop.jsonl");
+    await writeFile(prior, "synthetic prior evidence\n");
+    await writeFile(join(sessions, "rollout-malformed.jsonl"), tokenCount(
+      "2026-01-02T07:00:00Z", { ...usage(100, 0, 0), ...patch }, usage(100, 0, 0)
+    ) + "\n");
+    const result = run(cwd, env, ["--sessions", sessions, "--tag", "example-laptop"]);
+    assert.equal(result.status, 3);
+    assert.match(result.stderr, /malformed interior Codex JSONL record/);
+    assert.doesNotMatch(result.stdout + result.stderr, /synthetic-sensitive-counter/);
+    assert.equal(await readFile(prior, "utf8"), "synthetic prior evidence\n");
+  });
+}
 
 test("an unreadable store exits 3, is reported as unknown, and leaves the previous receipts untouched", async (t) => {
   if (process.getuid?.() === 0) return t.skip("permissions do not bind root");

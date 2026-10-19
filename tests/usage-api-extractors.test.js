@@ -513,6 +513,37 @@ test("OpenAI reconciliation decisions do not bleed across organizations", async 
   assert.match(unreviewed.stderr, /NOT imported/);
 });
 
+// OpenAI rejects usage reads older than one year (reporting_lookback_exceeded),
+// so a default read must start at the finalization horizon, not window_start.
+test("OpenAI reads from the finalization horizon by default and from the window start with --backfill", async () => {
+  const cwd = await workdir();
+  const scriptRoot = await localOpenAIExtractor(cwd, "UTC");
+  await writeFile(join(cwd, "config", "profile.json"), JSON.stringify({
+    timezone: "UTC",
+    window_start: "2026-01-01",
+    finalize_after_days: 30
+  }));
+  const env = { OPENAI_ADMIN_KEY: KEY, OPENAI_API_BASE_URL: "https://fixture.invalid/org", TEST_SCRIPT_ROOT: scriptRoot };
+  const earliestStart = async (args) => {
+    const stub = await stubbedUsagePages(cwd, {});
+    await rm(join(cwd, "usage-requests.jsonl"), { force: true });
+    const result = await run("extract-openai-api.js", [...args, "--dry-run", "--no-cost-report"], env, cwd, stub.preload);
+    assert.equal(result.status, 0, result.stderr);
+    const requests = await stub.requests();
+    assert.ok(requests.length);
+    return Math.min(...requests.map(({ query }) => Number(query.start_time))) * 1000;
+  };
+
+  const horizon = new Date();
+  horizon.setUTCDate(horizon.getUTCDate() - 30);
+  const horizonDay = Date.parse(`${horizon.toISOString().slice(0, 10)}T00:00:00Z`);
+  const defaultStart = await earliestStart([]);
+  assert.ok(Math.abs(defaultStart - horizonDay) <= 86_400_000, new Date(defaultStart).toISOString());
+
+  assert.equal(await earliestStart(["--backfill"]), Date.parse("2026-01-01T00:00:00Z"));
+  assert.equal(await earliestStart(["--since", "2026-02-01"]), Date.parse("2026-02-01T00:00:00Z"));
+});
+
 test("OpenAI uses paginated minute buckets when a fractional offset crosses the since boundary", async () => {
   const cwd = await workdir();
   const scriptRoot = await localOpenAIExtractor(cwd, "Asia/Kolkata");
