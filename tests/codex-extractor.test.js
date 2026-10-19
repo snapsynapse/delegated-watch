@@ -826,6 +826,25 @@ for (const [name, patch] of [
   });
 }
 
+for (const name of ["rollout-thread-2.jsonl.gz", "rollout-thread-2.json"]) {
+  test(`a rollout in an unrecognized format (${name}) makes its store unknown, not smaller`, async () => {
+    const { cwd, env } = await sandbox("codex-unknown-format-");
+    env.CODEX_HOME = join(cwd, "relocated-codex");
+    const live = join(env.CODEX_HOME, "sessions", "2026", "01", "02");
+    await writeRollout(live, "thread-1", 100);
+    await writeFile(join(live, name), "synthetic rollout in another format");
+    const previous = join(cwd, "scratch", "receipts", "codex-fixture_user.jsonl");
+    await mkdir(join(cwd, "scratch", "receipts"), { recursive: true });
+    await writeFile(previous, "previous receipts\n");
+
+    const result = run(cwd, env, ["--tag", "fixture/user"]);
+    assert.equal(result.status, 3);
+    assert.match(result.stdout, /UNREADABLE \(unrecognized rollout format \.(gz|json)\)/);
+    assert.match(result.stderr, /UNKNOWN, not zero/);
+    assert.equal(await readFile(previous, "utf8"), "previous receipts\n");
+  });
+}
+
 test("an unreadable store exits 3, is reported as unknown, and leaves the previous receipts untouched", async (t) => {
   if (process.getuid?.() === 0) return t.skip("permissions do not bind root");
   const { cwd, env } = await sandbox("codex-eacces-");

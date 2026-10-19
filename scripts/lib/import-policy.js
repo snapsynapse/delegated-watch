@@ -10,8 +10,20 @@ export const isCalendarDate = (value) => {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 };
 
-export function partitionCompleteReceipts(receipts, timezone, windowStart, now = new Date()) {
+// The first day of the Sunday-to-Saturday week containing `day`, matching the
+// heatmap's GitHub-style columns.
+export const weekStartOf = (day) => {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - date.getUTCDay());
+  return date.toISOString().slice(0, 10);
+};
+
+// completeWeeks: hold back the whole week in progress, not just today, so a
+// run only ever adds complete Sunday-to-Saturday columns and every source
+// ends on the same Saturday.
+export function partitionCompleteReceipts(receipts, timezone, windowStart, now = new Date(), { completeWeeks = false } = {}) {
   const today = calendarDay(timezone, now);
+  const cutoff = completeWeeks ? weekStartOf(today) : today;
   const errors = [];
   for (const receipt of receipts) {
     if (!isCalendarDate(receipt.date)) errors.push(`${receipt._where ?? "receipt"} has invalid calendar date`);
@@ -21,8 +33,9 @@ export function partitionCompleteReceipts(receipts, timezone, windowStart, now =
   if (errors.length) throw new Error(errors.join("\n"));
   return {
     today,
-    heldBack: receipts.filter((receipt) => receipt.date === today),
-    receipts: receipts.filter((receipt) => receipt.date < today)
+    cutoff,
+    heldBack: receipts.filter((receipt) => receipt.date >= cutoff),
+    receipts: receipts.filter((receipt) => receipt.date < cutoff)
   };
 }
 

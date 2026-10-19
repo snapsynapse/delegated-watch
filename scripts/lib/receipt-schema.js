@@ -211,6 +211,15 @@ export function validateReceiptSchema(receipt, where = "receipt") {
   if (PROVIDER_COST_FIELD in receipt) {
     errors.push(...validateProviderReportedCost(receipt[PROVIDER_COST_FIELD], `${where} ${PROVIDER_COST_FIELD}`));
   }
+  // The headline counters, whatever the schema version. Every extractor calls
+  // this before writing, so a coerced value ("0100abc", 6.5, -1) is refused at
+  // the source rather than first noticed by the importer.
+  if (!Number.isSafeInteger(receipt.tokens) || receipt.tokens < 0) {
+    errors.push(`${where} tokens must be a nonnegative integer`);
+  }
+  if ("calls" in receipt && (!Number.isSafeInteger(receipt.calls) || receipt.calls < 0)) {
+    errors.push(`${where} calls must be a nonnegative integer`);
+  }
   if (receipt.schema_version === undefined) return errors;
   if (receipt.schema_version !== RECEIPT_SCHEMA_VERSION) {
     return [...errors, `${where} schema_version must be ${RECEIPT_SCHEMA_VERSION}`];

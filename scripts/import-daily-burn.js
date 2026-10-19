@@ -18,10 +18,14 @@
 // - Receipts for the in-progress day are held back. A day is only imported
 //   once it has fully elapsed in TIMEZONE, so a row always describes a whole
 //   day rather than however much of it had happened when the import ran.
+//   --complete-weeks widens the hold-back to the whole Sunday-to-Saturday
+//   week in progress.
+// - --recent skips receipts dated before the finalization horizon
+//   (finalizedThrough), so a routine run cannot re-litigate final days.
 // - Totals are recomputed; output stays sorted by date.
 //
 // Usage:
-//   node scripts/import-daily-burn.js [--dry-run] [file.jsonl ...]
+//   node scripts/import-daily-burn.js [--dry-run] [--recent] [--complete-weeks] [file.jsonl ...]
 //   (no file args: reads every scratch/receipts/*.jsonl plus receipts/*.jsonl,
 //    the gitignored inbox where receipt files synced from other machines land)
 
@@ -53,7 +57,7 @@ import { recordPaths } from "./lib/record-paths.js";
 
 const DATA_FILE = recordPaths().dataset;
 const RECEIPT_DIRS = ["scratch/receipts", "receipts"];
-const { timezone, windowStart } = await import("./lib/profile.js");
+const { finalizedThrough, timezone, windowStart } = await import("./lib/profile.js");
 const TIMEZONE = await timezone();
 
 const args = process.argv.slice(2);
@@ -99,10 +103,8 @@ for (const file of files) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(receipt.date ?? "")) errors.push(`${where} has invalid date`);
     if (receipt.timezone !== TIMEZONE) errors.push(`${where} timezone must be ${TIMEZONE}`);
     if (!/^[a-z0-9_]+$/.test(receipt.source ?? "")) errors.push(`${where} source must be lowercase snake_case`);
-    if (!Number.isSafeInteger(receipt.tokens) || receipt.tokens < 0) errors.push(`${where} tokens must be a nonnegative integer`);
     if (!["exact", "estimated"].includes(receipt.fidelity)) errors.push(`${where} fidelity must be exact or estimated`);
     if ("origin" in receipt && !/^[a-z0-9][a-z0-9._/-]*$/.test(receipt.origin)) errors.push(`${where} origin must be lowercase alphanumeric with . _ - / separators`);
-    if ("calls" in receipt && (!Number.isSafeInteger(receipt.calls) || receipt.calls < 0)) errors.push(`${where} calls must be a nonnegative integer`);
     errors.push(...validateReceiptSchema(receipt, where));
     receipts.push({ ...receipt, _where: where });
   });
@@ -115,19 +117,36 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-const complete = partitionCompleteReceipts(receipts, TIMEZONE, await windowStart());
+// --complete-weeks holds back the week in progress, so the record ends on the
+// last complete Saturday. Opt-in: the default holds back only today.
+const completeWeeks = args.includes("--complete-weeks");
+const complete = partitionCompleteReceipts(receipts, TIMEZONE, await windowStart(), new Date(), { completeWeeks });
 const { heldBack } = complete;
 receipts = complete.receipts;
 
 let rows = JSON.parse(await readFile(DATA_FILE, "utf8"));
 const beforeRows = structuredClone(rows);
-const authorityPlan = await planPersistedAuthorityTransitions({ rows, receipts });
-rows = authorityPlan.rows;
-receipts = authorityPlan.receipts;
+const exclusions = await loadSourceEntryExclusions();
 const settled = await loadSettledSourceEntries();
 assertSettledEntriesIntact(beforeRows, settled, { label: "committed dataset" });
 const settledSplit = partitionSettledReceipts(receipts, settled, beforeRows);
 receipts = settledSplit.kept;
+// --recent imports only the finalization window. Days older than the horizon
+// are already recorded and final; re-admitting their receipts on every run
+// only re-litigates settled history against newer acceptance rules. Opt-in:
+// omit it for a deliberate whole-history import.
+const importHorizon = args.includes("--recent") ? await finalizedThrough() : null;
+const beforeHorizon = importHorizon ? receipts.filter((receipt) => receipt.date < importHorizon) : [];
+if (beforeHorizon.length) {
+  receipts = receipts.filter((receipt) => receipt.date >= importHorizon);
+  console.log(
+    `Skipped ${beforeHorizon.length} receipt(s) dated before ${importHorizon}: those days are final. ` +
+      "Omit --recent for a deliberate whole-history import."
+  );
+}
+const authorityPlan = await planPersistedAuthorityTransitions({ rows, receipts, exclusions, settled, correction });
+rows = authorityPlan.rows;
+receipts = authorityPlan.receipts;
 
 // Aggregate by date + source.
 const buckets = new Map();
@@ -211,7 +230,6 @@ const mergedBeforeExclusions = [...rowsByDate.values()].sort((a, b) =>
 for (const row of mergedBeforeExclusions) {
   row.total = Object.values(row.sources).reduce((sum, entry) => sum + entry.tokens, 0);
 }
-const exclusions = await loadSourceEntryExclusions();
 const { rows: merged, removed: excludedSources } =
   applySourceEntryExclusions(mergedBeforeExclusions, exclusions);
 assertHistoricalPreservation(beforeRows, merged, {
@@ -227,7 +245,7 @@ const correctedByDate = new Map(merged.map((row) => [row.date, row]));
 if (heldBack.length) {
   const days = [...new Set(heldBack.map((receipt) => receipt.date))].sort();
   console.log(
-    `Held back ${heldBack.length} receipt(s) for ${days.join(", ")}: not yet a complete day in ${TIMEZONE}.`
+    `Held back ${heldBack.length} receipt(s) for ${days.join(", ")}: not yet a complete ${completeWeeks ? "Sunday-to-Saturday week" : "day"} in ${TIMEZONE}.`
   );
 }
 

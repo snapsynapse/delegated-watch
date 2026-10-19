@@ -156,3 +156,19 @@ test("no stores means nothing written, and usage errors are refused", async () =
   assert.equal(run(cwd, env, ["--root", join(cwd, "tasks")]).status, 64); // --root needs one --source
   assert.equal(run(cwd, env, ["--source", "cline", "--root", join(cwd, "typo")]).status, 66);
 });
+
+for (const [name, usage] of [
+  ["numeric string", { tokensIn: "5", tokensOut: 5 }],
+  ["boolean", { tokensIn: 5, tokensOut: true }],
+  ["fraction", { tokensIn: 5, tokensOut: 5, cacheReads: 0.5 }]
+]) {
+  test(`a ${name} counter is never coerced into a measurement`, async () => {
+    const { cwd, env } = await sandbox("vscode-coerced-");
+    const root = join(cwd, "tasks");
+    await writeTask(root, "bad", [usageMessage(JAN_2, usage)]);
+    const result = run(cwd, env, ["--dry-run", "--source", "cline", "--root", root]);
+    assert.equal(result.status, 3);
+    assert.match(result.stderr, /invalid counters/);
+    assert.equal(receiptsIn(result.stdout).length, 0);
+  });
+}

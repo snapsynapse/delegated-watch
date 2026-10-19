@@ -42,7 +42,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { zstdDecompressSync } from "node:zlib";
 import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, extname, join } from "node:path";
 import { accountAlias, atomicWriteText, machineAlias } from "./lib/openai-integrity.js";
 import { RECEIPT_SCHEMA_VERSION, validateReceiptSchema } from "./lib/receipt-schema.js";
 import { dayOf, profile, timezone } from "./lib/profile.js";
@@ -109,8 +109,14 @@ const visit = async (dir, finding) => {
   for (const entry of entries) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) await visit(path, finding);
-    else if (entry.isFile() && entry.name.startsWith("rollout-") && (entry.name.endsWith(".jsonl") || entry.name.endsWith(".jsonl.zst"))) {
-      rolloutFiles.push({ path, finding });
+    else if (entry.isFile() && entry.name.startsWith("rollout-")) {
+      if (entry.name.endsWith(".jsonl") || entry.name.endsWith(".jsonl.zst")) rolloutFiles.push({ path, finding });
+      // A rollout in a format this reader does not know is evidence it would
+      // silently skip, as compressed rollouts once were. Unknown, not empty.
+      else {
+        finding.state = "unreadable";
+        finding.error = `unrecognized rollout format ${extname(entry.name) || "(no extension)"}`;
+      }
     }
   }
 };
