@@ -63,8 +63,8 @@
     "author_label": "Snap Synapse",
     "twitter": "@snapsynapse",
     "date_published": "2026-06-22",
-    "date_modified": "2026-10-03",
-    "version": "0.3.0",
+    "date_modified": "2026-10-18",
+    "version": "0.4.0",
     "same_as": [
       "https://github.com/snapsynapse/delegated-watch",
       "https://snapsynapse.com/"

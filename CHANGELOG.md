@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
-## [Unreleased]
+## [0.4.0] - 2026-10-18
 ### Added
 - Provider-reported cost on receipts. `provider_reported_cost` records a charge the provider itself computed, verbatim: Perplexity `usage.cost.total_cost` from both capture paths, and the Anthropic Admin Cost Report and OpenAI Costs API per UTC day from the two organization extractors (`--no-cost-report` skips the extra read). No price table, no computed cost, no conversion or rounding; absent where the provider reports nothing. Never summed into tokens and rejected in daily rows. This supersedes the 0.3.0 statement that the Perplexity capture never records cost.
 - `extract:openai-api --backfill` reads as far back as the provider allows; `--since` remains an explicit override.
