@@ -29,8 +29,9 @@ export const applySourceEntryExclusions = (
       !/^[a-z0-9_]+$/.test(exclusion.source ?? "") ||
       !Number.isInteger(exclusion.tokens) ||
       exclusion.tokens < 0 ||
-      !Number.isInteger(exclusion.calls) ||
-      exclusion.calls < 0
+      // calls: null pins a source that reports no call count (claude_api);
+      // it matches only an entry that carries no calls field.
+      !(exclusion.calls === null || (Number.isInteger(exclusion.calls) && exclusion.calls >= 0))
     ) {
       throw new Error(`Invalid source-entry exclusion: ${key}`);
     }
@@ -40,11 +41,11 @@ export const applySourceEntryExclusions = (
     if (!entry) continue;
     if (
       entry.tokens !== exclusion.tokens ||
-      entry.calls !== exclusion.calls
+      (entry.calls ?? null) !== exclusion.calls
     ) {
       throw new Error(
         `Source-entry exclusion mismatch for ${key}: expected ` +
-          `${exclusion.tokens}/${exclusion.calls}, found ` +
+          `${exclusion.tokens}/${exclusion.calls ?? "n/a"}, found ` +
           `${entry.tokens}/${entry.calls ?? "n/a"}`
       );
     }
