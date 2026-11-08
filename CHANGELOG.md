@@ -2,6 +2,7 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+## [0.5.0] - 2026-11-08
 ### Added
 - `npm run check:credentials` proves each usage-API admin key that is set is accepted, with one small usage read per provider at the extractors' endpoints. It prints the provider's error type and code, never the key or the provider's message, and flags a rejected key of exactly 128 characters as probably truncated by the macOS Keychain prompt. An unset key is skipped, since its extractor skips too. Exit 0 accepted, 1 rejected, 3 unreachable.
 - `npm run refresh` runs that check before `extract:claude-api` and `extract:openai-api` when their key is set. A rejected key fails only that step, and an unreachable provider makes it unknown; the rest of the run continues and the record is still rebuilt.
