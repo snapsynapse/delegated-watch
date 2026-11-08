@@ -7,7 +7,7 @@
 // Four scenarios, one per fixture file under candidate/fixtures/receipts/
 // (see the README there for what each demonstrates), plus a fourth generated
 // at run time rather than stored as a fixture: a receipt dated today, so the
-// midnight-cutoff gate has something to hold back. Storing a "today" fixture
+// in-progress-week gate has something to hold back. Storing a "today" fixture
 // would go stale the day after it was written; generating it here means the
 // demo is honest on every future run.
 //
@@ -160,7 +160,7 @@ async function runToday(root, tz) {
   const heldBack = result.stdout.includes("Held back") && result.stdout.includes(date);
   return [
     heldBack
-      ? `today (${date}): held back by the midnight cutoff -- "${result.stdout.split("\n")[0]}"`
+      ? `today (${date}): held back until its Sunday-to-Saturday week is complete -- "${result.stdout.split("\n")[0]}"`
       : `today (${date}): expected a "Held back" notice for the in-progress day, but stdout was:\n${result.stdout}`
   ];
 }

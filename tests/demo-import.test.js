@@ -40,7 +40,7 @@ test("demo-import runs all four scenarios and reports their outcomes", async () 
   assert.match(estimated, /^estimated: merges "claude_chat" \(estimated\) into 2025-01-09/);
   assert.match(estimated, /mixes fidelities: estimated, exact/);
 
-  assert.match(today, /^today \(\d{4}-\d{2}-\d{2}\): held back by the midnight cutoff/);
+  assert.match(today, /^today \(\d{4}-\d{2}-\d{2}\): held back until its Sunday-to-Saturday week is complete/);
   assert.match(today, /Held back 1 receipt\(s\) for \d{4}-\d{2}-\d{2}: not yet a complete Sunday-to-Saturday week in UTC/);
 
   const after = await hashOf(REAL_DATASET);
