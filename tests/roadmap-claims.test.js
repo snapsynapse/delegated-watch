@@ -90,12 +90,6 @@ test("item 2: nothing captures known activity automatically yet", async () => {
   assert.match(await read("DATA_CONTRACT.md"), /`config\/known-activity\.json` is the third option/);
 });
 
-test("the immediate queue's demo:import claim: it never sets a failing exit status", async () => {
-  const demo = await read("scripts/demo-import.js");
-  assert.doesNotMatch(demo, /process\.exit|exitCode/, "demo:import now sets an exit status: update ROADMAP.md");
-  assert.match(roadmap, /exits 0 even when a scenario does not behave as expected/);
-});
-
 test("the surface list: what it calls planned is planned, and has no extractor", async () => {
   for (const name of ["OpenCode", "Amp", "Factory Droid", "Kimi CLI", "Grok Build CLI"]) {
     assert.match(surfaceRow(name), /\| Planned \|/, `${name} is no longer Planned in SURFACES.md`);

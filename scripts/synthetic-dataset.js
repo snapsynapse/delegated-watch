@@ -25,6 +25,7 @@ import { candidateRoot } from "./lib/candidate-layout.js";
 import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { runDirectly } from "./lib/run-directly.js";
 
 // Fixed seed. Never derived from the clock or the environment.
 const SEED = 0x5eed0417;
@@ -250,6 +251,6 @@ export function observedIntervals(rows) {
 }
 
 // Allow the module to be imported by tests without running the CLI.
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (runDirectly(import.meta.url)) {
   await main();
 }

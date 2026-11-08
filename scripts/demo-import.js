@@ -11,6 +11,10 @@
 // would go stale the day after it was written; generating it here means the
 // demo is honest on every future run.
 //
+// Each scenario reports whether it behaved as expected. The script prints
+// every line, then exits 1, with a summary on stderr, if any did not: a zero
+// exit means all four outcomes occurred, not merely that the script ran.
+//
 // Usage:
 //   node scripts/demo-import.js
 
@@ -22,6 +26,7 @@ import { candidateRoot } from "./lib/candidate-layout.js";
 import { fileURLToPath } from "node:url";
 
 import { timezone } from "./lib/profile.js";
+import { runDirectly } from "./lib/run-directly.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(HERE, "..");
@@ -94,15 +99,22 @@ async function runDayOne(root, tz) {
   const beforeDates = new Set(before.map((row) => row.date));
   const result = runImporter(dir);
   if (result.status !== 0) {
-    return [`day-one: expected success, importer exited ${result.status}\n${result.stderr}`];
+    return { ok: false, line: `day-one: expected success, importer exited ${result.status}\n${result.stderr}` };
   }
   const after = await datasetRows(dir);
   const added = after.filter((row) => !beforeDates.has(row.date));
   const unreviewed = added.filter((row) => row.driver === "unreviewed");
-  return [
-    `day-one: imports ${added.length} new row(s) (${added.map((r) => r.date).join(", ")}) ` +
+  if (!added.length || unreviewed.length !== added.length) {
+    return {
+      ok: false,
+      line: `day-one: expected new rows, every one with driver "unreviewed", but ${unreviewed.length} of ${added.length} were`
+    };
+  }
+  return {
+    ok: true,
+    line: `day-one: imports ${added.length} new row(s) (${added.map((r) => r.date).join(", ")}) ` +
       `as driver "unreviewed" (${unreviewed.length}/${added.length} confirmed).`
-  ];
+  };
 }
 
 async function runRegression(root) {
@@ -110,7 +122,7 @@ async function runRegression(root) {
   await copyFixture("regression.jsonl", dir);
   const result = runImporter(dir);
   if (result.status === 0) {
-    return ["regression: expected the importer to refuse this receipt, but it exited 0."];
+    return { ok: false, line: "regression: expected the importer to refuse this receipt, but it exited 0." };
   }
   // Node prints the throwing source line before the actual "Error: ..." text,
   // so match the thrown message itself rather than the first line containing
@@ -125,8 +137,12 @@ async function runRegression(root) {
       body.push(line);
     }
   }
-  const message = body.length ? body.join(" ").trim() : lines.find((line) => line.trim()) ?? "(no message captured)";
-  return [`regression: refused by the importer's own no-decrease gate -- "${message}"`];
+  if (start === -1) {
+    // Refused, but not by the gate this scenario exists to show.
+    const other = lines.find((line) => line.startsWith("Error")) ?? lines.find((line) => line.trim()) ?? "(no message captured)";
+    return { ok: false, line: `regression: expected the no-decrease gate to refuse it, but the importer failed otherwise -- "${other}"` };
+  }
+  return { ok: true, line: `regression: refused by the importer's own no-decrease gate -- "${body.join(" ").trim()}"` };
 }
 
 async function runEstimated(root) {
@@ -137,15 +153,23 @@ async function runEstimated(root) {
   const beforeRow = before.find((row) => row.date === incoming.date);
   const result = runImporter(dir);
   if (result.status !== 0) {
-    return [`estimated: expected success, importer exited ${result.status}\n${result.stderr}`];
+    return { ok: false, line: `estimated: expected success, importer exited ${result.status}\n${result.stderr}` };
   }
   const after = await datasetRows(dir);
   const afterRow = after.find((row) => row.date === incoming.date);
-  const fidelities = [...new Set(Object.values(afterRow.sources).map((entry) => entry.fidelity))].sort();
-  return [
-    `estimated: merges "${incoming.source}" (estimated) into ${incoming.date}, which already carried ` +
+  const fidelities = [...new Set(Object.values(afterRow?.sources ?? {}).map((entry) => entry.fidelity))].sort();
+  if (afterRow?.sources?.[incoming.source]?.fidelity !== "estimated" || !fidelities.includes("exact")) {
+    return {
+      ok: false,
+      line: `estimated: expected ${incoming.date} to hold "${incoming.source}" as estimated beside exact sources, ` +
+        `but its fidelities are: ${fidelities.join(", ") || "none"}`
+    };
+  }
+  return {
+    ok: true,
+    line: `estimated: merges "${incoming.source}" (estimated) into ${incoming.date}, which already carried ` +
       `${Object.keys(beforeRow.sources).length} exact source(s); the row now mixes fidelities: ${fidelities.join(", ")}.`
-  ];
+  };
 }
 
 async function runToday(root, tz) {
@@ -155,32 +179,35 @@ async function runToday(root, tz) {
   await writeFile(join(dir, "receipts", "today.jsonl"), receiptText);
   const result = runImporter(dir);
   if (result.status !== 0) {
-    return [`today (${date}): expected success (held back, not refused), importer exited ${result.status}\n${result.stderr}`];
+    return { ok: false, line: `today (${date}): expected success (held back, not refused), importer exited ${result.status}\n${result.stderr}` };
   }
   const heldBack = result.stdout.includes("Held back") && result.stdout.includes(date);
-  return [
-    heldBack
-      ? `today (${date}): held back until its Sunday-to-Saturday week is complete -- "${result.stdout.split("\n")[0]}"`
-      : `today (${date}): expected a "Held back" notice for the in-progress day, but stdout was:\n${result.stdout}`
-  ];
+  return heldBack
+    ? { ok: true, line: `today (${date}): held back until its Sunday-to-Saturday week is complete -- "${result.stdout.split("\n")[0]}"` }
+    : { ok: false, line: `today (${date}): expected a "Held back" notice for the in-progress day, but stdout was:\n${result.stdout}` };
 }
 
 async function main() {
   const tz = await timezone();
   const root = await mkdtemp(join(tmpdir(), "delegated-watch-demo-import-"));
-  const narrative = [];
+  const outcomes = [];
   try {
-    narrative.push(...(await runDayOne(root, tz)));
-    narrative.push(...(await runRegression(root)));
-    narrative.push(...(await runEstimated(root)));
-    narrative.push(...(await runToday(root, tz)));
+    outcomes.push(await runDayOne(root, tz));
+    outcomes.push(await runRegression(root));
+    outcomes.push(await runEstimated(root));
+    outcomes.push(await runToday(root, tz));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
-  console.log(narrative.join("\n"));
+  console.log(outcomes.map((outcome) => outcome.line).join("\n"));
+  const unexpected = outcomes.filter((outcome) => !outcome.ok).length;
+  if (unexpected) {
+    console.error(`${unexpected} of ${outcomes.length} scenarios did not behave as expected.`);
+    process.exitCode = 1;
+  }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (runDirectly(import.meta.url)) {
   await main();
 }
 

@@ -4,8 +4,8 @@ Assistant Guide: install Delegated.watch and produce a first local record
 identifier: assistant-guide
 profile: human-verifiable-assistant-guide
 profile-version: 2.0.0
-guide-version: 1.4.0
-applies-to: delegated-watch >=0.5.0, <0.6.0
+guide-version: 1.5.0
+applies-to: delegated-watch >=0.6.0, <0.7.0
 canonical-url: https://delegated.watch/.well-known/assistant-guide.txt
 repository-url: https://github.com/snapsynapse/delegated-watch
 source-path: /docs/.well-known/assistant-guide.txt
@@ -124,7 +124,7 @@ approval: required
 command: node scripts/demo-import.js
 runner: argv
 cwd: .
-exec-sha256: c887afa843031134c4cff5894eebcf5fd85d5c2d1be6e30308f1799a2ee8df77
+exec-sha256: 41efde1d8a8b0f792135ae39f0a31f1e27283eeb7d87ce013240bb7ccfb5b699
 notes: Runs the importer over shipped synthetic fixtures only; reaches no network and no account.
 [/action]
 

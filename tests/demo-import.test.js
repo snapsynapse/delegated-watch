@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { readFile, readdir } from "node:fs/promises";
+import { cp, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -48,4 +48,28 @@ test("demo-import runs all four scenarios and reports their outcomes", async () 
 
   const tempsAfter = await demoTempDirs();
   assert.deepEqual(tempsAfter, tempsBefore, "demo-import.js must remove every temp directory it creates");
+});
+
+test("a scenario that does not behave as expected makes the demo exit 1, naming it", async (t) => {
+  // A copy of the tool whose regression fixture raises the committed count
+  // instead of lowering it, so the importer accepts it and that scenario's
+  // expected outcome, a refusal, does not occur.
+  // The space in the directory name, and on macOS the /var symlink under
+  // tmpdir(), are both paths the old direct-run check silently ignored.
+  const copy = await mkdtemp(join(tmpdir(), "dw demo fail "));
+  t.after(() => rm(copy, { recursive: true, force: true }));
+  for (const path of ["scripts", "config", "fixtures", "public", "package.json"]) {
+    await cp(join(REPO_ROOT, path), join(copy, path), { recursive: true });
+  }
+  const fixture = join(copy, "fixtures/receipts/regression.jsonl");
+  const receipt = JSON.parse((await readFile(fixture, "utf8")).trim());
+  receipt.tokens = 99999;
+  receipt.calls = 99;
+  await writeFile(fixture, `${JSON.stringify(receipt)}\n`);
+
+  const result = spawnSync(process.execPath, [join(copy, "scripts/demo-import.js")], { cwd: copy, encoding: "utf8" });
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^regression: expected the importer to refuse this receipt, but it exited 0\.$/m);
+  assert.match(result.stdout, /^day-one: imports 2 new row/m, "the other scenarios still run and report");
+  assert.match(result.stderr, /1 of 4 scenarios did not behave as expected\./);
 });

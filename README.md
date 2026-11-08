@@ -81,7 +81,7 @@ It prints one line per scenario:
 | `regression.jsonl` | Refused: an exact claim of 10,000 tokens for 2025-01-02 `codex` would lower the committed 36,327, and the dataset is left as it was |
 | `estimated.jsonl` | An estimated `claude_chat` entry joins 2025-01-09 beside two exact sources, and each keeps its own fidelity |
 | A receipt dated today, generated at run time | Held back until its Sunday-to-Saturday week is complete in the timezone set in `config/profile.json` |
-Read the lines themselves. The command exits 0 even when a scenario does not behave as expected, so the exit status alone proves nothing; a line that begins "expected" is a scenario that failed. This demonstrates the importer's behavior on fixtures, not any provider's accuracy or any record's completeness.
+A scenario that does not behave as expected says so on its line, and the command then exits 1 with a count of how many did not. Exit 0 means all four outcomes occurred. This demonstrates the importer's behavior on fixtures, not any provider's accuracy or any record's completeness.
 ## See the dashboard
 Literal
 ```bash
