@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -73,6 +73,35 @@ test("local model calls become exact v2 receipts, including committed WAL frames
   } finally {
     writer.close();
   }
+});
+
+test("a cleanly closed WAL database with no -wal or -shm file is still read", async () => {
+  // When goose closes cleanly it checkpoints the WAL into the main file and
+  // removes -wal and -shm, but the file stays in WAL mode. A read-only open
+  // must not depend on those files existing.
+  const { cwd, env } = await sandbox("goose-closed-wal-");
+  const dbPath = join(cwd, "sessions.db");
+  const db = createDb(dbPath);
+  db.exec("INSERT INTO sessions VALUES ('s1', 'ollama')");
+  db.exec(`INSERT INTO usage_ledger (session_id, created_timestamp, model, input_tokens, output_tokens) VALUES ('s1', ${JAN_2}, 'gemma4:31b', 40, 2)`);
+  db.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+  db.close();
+  await rm(`${dbPath}-wal`, { force: true });
+  await rm(`${dbPath}-shm`, { force: true });
+  const mode = new DatabaseSync(dbPath, { readOnly: true });
+  assert.equal(mode.prepare("PRAGMA journal_mode").get().journal_mode, "wal", "the fixture is a WAL database");
+  mode.close();
+  await rm(`${dbPath}-wal`, { force: true });
+  await rm(`${dbPath}-shm`, { force: true });
+  const before = await readFile(dbPath);
+
+  const result = run(cwd, env, ["--db", dbPath, "--dry-run"]);
+  assert.equal(result.status, 0, result.stderr);
+  const [receipt, ...rest] = receiptsIn(result.stdout);
+  assert.equal(rest.length, 0);
+  assert.equal(receipt.tokens, 42);
+  assert.equal(receipt.calls, 1);
+  assert.deepEqual(await readFile(dbPath), before, "the database is unchanged");
 });
 
 test("calls routed to a hosted provider are labelled as goose traffic, not local inference", async () => {

@@ -20,9 +20,16 @@ import {
 const repo = resolve(import.meta.dirname, "..");
 const { timezone } = await import("../scripts/lib/profile.js");
 const TIMEZONE = await timezone();
-const yesterday = new Intl.DateTimeFormat("en-CA", {
+// The last day of the latest complete Sunday-to-Saturday week, which the
+// importer accepts under its default whole-week hold-back on any weekday.
+const today = new Intl.DateTimeFormat("en-CA", {
   timeZone: TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit"
-}).format(new Date(Date.now() - 86400000));
+}).format(new Date());
+const lastSaturday = (() => {
+  const date = new Date(`${today}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - date.getUTCDay() - 1);
+  return date.toISOString().slice(0, 10);
+})();
 
 const syntheticCost = providerReportedCost("perplexity_usage_total_cost", "0.00700000", "USD");
 
@@ -106,7 +113,7 @@ test("import keeps the cost out of the dataset, its totals, and the ledger", asy
   await writeFile(join(cwd, "public", "data", "daily-burn.json"), "[]\n");
   const receipts = join(cwd, "receipts.jsonl");
   await writeFile(receipts, `${JSON.stringify({
-    date: yesterday, timezone: TIMEZONE, source: "perplexity_api", tokens: 140, calls: 1,
+    date: lastSaturday, timezone: TIMEZONE, source: "perplexity_api", tokens: 140, calls: 1,
     fidelity: "exact", provenance: "synthetic fixture", [PROVIDER_COST_FIELD]: syntheticCost
   })}\n`);
   execFileSync(process.execPath, [join(repo, "scripts", "import-daily-burn.js"), receipts], {

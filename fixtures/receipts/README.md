@@ -46,7 +46,7 @@ UTC day, and imports it into its own temp copy. It is never written to this
 directory: a fixture dated "today" goes stale the day after it is committed,
 and silently stops demonstrating the cutoff it exists to show. The importer
 holds it back and says so — "Held back 1 receipt(s) for `<today>`: not yet a
-complete day in UTC" — and the temp dataset is left unchanged, per the cutoff gate in `DATA_CONTRACT.md`
+complete Sunday-to-Saturday week in UTC" — and the temp dataset is left unchanged, per the cutoff gate in `DATA_CONTRACT.md`
 "The tally cuts at midnight; the current day is never imported."
 
 ## Settled entries, described but not demonstrated

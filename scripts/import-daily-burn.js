@@ -15,11 +15,12 @@
 //   arrives for that day.
 // - New dates get driver "unreviewed" and an import evidence note; review
 //   and relabel before deploying.
-// - Receipts for the in-progress day are held back. A day is only imported
-//   once it has fully elapsed in TIMEZONE, so a row always describes a whole
-//   day rather than however much of it had happened when the import ran.
-//   --complete-weeks widens the hold-back to the whole Sunday-to-Saturday
-//   week in progress.
+// - Receipts for the in-progress Sunday-to-Saturday week are held back, so
+//   the record only gains complete weeks and ends on the last complete
+//   Saturday. With import_weeks "daily" in config/profile.json only the
+//   in-progress day is held back: a day is imported once it has fully elapsed
+//   in TIMEZONE, so a row always describes a whole day. --complete-weeks
+//   forces whole weeks for one run.
 // - --recent skips receipts dated before the finalization horizon
 //   (finalizedThrough), so a routine run cannot re-litigate final days.
 // - Totals are recomputed; output stays sorted by date.
@@ -57,7 +58,7 @@ import { recordPaths } from "./lib/record-paths.js";
 
 const DATA_FILE = recordPaths().dataset;
 const RECEIPT_DIRS = ["scratch/receipts", "receipts"];
-const { finalizedThrough, timezone, windowStart } = await import("./lib/profile.js");
+const { finalizedThrough, importWeeks, timezone, windowStart } = await import("./lib/profile.js");
 const TIMEZONE = await timezone();
 
 const args = process.argv.slice(2);
@@ -117,9 +118,12 @@ if (errors.length) {
   console.error(errors.join("\n"));
   process.exit(1);
 }
-// --complete-weeks holds back the week in progress, so the record ends on the
-// last complete Saturday. Opt-in: the default holds back only today.
-const completeWeeks = args.includes("--complete-weeks");
+// By default the importer holds back the whole week in progress, so the record
+// ends on the last complete Saturday. import_weeks "daily" in
+// config/profile.json holds back only today. --complete-weeks forces whole
+// weeks for one run, which is always safe; there is no per-run daily flag,
+// because the dashboard reads the profile to decide which days were scanned.
+const completeWeeks = args.includes("--complete-weeks") || (await importWeeks()) === "complete";
 const complete = partitionCompleteReceipts(receipts, TIMEZONE, await windowStart(), new Date(), { completeWeeks });
 const { heldBack } = complete;
 receipts = complete.receipts;

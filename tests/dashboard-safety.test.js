@@ -49,7 +49,8 @@ test("recent and prior metrics use complete calendar windows anchored to the dis
     observedDays: 1, total: 28, complete: false, average: null
   });
 
-  const summary = summarizeDashboardRows(rows, new Date("2026-01-01T12:00:00"), end);
+  const summary = summarizeDashboardRows(rows, new Date("2026-01-01T12:00:00"), end, { importWeeks: "daily" });
+  assert.equal(summary.windowRule, "calendar");
   assert.equal(summary.recentAverage, null);
   assert.equal(summary.previousAverage, null);
   assert.equal(summary.deltaPercent, null);
@@ -101,8 +102,46 @@ test("the trailing average resolves although the day in progress is never import
   assert.equal(endingToday.observedDays, 6, "today has no row, so the window is short");
   assert.equal(endingToday.average, null);
 
-  const summary = summarizeDashboardRows(rows, new Date("2026-09-01T12:00:00"), today);
+  const summary = summarizeDashboardRows(rows, new Date("2026-09-01T12:00:00"), today, { importWeeks: "daily" });
   assert.equal(summary.recentWindow.through, "2026-09-21", "the window ends on the last elapsed day");
   assert.equal(summary.recentWindow.observedDays, 7);
   assert.equal(summary.recentAverage, 40, "seven measured days, mean of 10..70");
+});
+
+test("a whole-week record averages its latest scanned week, viewed days after the import", () => {
+  // Imported in whole weeks, so the record ends on Saturday 2026-01-10 and is
+  // read on a later weekday. A window ending on the viewer's yesterday would
+  // hold unscanned days and read Unavailable for most of every week.
+  const rows = ["01-01", "01-02", "01-03", "01-05", "01-06", "01-07", "01-09"]
+    .map((day) => ({ date: `2026-${day}`, total: 70 }));
+  const summary = summarizeDashboardRows(rows, new Date("2026-01-01T12:00:00"), new Date("2026-01-14T12:00:00"));
+  assert.equal(summary.windowRule, "scanned-week");
+  assert.equal(summary.recentWindow.from, "2026-01-04");
+  assert.equal(summary.recentWindow.through, "2026-01-10");
+  // 01-04, 01-08 and 01-10 were scanned and nothing was found.
+  assert.equal(summary.recentWindow.observedDays, 4);
+  assert.equal(summary.recentAverage, 40, "280 over seven days");
+  assert.equal(summary.previousAverage, 30, "210 over seven days");
+  assert.equal(summary.deltaPercent, 33);
+});
+
+test("a whole-week record never counts the unfinished week holding its newest row", () => {
+  // A row inside the week still in progress was not written by a whole-week
+  // import, so the rest of that week was never scanned. The tile falls back
+  // to the latest finished week instead of treating those days as zero.
+  const rows = [
+    ...["01-04", "01-05", "01-06", "01-07", "01-08", "01-09", "01-10"].map((day) => ({ date: `2026-${day}`, total: 70 })),
+    { date: "2026-01-12", total: 700 }
+  ];
+  const summary = summarizeDashboardRows(rows, new Date("2026-01-01T12:00:00"), new Date("2026-01-14T12:00:00"));
+  assert.equal(summary.recentWindow.from, "2026-01-04");
+  assert.equal(summary.recentWindow.through, "2026-01-10");
+  assert.equal(summary.recentAverage, 70);
+});
+
+test("a whole-week record with no rows has no average", () => {
+  const summary = summarizeDashboardRows([], new Date("2026-01-01T12:00:00"), new Date("2026-01-14T12:00:00"));
+  assert.equal(summary.recentAverage, null);
+  assert.equal(summary.previousAverage, null);
+  assert.equal(summary.deltaPercent, null);
 });

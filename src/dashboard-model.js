@@ -59,6 +59,40 @@ export const summarizeCalendarWindows = (rows, end) => ({
   previous: calendarWindow(rows, end, 7)
 });
 
+// A record imported in whole weeks (the default, import_weeks "complete" in
+// config/profile.json) only ever gains complete Sunday-to-Saturday weeks, so
+// every day of an imported week was scanned: a day there with no row is a
+// scanned day where nothing was found, not a gap. The headline average is
+// then the latest scanned week, its total over seven days, compared with the
+// week before. A week with no rows at all predates the record or was never
+// scanned, so it has no average.
+const scannedWeek = (rows, saturday, offset) => {
+  const byDate = new Map(rows.map((row) => [row.date, row]));
+  const dates = Array.from({ length: 7 }, (_, index) => calendarIsoDay(addDays(saturday, -(offset + index))));
+  const observed = dates.map((date) => byDate.get(date)).filter(Boolean);
+  const total = observed.reduce((sum, row) => sum + Number(row.total || 0), 0);
+  return {
+    from: dates.at(-1),
+    through: dates[0],
+    observedDays: observed.length,
+    total,
+    average: observed.length ? Math.round(total / 7) : null
+  };
+};
+
+// The latest scanned week is the one holding the newest row, unless that
+// week has not finished by `end` (the viewer's today). Then the record holds
+// part of a week in progress, which a whole-week import never writes, so its
+// remaining days were not scanned and the week before is the latest complete
+// one.
+export const summarizeScannedWeeks = (rows, end) => {
+  const latest = rows.reduce((best, row) => (row.date > best ? row.date : best), "");
+  const anchor = latest ? new Date(`${latest}T12:00:00`) : lastElapsedDay(end);
+  let saturday = addDays(anchor, 6 - anchor.getDay());
+  if (calendarIsoDay(saturday) >= calendarIsoDay(end)) saturday = addDays(saturday, -7);
+  return { recent: scannedWeek(rows, saturday, 0), previous: scannedWeek(rows, saturday, 7) };
+};
+
 // Include every calendar week in the displayed range. Weeks without recovered
 // rows are explicit gaps, allowing the renderer to leave the trend unbridged.
 export const weeklySeries = (rows, start, end) => {
@@ -126,7 +160,10 @@ export const filterDashboardRows = (rows, filters) =>
       (row) => row.total > 0 || Object.values(row.sources).some(sourceHasMeasuredActivity)
     );
 
-export const summarizeDashboardRows = (rows, start, end) => {
+// importWeeks follows config/profile.json import_weeks. "daily" records end
+// on the last elapsed day, so their window is the calendar week ending there
+// and a missing day stays unknown.
+export const summarizeDashboardRows = (rows, start, end, { importWeeks = "complete" } = {}) => {
   const total = rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
   const split = rows.reduce(
     (totals, row) => {
@@ -140,9 +177,13 @@ export const summarizeDashboardRows = (rows, start, end) => {
   const peak = rows.length
     ? rows.reduce((best, row) => (row.total > best.total ? row : best), rows[0])
     : null;
-  const windows = summarizeCalendarWindows(rows, lastElapsedDay(end));
+  const daily = importWeeks === "daily";
+  const windows = daily
+    ? summarizeCalendarWindows(rows, lastElapsedDay(end))
+    : summarizeScannedWeeks(rows, end);
 
   return {
+    windowRule: daily ? "calendar" : "scanned-week",
     total,
     split,
     peak,

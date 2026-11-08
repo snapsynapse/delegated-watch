@@ -3,9 +3,10 @@
 // checkout is never switched into record mode.
 
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
@@ -75,6 +76,41 @@ test("per-step options from config/record.json reach the extractor, and bad step
   assert.equal(refresh(root, env, ["--only", "extract:nothing"]).status, 64);
   await writeFile(join(root, "config", "record.json"), JSON.stringify({ options: { "extract:nothing": [] } }));
   assert.equal(refresh(root, env).status, 64);
+});
+
+test("a rejected usage-API key fails only its own step, before its extractor runs", async () => {
+  const { root, env } = await workspace();
+  // A local stand-in provider that rejects every key; never the network.
+  const requests = [];
+  const server = createServer((request, response) => {
+    requests.push(request.url.split("?")[0]);
+    response.statusCode = 401;
+    response.setHeader("content-type", "application/json");
+    response.end(JSON.stringify({ error: { type: "invalid_request_error", code: "invalid_api_key", message: "echoes the key" } }));
+  });
+  await new Promise((done) => server.listen(0, "127.0.0.1", done));
+  try {
+    const result = await new Promise((done) => {
+      const child = spawn(process.execPath, [join(root, "scripts", "refresh.js")], {
+        cwd: root,
+        env: { ...env, OPENAI_ADMIN_KEY: "sk-admin-rejected", OPENAI_API_BASE_URL: `http://127.0.0.1:${server.address().port}/usage` }
+      });
+      let stdout = "";
+      child.stdout.on("data", (chunk) => { stdout += chunk; });
+      child.stderr.on("data", (chunk) => { stdout += chunk; });
+      child.on("close", (status) => done({ status, stdout }));
+    });
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(result.stdout, /OpenAI admin key: rejected -- HTTP 401 \(invalid_request_error, invalid_api_key\)/);
+    assert.match(result.stdout, /extract:openai-api: not run, because the OPENAI_ADMIN_KEY check did not pass/);
+    assert.match(result.stdout, /failed\s+extract:openai-api \(exit 1\)/);
+    assert.match(result.stdout, /ok\s+extract:claude-api/, "an unset key is not checked and its extractor skips");
+    assert.match(result.stdout, /ok\s+build/, "the record is still rebuilt");
+    assert.doesNotMatch(result.stdout, /sk-admin-rejected|echoes the key/);
+    assert.deepEqual(requests, ["/usage/completions"], "only the preflight read reached the provider");
+  } finally {
+    await new Promise((done) => server.close(done));
+  }
 });
 
 test("a record directory can never sit in a tracked or served location", () => {

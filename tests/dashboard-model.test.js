@@ -87,11 +87,12 @@ test("summary calculations preserve fidelity, peak, averages, and coverage", () 
   assert.equal(summary.total, 175);
   assert.deepEqual(summary.split, { exact: 125, estimated: 50 });
   assert.equal(summary.peak.date, "2026-01-01");
+  // The newest row's week, 2025-12-28 to 2026-01-03, has not finished on the
+  // displayed end, so a whole-week record has not scanned it. The latest
+  // scanned week is the one before, which holds no rows.
+  assert.equal(summary.windowRule, "scanned-week");
+  assert.equal(summary.recentWindow.through, "2025-12-27");
   assert.equal(summary.recentAverage, null);
-  // The trailing window ends on the last elapsed day, so the displayed end
-  // date itself is outside it: only 2026-01-01 of these two rows counts.
-  assert.equal(summary.recentWindow.through, "2026-01-01");
-  assert.equal(summary.recentWindow.observedDays, 1);
   assert.equal(summary.previousAverage, null);
   assert.equal(summary.deltaPercent, null);
   assert.equal(summary.exactPercent, (125 / 175) * 100);

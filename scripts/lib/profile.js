@@ -35,6 +35,9 @@ export async function profile() {
   if (days != null && days !== 0 && !(Number.isSafeInteger(days) && days > 0 && days < MAX_FINALIZE_AFTER_DAYS)) {
     throw new Error(`config/profile.json: finalize_after_days must be 0 or a whole number below ${MAX_FINALIZE_AFTER_DAYS}`);
   }
+  if (parsed.import_weeks != null && !IMPORT_WEEKS.includes(parsed.import_weeks)) {
+    throw new Error(`config/profile.json: import_weeks must be one of ${IMPORT_WEEKS.join(", ")}`);
+  }
   // Fail loudly on a bad IANA zone rather than silently bucketing wrong.
   try {
     new Intl.DateTimeFormat("en-CA", { timeZone: parsed.timezone });
@@ -63,6 +66,18 @@ export async function timezone() {
 
 export async function windowStart() {
   return (await profile()).window_start;
+}
+
+// How the importer holds back the period in progress. "complete" (the
+// default) imports only whole Sunday-to-Saturday weeks, so the record ends on
+// the last complete Saturday and every imported day was scanned. "daily"
+// holds back only the day in progress. The dashboard reads the same setting,
+// so the record and its 7-day tile always agree on what was scanned; that is
+// why this is a profile setting rather than a per-run flag.
+export const IMPORT_WEEKS = ["complete", "daily"];
+
+export async function importWeeks() {
+  return (await profile()).import_weeks ?? "complete";
 }
 
 // Days at or before this date are final: no provider read may revise them.

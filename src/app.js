@@ -267,8 +267,9 @@ const renderSummary = (rows, start, end) => {
     deltaPercent,
     exactPercent,
     evidenceDays,
-    elapsedDays
-  } = summarizeDashboardRows(rows, start, end);
+    elapsedDays,
+    windowRule
+  } = summarizeDashboardRows(rows, start, end, { importWeeks: window.__PROFILE__?.importWeeks });
 
   // No matching evidence is not a measured zero, so it is never shown as one.
   document.querySelector("#totalTokens").textContent = evidenceDays
@@ -293,11 +294,17 @@ const renderSummary = (rows, start, end) => {
   document.querySelector("#avgSeven").textContent = recentAverage === null
     ? "Unavailable"
     : `${formatTokens(recentAverage)}`;
-  // The window is named, not implied. It ends on the last elapsed day rather
-  // than today, so a reader comparing the tile against the heatmap's final
-  // cell can see which seven days the mean covers.
+  // The window is named, not implied, so a reader comparing the tile against
+  // the heatmap can see which seven days the mean covers: the latest scanned
+  // Sunday-to-Saturday week for a whole-week record, or the seven days ending
+  // on the last elapsed day for a daily one.
   const windowLabel = `${formatDate(recentWindow.from)}\u2013${formatDate(recentWindow.through)}`;
-  document.querySelector("#avgDelta").textContent = recentAverage === null || previousAverage === null
+  const scannedWeek = windowRule === "scanned-week";
+  document.querySelector("#avgDelta").textContent = scannedWeek && recentAverage === null
+    ? "No scanned week in this view"
+    : scannedWeek && previousAverage === null
+    ? `${windowLabel} \u00b7 no data for the week before`
+    : recentAverage === null || previousAverage === null
     ? `${windowLabel}: recent ${recentWindow.observedDays}/7 and prior ${previousWindow.observedDays}/7 days observed; incomplete coverage`
     : previousAverage
     ? `${windowLabel} \u00b7 ${deltaPercent > 0 ? "+" : ""}${deltaPercent}% vs prior 7d`
