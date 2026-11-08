@@ -19,28 +19,12 @@ const workflowPath = path.join(candidateRoot, '.github/workflows/ci.yml');
 const content = fs.readFileSync(workflowPath, 'utf8');
 const lines = content.split('\n');
 
-// Depot CI executes .depot/workflows/ci.yml; the .github copy is a manual
-// workflow_dispatch fallback. The rules below are about what CI is permitted
-// to do, so they apply to whichever file runs -- and the Depot copy is the one
-// that runs on every push. Asserting them against .github alone would test the
-// spare and leave the engine unchecked.
-const depotWorkflowPath = path.join(candidateRoot, '.depot/workflows/ci.yml');
-const depotContent = fs.readFileSync(depotWorkflowPath, 'utf8');
-const depotLines = depotContent.split('\n');
-
-const workflows = [
-  { label: '.github/workflows/ci.yml', content, lines },
-  { label: '.depot/workflows/ci.yml', content: depotContent, lines: depotLines }
-];
-
-// The steps list is the part the two copies must share. Their triggers and
-// matrix legs diverge on purpose, so comparing whole files would fail on the
-// intended differences and teach us to ignore the test.
-function stepsBlock(sourceLines, label) {
-  const start = sourceLines.findIndex((line) => /^\s*steps:\s*$/.test(line));
-  assert.notEqual(start, -1, `${label} has no "steps:" block`);
-  return sourceLines.slice(start).join('\n').trimEnd();
-}
+// GitHub Actions runs this one workflow on every push to main and every pull
+// request, and its two verify jobs are required status checks on main. A
+// second CI copy for another runner (Depot, until 2026-11-08) is not allowed
+// back: that copy stopped running without any visible sign, and because it
+// never posted GitHub checks, pull requests merged with zero checks.
+const workflows = [{ label: '.github/workflows/ci.yml', content, lines }];
 
 test('top-level permissions is exactly contents: read, and no other permissions block appears', () => {
   for (const workflow of workflows) {
@@ -176,65 +160,41 @@ test('the candidate .github tree contains only its declared files', () => {
     '.github/ISSUE_TEMPLATE/config.yml',
     '.github/ISSUE_TEMPLATE/feature_request.md',
     '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/repository-settings.json',
     '.github/workflows/ci.yml'
   ]);
 });
 
-test('the two workflow copies share an identical steps list', () => {
-  // The copies exist because Depot CI and GitHub Actions read different paths,
-  // not because they should do different work. Nothing in either file records
-  // what the other contains, so a step added to one rots silently in the other:
-  // the inventory's pinned hashes notice a change but cannot notice an omission.
-  assert.equal(
-    stepsBlock(depotLines, '.depot/workflows/ci.yml'),
-    stepsBlock(lines, '.github/workflows/ci.yml'),
-    'the steps lists have drifted; a change to one copy must be made in the other'
-  );
+test('CI runs on every push to main and every pull request', () => {
+  // The required status checks on main are the verify jobs of this workflow.
+  // Without the pull_request trigger a PR would show zero checks and could
+  // never satisfy them; without push it would never verify main itself.
+  // workflow_dispatch stays so a run can be fired by hand on any ref.
+  const start = lines.findIndex((line) => /^on:\s*$/.test(line));
+  assert.notEqual(start, -1, 'no "on:" block');
+  let end = start + 1;
+  while (end < lines.length && (lines[end].startsWith(' ') || lines[end].trim() === '')) end++;
+  const triggers = lines.slice(start, end).map((line) => line.trim()).filter(Boolean);
+  assert.deepEqual(triggers, ['on:', 'push:', 'branches:', '- main', 'pull_request:', 'workflow_dispatch:']);
 });
 
-test('the copies diverge only in their triggers and their matrix legs', () => {
-  // Pinning the intended differences means an unintended one fails here rather
-  // than being absorbed as "some divergence is expected".
-  const triggers = (sourceLines) => {
-    const start = sourceLines.findIndex((line) => /^on:\s*$/.test(line));
-    assert.notEqual(start, -1, 'no "on:" block');
-    let end = start + 1;
-    while (end < sourceLines.length && (sourceLines[end].startsWith(' ') || sourceLines[end].trim() === '')) end++;
-    return sourceLines.slice(start, end).map((line) => line.trim()).filter(Boolean);
-  };
-
-  assert.deepEqual(triggers(lines), ['on:', 'workflow_dispatch:']);
-  assert.deepEqual(triggers(depotLines), [
-    'on:',
-    'push:',
-    'branches:',
-    '- main',
-    'pull_request:',
-    'workflow_dispatch:'
-  ]);
+test('the verify job names match the required status checks', () => {
+  // GitHub names a matrix job "<name> (<node-version>, <os>)". The ruleset on
+  // main requires those exact contexts, and .github/repository-settings.json
+  // records them. Renaming the job or changing a matrix leg without updating
+  // both would leave a required check that never reports, blocking every merge.
+  const settings = JSON.parse(fs.readFileSync(path.join(candidateRoot, '.github/repository-settings.json'), 'utf8'));
+  const required = settings.rulesets
+    .flatMap((ruleset) => ruleset.rules)
+    .filter((rule) => rule.type === 'required_status_checks')
+    .flatMap((rule) => rule.parameters.required_status_checks.map((check) => check.context));
+  assert.match(content, /^  verify:\n    name: verify$/m, 'the verify job must keep the name "verify"');
+  assert.deepEqual(required.sort(), ['verify (24.x, ubuntu-latest)', 'verify (26.x, ubuntu-latest)']);
 });
 
-test('the candidate .depot tree contains only the Depot CI workflow', () => {
-  const depotRoot = path.join(candidateRoot, '.depot');
-  const files = [];
-
-  function walk(dir) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        walk(full);
-      } else {
-        files.push(path.relative(candidateRoot, full).split(path.sep).join('/'));
-      }
-    }
-  }
-
-  walk(depotRoot);
-  // `depot ci migrate` also writes .depot/actions/ when a workflow uses a local
-  // action. This repo's workflow uses none, so anything beyond the one file is
-  // either a migration artefact nobody reviewed or a local action that would
-  // execute unpinned code in CI.
-  assert.deepEqual(files.sort(), ['.depot/workflows/ci.yml']);
+test('there is no second CI workflow for another runner', () => {
+  assert.equal(fs.existsSync(path.join(candidateRoot, '.depot')), false, '.depot/ must not exist');
+  assert.deepEqual(fs.readdirSync(path.join(candidateRoot, '.github/workflows')), ['ci.yml']);
 });
 
 test('every eval step runs under --strict', () => {
