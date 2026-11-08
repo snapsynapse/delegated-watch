@@ -1,18 +1,93 @@
 # Delegated.watch
 A local-first record of the work you delegate to AI models, counted in tokens, that refuses to lower a committed number without a stated reason and is honest about what it cannot see.
-Tokens here are the units a language model consumes reading and writing text. Not cryptocurrency: there is no blockchain, no supply, no burning in that sense, and nothing in the schema or the code is denominated in any currency. Not to be confused with delegated.to, a different company.
+Tokens here are the units a language model consumes reading and writing text. Not cryptocurrency: there is no blockchain, no supply, no burning in that sense, and no token count is ever converted into money. Not to be confused with delegated.to, a different company.
 ![Dashboard rendering synthetic demonstration data](docs/screenshot.png)
 The site is at [delegated.watch](https://delegated.watch/); the dashboard above runs at [delegated.watch/demo/](https://delegated.watch/demo/) over synthetic demonstration data.
-Install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line, then clone the repository. There are no runtime dependencies, so there is no install step.
+## A worked receipt, synthetic
+Every identity, date, and count in this section is invented. Nothing here is anyone's measured usage.
+A receipt is one source's counters for one day, written by an extractor or a capture tool after scrubbing. This one is the first of four in `fixtures/receipts/day-one.jsonl`, the fixture the demo imports. It is shown as data to read, not as a receipt to import into a record of your own.
+Literal
+```json
+{
+  "schema_version": 2,
+  "date": "2025-01-04",
+  "timezone": "UTC",
+  "source": "codex",
+  "provider": "openai",
+  "surface": "cli",
+  "account_alias": "example",
+  "origin": "machine/example",
+  "snapshot_key": "synthetic:codex:2025-01-04:machine/example",
+  "authority": "tool",
+  "interval": { "start": "2025-01-04", "end": "2025-01-04" },
+  "tokens": 4200,
+  "calls": 6,
+  "fidelity": "exact",
+  "provenance": "synthetic: local tool counter, day one"
+}
+```
+`fidelity: "exact"` classifies the fixture's counter the way a real tool counter would be classified. It does not make these provider-verified numbers.
+The same fixture holds a second receipt for that day: a `claude_chat` estimate of 1,800 tokens with no call count. The importer merges both into one daily row. This is the row it writes, captured from the importer itself run over the fixture:
+Literal
+```json
+{
+  "date": "2025-01-04",
+  "timezone": "UTC",
+  "sources": {
+    "codex": {
+      "tokens": 4200,
+      "fidelity": "exact",
+      "calls": 6,
+      "by_origin": { "machine/example": 4200 }
+    },
+    "claude_chat": {
+      "tokens": 1800,
+      "fidelity": "estimated",
+      "by_origin": { "account/example-provider": 1800 }
+    }
+  },
+  "total": 6000,
+  "driver": "unreviewed",
+  "evidence": "imported from local receipts; pending review"
+}
+```
+| Synthetic receipt | What the row records |
+|---|---|
+| `codex`: 4,200 tokens, 6 calls, exact | `sources.codex`: 4,200 tokens, 6 calls, fidelity `exact`, attributed to `machine/example` |
+| `claude_chat`: 1,800 tokens, no call count, estimated | `sources.claude_chat`: 1,800 tokens, fidelity `estimated`, and no `calls` field at all |
+| Both, for 2025-01-04 | `total` 6,000, and driver `unreviewed` until someone reviews what the work was |
+Each source keeps its own fidelity. An exact entry and an estimated one sit side by side, and the total is not an exact measurement because one of its parts is. A count the source never reported stays absent; it is never written as zero. Importing a row does not review it, and a token count says how much the model read and wrote, not how good or how valuable the work was.
+This example is synthetic. A real record covers only the supported sources, and only the intervals for which evidence survives.
+## Try it on the synthetic fixtures
+Install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line. There are no runtime dependencies, so there is no install step. Clone into a fresh directory, separate from any checkout that holds a record of your own. Cloning contacts GitHub; nothing after it reads a provider, an account, or the network.
 Literal
 ```bash
 git clone https://github.com/snapsynapse/delegated-watch.git && cd delegated-watch
 ```
-Run the dashboard. It opens on 127.0.0.1.
+Confirm the running Node version is supported.
+Literal
+```bash
+npm run check:runtime
+```
+Walk the importer's gates. This runs the real importer against throwaway copies of the synthetic dataset and the fixture receipts, deletes the copies when it finishes, and leaves this checkout's own files untouched.
+Literal
+```bash
+npm run demo:import
+```
+It prints one line per scenario:
+| Synthetic scenario | What the line reports |
+|---|---|
+| `day-one.jsonl` | Two new rows, 2025-01-04 and 2025-01-05, both with driver `unreviewed` |
+| `regression.jsonl` | Refused: an exact claim of 10,000 tokens for 2025-01-02 `codex` would lower the committed 36,327, and the dataset is left as it was |
+| `estimated.jsonl` | An estimated `claude_chat` entry joins 2025-01-09 beside two exact sources, and each keeps its own fidelity |
+| A receipt dated today, generated at run time | Held back until its Sunday-to-Saturday week is complete in the timezone set in `config/profile.json` |
+Read the lines themselves. The command exits 0 even when a scenario does not behave as expected, so the exit status alone proves nothing; a line that begins "expected" is a scenario that failed. This demonstrates the importer's behavior on fixtures, not any provider's accuracy or any record's completeness.
+## See the dashboard
 Literal
 ```bash
 npm run dev
 ```
+It prints a loopback address. Open it, and its `/demo/` route for the dashboard, then press Control-C in the terminal to stop. It serves the shipped synthetic dataset, not the rows `demo:import` added, which were deleted with their temporary copies. Nothing is published.
 ## Installing this with an agent
 The install path an assistant follows is `docs/.well-known/assistant-guide.txt`, served at [delegated.watch/.well-known/assistant-guide.txt](https://delegated.watch/.well-known/assistant-guide.txt). It conforms to the [GuideCheck](https://guidecheck.org/) Human-Verifiable Assistant Guide profile 2.0.0 at Level 4, the highest level a guide file can reach: strict ASCII under 8 KiB, an explicit scope and non-goals, one structured action block per step with an approval gate on every networked and code-executing command, a sidecar manifest pinning the guide's exact bytes, and that hash cross-published as a DNS TXT record at `_assistant-guide.delegated.watch` so you can confirm through a second channel that the bytes you read are the bytes being served. Point an assistant at it rather than at this README, and have it verify the guide and report the level before it runs anything.
 `tests/assistant-guide.test.js` asserts the byte profile, the approval gates, every `exec-sha256` pin, and the manifest against the guide's actual bytes on every CI job. A pinned script that changes fails the build, because a stale pin reads as provenance while binding bytes that no longer exist.
