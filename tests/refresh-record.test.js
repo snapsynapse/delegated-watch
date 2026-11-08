@@ -63,6 +63,54 @@ test("the first refresh starts a record of its own and never touches the shipped
   assert.deepEqual(JSON.parse(await readFile(join(root, "record", "daily-burn.json"), "utf8")).map((row) => row.total), [450]);
 });
 
+// The profile's import_weeks reaches both the importer and the page, so the
+// record and its 7-day tile agree on which days were scanned.
+const setImportWeeks = async (root, value) => {
+  const path = join(root, "config", "profile.json");
+  const profile = JSON.parse(await readFile(path, "utf8"));
+  await writeFile(path, `${JSON.stringify({ ...profile, import_weeks: value }, null, 2)}\n`);
+};
+const inlinedProfile = (page) => JSON.parse(page.match(/window\.__PROFILE__ = (.*?);\n/s)[1]);
+const addTodayRollout = async (env) => {
+  const usage = { input_tokens: 70, cached_input_tokens: 0, output_tokens: 7, total_tokens: 77 };
+  await writeFile(join(env.HOME, ".codex", "sessions", "rollout-today.jsonl"), [
+    JSON.stringify({ type: "turn_context", payload: { model: "test-model" } }),
+    JSON.stringify({ timestamp: new Date().toISOString(), payload: { type: "token_count", info: { last_token_usage: usage, total_token_usage: usage } } })
+  ].join("\n") + "\n");
+};
+
+test("a whole-week record holds back the week in progress and tells the page", async () => {
+  const { root, env } = await workspace();
+  await addTodayRollout(env);
+  const result = refresh(root, env);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /not yet a complete Sunday-to-Saturday week/);
+  assert.match(result.stdout, /ok\s+no in-progress week rows/);
+  assert.match(result.stdout, /ok\s+7-day tile covers the last scanned days\s+complete:/);
+  assert.equal(inlinedProfile(await readFile(join(root, "record", "index.html"), "utf8")).importWeeks, "complete");
+});
+
+test("import_weeks daily holds back only today, end to end", async () => {
+  const { root, env } = await workspace();
+  await setImportWeeks(root, "daily");
+  await addTodayRollout(env);
+  const result = refresh(root, env);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /not yet a complete day in /);
+  assert.doesNotMatch(result.stdout, /Sunday-to-Saturday week in /);
+  assert.match(result.stdout, /no in-progress week rows\s+not applicable: import_weeks is daily/);
+  assert.match(result.stdout, /ok\s+7-day tile covers the last scanned days\s+daily:/);
+  assert.equal(inlinedProfile(await readFile(join(root, "record", "index.html"), "utf8")).importWeeks, "daily");
+});
+
+test("an import_weeks value other than complete or daily is refused", async () => {
+  const { root, env } = await workspace();
+  await setImportWeeks(root, "weekly");
+  const result = spawnSync(process.execPath, [join(root, "scripts", "import-daily-burn.js"), "--dry-run"], { cwd: root, env, encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /config\/profile\.json: import_weeks must be one of complete, daily/);
+});
+
 test("per-step options from config/record.json reach the extractor, and bad steps are refused", async () => {
   const { root, env } = await workspace();
   await writeFile(join(root, "config", "record.json"), JSON.stringify({

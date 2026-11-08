@@ -22,9 +22,11 @@ const APP_FILE = "src/app.js";
 const DEFAULT_BUILD_OUTPUT = "docs2B/index.html";
 const site = JSON.parse(await readFile("config/site.json", "utf8"));
 const BUILD_FILE = recordPaths().dashboard ?? site.build_output ?? DEFAULT_BUILD_OUTPUT;
-const { timezone, windowStart } = await import("./lib/profile.js");
+const { importWeeks, timezone, windowStart } = await import("./lib/profile.js");
+const { weekStartOf } = await import("./lib/import-policy.js");
 const TIMEZONE = await timezone();
 const WINDOW_START = await windowStart();
+const IMPORT_WEEKS = await importWeeks();
 
 const strict = process.argv.includes("--strict");
 const results = [];
@@ -67,6 +69,23 @@ check("no future or pre-window rows", future.length || preWindow.length ? "FAIL"
 const inProgress = rows.filter((row) => row.date === today);
 check("no in-progress day row", inProgress.length ? "FAIL" : "ok",
   inProgress.map((row) => `${row.date} is not a complete day yet`).join(", "));
+
+// A whole-week record (import_weeks "complete", the default) only ever gains
+// complete Sunday-to-Saturday weeks, and the 7-day tile relies on that to
+// treat every imported day as scanned. A row inside the week still in
+// progress means the hold-back was bypassed. It warns rather than fails,
+// because a record imported daily before whole weeks became the default holds
+// such rows until that week completes; --strict still fails on it.
+if (IMPORT_WEEKS === "complete") {
+  const weekStart = weekStartOf(today);
+  const inProgressWeek = rows.filter((row) => row.date >= weekStart && row.date < today);
+  check("no in-progress week rows", inProgressWeek.length ? "WARN" : "ok",
+    inProgressWeek.length
+      ? `${inProgressWeek.map((row) => row.date).join(", ")} sit in the week from ${weekStart}, which has not finished`
+      : "");
+} else {
+  check("no in-progress week rows", "ok", `not applicable: import_weeks is ${IMPORT_WEEKS}`);
+}
 
 // A zero headline is admissible only when the source retained affirmative
 // measured activity such as calls or positive token components. An unknown day

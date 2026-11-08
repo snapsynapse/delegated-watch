@@ -270,7 +270,19 @@ check(
 // window must end on the newest row.
 const { summarizeDashboardRows } = await import("../src/dashboard-model.js");
 const inlinedRows = extractInline("__DAILY_BURN__");
-const importWeeks = extractInline("__PROFILE__")?.importWeeks ?? "complete";
+// The page must carry the profile's import mode, or its tile would judge
+// which days were scanned by a rule the importer did not follow.
+const { importWeeks: profileImportWeeks } = await import("./lib/profile.js");
+const expectedImportWeeks = await profileImportWeeks();
+const pageImportWeeks = extractInline("__PROFILE__")?.importWeeks;
+check(
+  "page import mode matches the profile",
+  !built ? "ok" : pageImportWeeks === expectedImportWeeks ? "ok" : "FAIL",
+  !built || pageImportWeeks === expectedImportWeeks
+    ? ""
+    : `page says ${pageImportWeeks ?? "nothing"}, config/profile.json says ${expectedImportWeeks}; run npm run build`
+);
+const importWeeks = pageImportWeeks ?? "complete";
 const newest = inlinedRows?.at(-1)?.date;
 if (newest) {
   const noon = (date) => new Date(`${date}T12:00:00`);
