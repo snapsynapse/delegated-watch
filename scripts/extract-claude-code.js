@@ -53,6 +53,7 @@ import { hashCorrelationKey, RECEIPT_SCHEMA_VERSION, validateReceiptSchema } fro
 import { dayOf, timezone } from "./lib/profile.js";
 import { localOrigin } from "./lib/origin.js";
 import { accountAlias, machineAlias } from "./lib/openai-integrity.js";
+import { addAnthropicCounters, anthropicComponents, newAnthropicTally } from "./lib/anthropic-components.js";
 
 const SOURCES = {
   claude_code: { surface: "claude_code_transcripts", label: "Claude Code transcripts" },
@@ -213,6 +214,7 @@ for (const record of chosen.values()) {
     tokens: 0,
     calls: 0,
     cacheRead: 0,
+    components: newAnthropicTally(),
     models: new Set(),
     correlationKeys: new Set()
   };
@@ -221,6 +223,12 @@ for (const record of chosen.values()) {
     (record.usage.cache_creation_input_tokens ?? 0) +
     (record.usage.output_tokens ?? 0);
   bucket.cacheRead += record.usage.cache_read_input_tokens ?? 0;
+  addAnthropicCounters(bucket.components, {
+    uncached: record.usage.input_tokens,
+    cacheWrite: record.usage.cache_creation_input_tokens,
+    cacheRead: record.usage.cache_read_input_tokens,
+    output: record.usage.output_tokens
+  });
   bucket.calls += 1;
   if (record.model) bucket.models.add(record.model);
   if (record.correlationKey) bucket.correlationKeys.add(record.correlationKey);
@@ -252,6 +260,8 @@ for (const bucket of [...buckets.values()].sort((a, b) => a.date.localeCompare(b
     correlation_keys: [...bucket.correlationKeys].sort(),
     provenance: `${SOURCES[bucket.source].label}: cache_read ${bucket.cacheRead} excluded`
   };
+  const components = anthropicComponents(bucket.components);
+  if (components) receipt.token_components = components;
   const errors = validateReceiptSchema(receipt, `${bucket.source} ${bucket.date}`);
   if (errors.length) {
     console.error(errors.join("\n"));

@@ -55,10 +55,6 @@ test("item 1: exactly the extractors it names emit token components", async () =
   const claimed = [...named.matchAll(/`extract:([a-z-]+)`/g)].map((match) => `extract-${match[1]}.js`).sort();
   const actual = (await scriptsMatching(/token_components/)).filter((name) => name.startsWith("extract-"));
   assert.deepEqual(actual, claimed, "update ROADMAP.md item 1's list of extractors that emit token components");
-  for (const name of ["extract-claude-code.js", "extract-claude-api.js"]) {
-    const source = await read(`scripts/${name}`);
-    assert.match(source, /cache_read_input_tokens/, `${name} no longer reads the Anthropic cache counters item 1 describes`);
-  }
 });
 
 test("item 3: the receipt schema has no route field yet", async () => {

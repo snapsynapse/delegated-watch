@@ -73,6 +73,33 @@ test("a backup root is read, cache reads are excluded, and receipts meet schema 
   assert.doesNotMatch(JSON.stringify(receipt), /req_1/, "a raw request id never enters a receipt");
 });
 
+test("receipts carry token components that reproduce the headline, and omit an unreported counter", async () => {
+  const { cwd, env } = await sandbox("claude-code-components-");
+  const root = join(cwd, "projects-backup", "p");
+  await mkdir(root, { recursive: true });
+  const partial = (id) => JSON.stringify({
+    uuid: id, requestId: id, timestamp: "2026-03-06T20:00:00.000Z",
+    message: { model: "claude-test-model", usage: { input_tokens: 10, cache_read_input_tokens: 4, output_tokens: 6 } }
+  });
+  await writeFile(join(root, "s.jsonl"), [
+    usageLine(), usageLine({ uuid: "u-2", requestId: "req_2" }),
+    partial("req_3"), usageLine({ uuid: "u-4", requestId: "req_4", timestamp: "2026-03-06T21:00:00.000Z" })
+  ].join("\n") + "\n");
+  const result = run(cwd, env, ["--dry-run", "--root", join(cwd, "projects-backup")]);
+  assert.equal(result.status, 0, result.stderr);
+  const [full, mixed] = receiptsIn(result.stdout);
+  assert.equal(full.date, "2026-03-05");
+  assert.deepEqual(full.token_components, {
+    schema_version: 1, input_tokens: 18300, cached_input_tokens: 18000, cache_write_tokens: 100, output_tokens: 50
+  });
+  const c = full.token_components;
+  assert.equal(Math.max(0, c.input_tokens - c.cached_input_tokens) + c.output_tokens, full.tokens);
+  assert.equal(mixed.date, "2026-03-06");
+  assert.deepEqual(mixed.token_components, { schema_version: 1, cached_input_tokens: 9004, output_tokens: 31 },
+    "one record without cache_creation leaves input and cache writes unavailable for the day");
+  for (const receipt of [full, mixed]) assert.deepEqual(validateReceiptSchema(receipt), []);
+});
+
 test("streaming rewrites of one request collapse to the final write, in any line order", async () => {
   const { cwd, env } = await sandbox("claude-code-stream-");
   const root = join(cwd, "projects", "p");
