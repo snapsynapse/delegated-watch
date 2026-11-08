@@ -1,10 +1,16 @@
 // Deterministic generator for the public-candidate demo dataset. Produces a
 // daily-burn.json array that is realistic in shape but obviously invented:
 // every identity is a reserved placeholder (config/public-candidate.json
-// "reserved_identities"), every evidence string is prefixed "synthetic:", and
-// the calendar year (2025) predates this repo's actual recovery window, so it
-// can never collide with a measured row. See config/public-candidate.json
-// "synthetic_dataset" for the constraints this script must satisfy.
+// "reserved_identities"), and every evidence string is prefixed "synthetic:".
+// See config/public-candidate.json "synthetic_dataset" for the constraints this
+// script must satisfy.
+//
+// The calendar year (2025) does not keep these rows apart from a real record:
+// real records can and do cover 2025. What makes the values independent is
+// that they come only from the fixed seed below, with no clock, environment,
+// personal config, or record as input. Whether a particular real record shares
+// a (date, source, tokens) triple with them is a separate, measured question,
+// answered at release time by verify-public-candidate.js --reference-data.
 //
 // Deterministic by construction: a fixed in-code seed drives a small
 // integer-only PRNG (mulberry32). No Date.now, no Math.random, no filesystem

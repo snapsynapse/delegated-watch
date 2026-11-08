@@ -14,12 +14,19 @@
 // Usage:
 //   node scripts/verify-public-candidate.js --candidate <dir>
 //     [--inventory config/public-candidate.json]
-//     [--private-data <path>]   fail if a candidate row matches a real one
+//     [--reference-data <path>] compare against a real aggregate dataset; fail
+//                               on any shared (date, source, tokens) triple
+//     [--private-data <path>]   older name for --reference-data
+//     [--require-reference-data] fail unless that comparison ran and passed
 //     [--json <out>]            machine-readable report
 //     [--pin]                   record current hashes as reviewed
 //     [--self]                  the candidate IS this tree (shipped CI copy)
 //     [--before-build]          generated files may be absent (WARN)
 //     [--fresh-history]         require a one-commit, remote-free .git
+//
+// The reference comparison is always reported: passed, failed, or not
+// evaluated. Public CI runs offline and reports not evaluated; that is a
+// statement that no comparison happened, never a pass.
 //
 // Exits 1 on any FAIL, 2 on a usage error, 0 otherwise.
 
@@ -31,6 +38,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { privateTextFindings } from "./lib/receipt-privacy.js";
+import { referenceTriples, syntheticDatasetProblems } from "./lib/synthetic-check.js";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -55,27 +63,28 @@ const REQUIRED_OBJECTS = [
 
 const usage = (message) => {
   process.stderr.write(`${message}\nUsage: node scripts/verify-public-candidate.js --candidate <dir> ` +
-    `[--inventory <path>] [--private-data <path>] [--json <out>] ` +
+    `[--inventory <path>] [--reference-data <path>] [--require-reference-data] [--json <out>] ` +
     `[--pin] [--self] [--before-build] [--fresh-history]\n`);
   process.exit(2);
 };
 
 // ---------------------------------------------------------------- arguments
 
-const options = { candidate: null, inventory: null, privateData: null, json: null };
+const options = { candidate: null, inventory: null, referenceData: null, privateData: null, json: null };
 const flags = new Set();
 const argv = process.argv.slice(2);
 const VALUED = new Map([
   ["--candidate", "candidate"], ["--inventory", "inventory"],
-  ["--private-data", "privateData"], ["--json", "json"]
+  ["--reference-data", "referenceData"], ["--private-data", "privateData"], ["--json", "json"]
 ]);
-const BARE = new Set(["--pin", "--self", "--before-build", "--fresh-history"]);
+const BARE = new Set(["--pin", "--self", "--before-build", "--fresh-history", "--require-reference-data"]);
 
 for (let index = 0; index < argv.length; index += 1) {
   const argument = argv[index];
   if (VALUED.has(argument)) {
     const value = argv[index + 1];
     if (value === undefined || value.startsWith("--")) usage(`${argument} needs a value.`);
+    if (options[VALUED.get(argument)] !== null) usage(`${argument} was given twice.`);
     options[VALUED.get(argument)] = value;
     index += 1;
   } else if (BARE.has(argument)) {
@@ -91,6 +100,13 @@ const selfMode = flags.has("--self");
 if (!options.candidate && !selfMode) usage("--candidate is required unless --self is given.");
 const beforeBuild = flags.has("--before-build");
 const freshHistory = flags.has("--fresh-history");
+// Two names for one path invite two different paths. Either name is accepted;
+// both together is a usage error rather than a silent choice between them.
+if (options.referenceData && options.privateData) {
+  usage("--reference-data and --private-data name the same input; give one.");
+}
+const referencePath = options.referenceData ?? options.privateData;
+const requireReference = flags.has("--require-reference-data");
 const inventoryPath = resolve(options.inventory ?? join(REPO_ROOT, "config/public-candidate.json"));
 const candidateDir = resolve(options.candidate ?? REPO_ROOT);
 
@@ -560,49 +576,11 @@ const origins = new Set(inventory.reserved_identities.origins ?? []);
 const accountAliases = new Set(inventory.reserved_identities.account_aliases ?? []);
 const machineAliases = new Set(inventory.reserved_identities.machine_aliases ?? []);
 
-const triples = new Set();
+let triples = new Set();
 if (datasetRows !== null) {
-  if (!Array.isArray(datasetRows)) {
-    datasetProblems.push(`${datasetPath} must be an array`);
-  } else {
-    const [from, to] = inventory.synthetic_dataset.date_range;
-    const prefix = inventory.synthetic_dataset.evidence_prefix;
-    const maxRows = inventory.synthetic_dataset.max_rows;
-    if (Number.isInteger(maxRows) && datasetRows.length > maxRows) {
-      datasetProblems.push(`${datasetRows.length} rows exceeds max_rows ${maxRows}`);
-    }
-    for (const row of datasetRows) {
-      if (row === null || typeof row !== "object" || Array.isArray(row)) {
-        datasetProblems.push("a row is not an object");
-        continue;
-      }
-      if (typeof row.date !== "string" || row.date < from || row.date > to) {
-        datasetProblems.push(`row date ${JSON.stringify(row.date)} is outside ${from}..${to}`);
-      }
-      if (Object.hasOwn(row, "evidence") && typeof prefix === "string" &&
-          !(typeof row.evidence === "string" && row.evidence.startsWith(prefix))) {
-        datasetProblems.push(`${row.date} evidence does not begin with "${prefix}"`);
-      }
-      const sources = row.sources;
-      if (sources === null || typeof sources !== "object" || Array.isArray(sources)) {
-        datasetProblems.push(`${row.date} has no sources object`);
-        continue;
-      }
-      for (const [source, entry] of Object.entries(sources)) {
-        if (entry === null || typeof entry !== "object") {
-          datasetProblems.push(`${row.date} source ${source} is not an object`);
-          continue;
-        }
-        if (!["exact", "estimated"].includes(entry.fidelity)) {
-          datasetProblems.push(`${row.date} source ${source} fidelity ${JSON.stringify(entry.fidelity)} must be exact or estimated`);
-        }
-        triples.add(`${row.date} ${source} ${entry.tokens}`);
-        for (const origin of Object.keys(entry.by_origin ?? {})) {
-          if (!origins.has(origin)) datasetProblems.push(`${row.date} source ${source} origin "${origin}" is not reserved`);
-        }
-      }
-    }
-  }
+  const checked = syntheticDatasetProblems(datasetRows, inventory, datasetPath);
+  datasetProblems.push(...checked.problems);
+  triples = checked.triples;
 }
 
 // Fixture receipts carry the same identities as the dataset and are just as
@@ -639,28 +617,33 @@ check("synthetic dataset and fixtures are synthetic", datasetProblems.length ? "
     : `${Array.isArray(datasetRows) ? datasetRows.length : 0} rows, ${malformedFixtureLines} malformed fixture lines`);
 
 // The overlap check proves the candidate is not the private record with the
-// names filed off. Only the count is ever printed; the private rows are read
+// names filed off. Only the count is ever printed; the reference rows are read
 // to build a comparison set and are never echoed, logged, or written out.
-if (options.privateData) {
-  let privateTriples = null;
+// The result is always one of passed, failed, or not evaluated, so a run that
+// compared nothing can never be read as a run that found nothing.
+const REFERENCE_CHECK = "no overlap with the reference dataset";
+let referenceComparison = "not evaluated";
+if (!referencePath) {
+  check(REFERENCE_CHECK, requireReference ? "FAIL" : "n/a",
+    requireReference
+      ? "not evaluated: --require-reference-data needs --reference-data <path>"
+      : "not evaluated: no --reference-data given");
+  if (requireReference) referenceComparison = "failed";
+} else {
+  let reference = { reason: null, triples: null };
   try {
-    const parsed = JSON.parse(await readFile(resolve(options.privateData), "utf8"));
-    privateTriples = new Set();
-    if (Array.isArray(parsed)) {
-      for (const row of parsed) {
-        for (const [source, entry] of Object.entries(row?.sources ?? {})) {
-          privateTriples.add(`${row.date} ${source} ${entry?.tokens}`);
-        }
-      }
-    }
+    reference = referenceTriples(JSON.parse(await readFile(resolve(referencePath), "utf8")));
   } catch (error) {
-    check("no overlap with the private dataset", "FAIL",
-      `private dataset unreadable (${error.code ?? error.name}); overlap unknown`);
+    reference = { reason: `reference dataset unreadable (${error.code ?? error.name})`, triples: null };
   }
-  if (privateTriples) {
-    const overlap = [...triples].filter((triple) => privateTriples.has(triple)).length;
-    check("no overlap with the private dataset", overlap ? "FAIL" : "ok",
-      overlap ? `${overlap} (date, source, tokens) triples also appear in the private record` : "no shared triples");
+  if (!reference.triples) {
+    check(REFERENCE_CHECK, "FAIL", `${reference.reason}; overlap unknown`);
+    referenceComparison = "failed";
+  } else {
+    const overlap = [...triples].filter((triple) => reference.triples.has(triple)).length;
+    check(REFERENCE_CHECK, overlap ? "FAIL" : "ok",
+      overlap ? `${overlap} (date, source, tokens) triples also appear in the reference dataset` : "no shared triples");
+    referenceComparison = overlap ? "failed" : "passed";
   }
 }
 
@@ -787,9 +770,11 @@ if (findings.length) {
 
 const failed = results.filter((result) => result.verdict === "FAIL");
 const warned = results.filter((result) => result.verdict === "WARN");
+const notEvaluated = results.filter((result) => result.verdict === "n/a");
 const verdict = failed.length ? "fail" : "pass";
 console.log(`\n${files.length} candidate files, ${findings.length} findings: ` +
-  `${results.length - failed.length - warned.length} ok, ${warned.length} warn, ${failed.length} fail.`);
+  `${results.length - failed.length - warned.length - notEvaluated.length} ok, ${warned.length} warn, ` +
+  `${failed.length} fail, ${notEvaluated.length} not evaluated.`);
 
 if (options.json) {
   await writeFile(resolve(options.json), `${JSON.stringify({
@@ -799,6 +784,7 @@ if (options.json) {
     checks: results,
     files: hashes,
     findings_count: findings.length,
+    reference_comparison: referenceComparison,
     verdict
   }, null, 2)}\n`);
 }

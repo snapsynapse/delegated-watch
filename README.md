@@ -148,7 +148,7 @@ Every command below is documented at the top of its script.
 - `npm run test`: run the test suite against synthetic fixtures.
 - `npm run typesafe:capture`: relay one TypeSafe request from stdin and capture its usage counters, never the state, questions, or answers.
 - `npm run validate`: validate the dataset file against the schema.
-- `npm run verify:candidate`: check an assembled candidate directory against the inventory file.
+- `npm run verify:candidate`: check an assembled candidate directory against the inventory file. Add `--reference-data PATH` to compare against a real aggregate dataset, and `--require-reference-data` to fail when that comparison did not run; without it the comparison is reported as not evaluated.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status

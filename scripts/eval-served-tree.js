@@ -7,6 +7,13 @@
 // is gated on recording a public_mode, because publishing docs/ publishes
 // whatever is in it.
 //
+// While posture is "live" the eval checks what the recorded public_mode
+// promises. For "synthetic" that is: the mode is one of the declared options,
+// config/site.json says the dataset is synthetic, the rows inlined in the built
+// page equal public/data/daily-burn.json, and every one of them passes the same
+// synthetic-data rules the public-candidate verifier applies. It checks the
+// committed bytes, never the deployed site.
+//
 // Usage:
 //   node scripts/eval-served-tree.js [--strict]
 //
@@ -14,7 +21,10 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
+import { validateDataset } from "./lib/dataset-validation.js";
 import { recordPaths } from "./lib/record-paths.js";
+import { syntheticDatasetProblems } from "./lib/synthetic-check.js";
 
 const SERVED_DIR = "docs";
 // Matches the default in scripts/build.js, so an older config without
@@ -263,9 +273,75 @@ if (config.posture === "pre-launch") {
   check("placeholder is not open to crawlers", /Disallow:\s*\/\s*$/m.test(robots) ? "ok" : "WARN",
     /Disallow:\s*\/\s*$/m.test(robots) ? "" : "robots.txt does not disallow while pre-launch");
 } else if (config.posture === "live") {
-  check("public mode recorded before going live", config.public_mode ? "ok" : "FAIL",
-    config.public_mode ? config.public_mode : "set public_mode in config/site.json first");
-  check("no dataset content in served tree", "ok", "skipped: posture is live, publishing data is intentional");
+  const modeOptions = Array.isArray(config.public_mode_options) ? config.public_mode_options : [];
+  const mode = config.public_mode;
+  const modeKnown = typeof mode === "string" && modeOptions.includes(mode);
+  check("public mode recorded before going live", modeKnown ? "ok" : "FAIL",
+    !mode ? "set public_mode in config/site.json first"
+      : modeKnown ? mode
+        : `"${mode}" is not one of public_mode_options (${modeOptions.join(", ") || "none declared"})`);
+
+  if (mode === "synthetic") {
+    check("site declares a synthetic dataset", config.dataset === "synthetic" ? "ok" : "FAIL",
+      config.dataset === "synthetic" ? "" : `public_mode is synthetic but dataset is ${JSON.stringify(config.dataset)}`);
+
+    // The page is what is published, so its inlined rows are what must be
+    // synthetic. The tracked synthetic dataset is compared too, so a
+    // hand-edited or stale page cannot pass on the strength of a clean data
+    // file. That dataset is the one the inventory names, not recordPaths():
+    // with a local record configured, the served demo still carries the
+    // synthetic rows, and the record must never be what it is compared to.
+    let inventoryProblem = null;
+    const inventory = await readFile("config/public-candidate.json", "utf8").then(JSON.parse).catch((error) => {
+      inventoryProblem = `config/public-candidate.json unreadable (${error.code ?? error.name})`;
+      return null;
+    });
+    const syntheticPath = inventory?.synthetic_dataset?.path;
+    let syntheticRows = null;
+    if (inventory && typeof syntheticPath !== "string") inventoryProblem = "config/public-candidate.json names no synthetic_dataset.path";
+    if (!inventoryProblem) {
+      syntheticRows = await readFile(syntheticPath, "utf8").then(JSON.parse).catch((error) => {
+        inventoryProblem = `${syntheticPath} unreadable (${error.code ?? error.name})`;
+        return null;
+      });
+    }
+    const page = await readFile(BUILD_FILE, "utf8").catch(() => null);
+    const marker = "window.__DAILY_BURN__ = ";
+    const inlineLine = page?.split("\n").find((line) => line.startsWith(marker));
+    let inline = null;
+    let inlineProblem = null;
+    if (page === null) inlineProblem = `${BUILD_FILE} is absent; run npm run build`;
+    else if (!inlineLine) inlineProblem = `${BUILD_FILE} carries no inlined dataset`;
+    else {
+      try {
+        inline = JSON.parse(inlineLine.slice(marker.length).replace(/;\s*$/, ""));
+      } catch (error) {
+        inlineProblem = `${BUILD_FILE} inlined dataset does not parse (${error.name})`;
+      }
+    }
+    const matches = inline !== null && syntheticRows !== null && isDeepStrictEqual(inline, syntheticRows);
+    check("served page data matches the tracked dataset", matches ? "ok" : "FAIL",
+      inlineProblem ?? inventoryProblem ?? (matches ? `${syntheticRows.length} rows`
+        : `${BUILD_FILE} rows differ from ${syntheticPath}; rebuild with npm run build`));
+
+    let syntheticProblems = [inlineProblem ?? inventoryProblem ?? ""].filter(Boolean);
+    if (inline !== null && inventory) {
+      syntheticProblems = [
+        ...syntheticDatasetProblems(inline, inventory, BUILD_FILE).problems,
+        ...validateDataset(inline, { allowSample: false, requireReviewed: false })
+      ];
+    }
+    check("served page data is synthetic", syntheticProblems.length ? "FAIL" : "ok",
+      syntheticProblems.length
+        ? `${syntheticProblems.length} problems: ${syntheticProblems.slice(0, 4).join("; ")}`
+        : `${inline.length} rows: reserved identities, synthetic evidence, synthetic date range, strict shape`);
+  } else if (modeKnown) {
+    // Each other mode publishes a real record in some form, and this eval has
+    // no rule yet for what that form must look like. Saying so is the honest
+    // result; recording a pass would claim a check that never ran.
+    check("served data checked against its public mode", "n/a",
+      `not evaluated: no served-content rule for public_mode "${mode}"`);
+  }
 } else {
   check("posture recognised", "FAIL", `unknown posture "${config.posture}"`);
 }
@@ -277,6 +353,9 @@ for (const { name, verdict, detail } of results) {
 
 const failed = results.filter((result) => result.verdict === "FAIL");
 const warned = results.filter((result) => result.verdict === "WARN");
-console.log(`\nposture "${config.posture}", ${servedFiles.length} served files: ${results.length - failed.length - warned.length} ok, ${warned.length} warn, ${failed.length} fail.`);
+const notEvaluated = results.filter((result) => result.verdict === "n/a");
+console.log(`\nposture "${config.posture}", ${servedFiles.length} served files: ` +
+  `${results.length - failed.length - warned.length - notEvaluated.length} ok, ${warned.length} warn, ${failed.length} fail` +
+  `${notEvaluated.length ? `, ${notEvaluated.length} not evaluated` : ""}.`);
 
 if (failed.length || (strict && warned.length)) process.exit(1);

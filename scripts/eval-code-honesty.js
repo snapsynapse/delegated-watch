@@ -12,6 +12,11 @@
 //
 // Suppress a deliberate case with a trailing comment on the catch line:
 //   } catch { // honesty-ok: <reason>
+//
+// It also refuses a realistic token count written into a comment or an
+// embedded example unless the same line says it is synthetic, an example, or
+// a documented limit. Such numbers have been real usage copied into code
+// before. The finding names the file, line, and rule, never the number.
 
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -23,6 +28,21 @@ const SCAN_DIRS = ["scripts", "src"];
 const strict = process.argv.includes("--strict");
 const findings = [];
 const note = (file, line, rule, detail) => findings.push({ file, line, rule, detail });
+
+// Usage context, a count of four or more digits (with or without thousands
+// separators), and the words that make one acceptable. Dates, hashes, version
+// strings, and numbers carrying a unit of time or size are removed first, so a
+// date or a constant like "86400 seconds" beside the word "tokens" is not
+// mistaken for a count.
+const USAGE_CONTEXT = /\b(?:tokens?|calls|usage)\b/i;
+const USAGE_NUMBER = /(?<![\w.])(?:\d{1,3}(?:,\d{3})+|\d{4,})(?![\w.])/;
+const USAGE_EMBEDDED = /\b(?:tokens|calls|input_tokens|output_tokens|total_tokens)["']?\s*:\s*\d{4,}/;
+const USAGE_MARKER = /\b(?:synthetic|example|threshold|limit|maximum|minimum|cap)\b/i;
+const notCounts = (text) => text
+  .replace(/\d{4}-\d{2}-\d{2}(?:T[\d:.]+Z?)?/g, "")
+  .replace(/\b[0-9a-f]{7,}\b/gi, "")
+  .replace(/\bv?\d+\.\d+\.\d+\b/g, "")
+  .replace(/\b[\d,]+\s*(?:ms|s|sec|seconds?|minutes?|hours?|days?|bytes?|[kmg]i?b|%)(?![\w])/gi, "");
 
 // Every JavaScript module under scripts/, whatever extension it carries. The
 // capture wrappers are .mjs and read provider counters, which is exactly the
@@ -55,6 +75,13 @@ for (const file of files) {
   lines.forEach((line, index) => {
     const lineNo = index + 1;
     if (/honesty-ok/.test(line)) return;
+
+    const comment = line.match(/(?:^|\s)\/\/(.*)$/)?.[1] ?? line.match(/^\s*\*(.*)$/)?.[1] ?? null;
+    const inComment = comment !== null && USAGE_CONTEXT.test(comment) && USAGE_NUMBER.test(notCounts(comment));
+    if ((inComment || USAGE_EMBEDDED.test(line)) && !USAGE_MARKER.test(line)) {
+      note(file, lineNo, "usage-literal",
+        "a token-usage number with no synthetic, example, or limit marker on the line");
+    }
 
     // A catch whose entire body is return/continue discards the reason the read
     // failed. Absence and inaccessibility become the same outcome.
@@ -122,7 +149,8 @@ const RULES = {
   "silent-catch": "FAIL",
   "unreadable-store": "FAIL",
   "uncounted-parse-failure": "WARN",
-  "inline-personal-constant": "FAIL"
+  "inline-personal-constant": "FAIL",
+  "usage-literal": "FAIL"
 };
 
 console.log(`Scanned ${files.length} scripts for unknown-vs-zero hazards.\n`);
