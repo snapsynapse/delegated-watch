@@ -41,7 +41,7 @@ test("demo-import runs all four scenarios and reports their outcomes", async () 
   assert.match(estimated, /mixes fidelities: estimated, exact/);
 
   assert.match(today, /^today \(\d{4}-\d{2}-\d{2}\): held back by the midnight cutoff/);
-  assert.match(today, /Held back 1 receipt\(s\) for \d{4}-\d{2}-\d{2}: not yet a complete day in UTC/);
+  assert.match(today, /Held back 1 receipt\(s\) for \d{4}-\d{2}-\d{2}: not yet a complete Sunday-to-Saturday week in UTC/);
 
   const after = await hashOf(REAL_DATASET);
   assert.equal(after, before, "demo-import.js must never modify the real public/data/daily-burn.json");

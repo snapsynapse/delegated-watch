@@ -12,7 +12,8 @@
 // nothing and succeeds; one that finds a store it cannot read, or cannot
 // decide, exits 3 and leaves its previous receipts untouched, which is
 // reported here and does not stop the run. The usage-API extractors skip
-// cleanly without their keys. Call-time captures (Ollama, Perplexity, TypeSafe)
+// cleanly without their keys, and a key that is set is checked first
+// (scripts/check-credentials.js). Call-time captures (Ollama, Perplexity, TypeSafe)
 // are not run here: they record calls as they happen, and their receipts are
 // imported with everything else.
 //
@@ -102,10 +103,31 @@ for (const [step, extra] of Object.entries(options)) {
   }
 }
 
+// A usage-API key that is set is checked before its extractor runs, so a
+// rejected key is reported as rejected, with the provider's error code, rather
+// than as an HTTP failure partway through extraction. A rejected or
+// unreachable key fails or makes unknown only that step; an unset key is not
+// checked, because the extractor skips cleanly without it.
+const PREFLIGHT = {
+  "extract:claude-api": ["anthropic", "ANTHROPIC_ADMIN_KEY"],
+  "extract:openai-api": ["openai", "OPENAI_ADMIN_KEY"]
+};
+
 const outcomes = [];
 const runStep = ([name, script]) => {
   const extra = options[name] ?? [];
   console.log(`\n== ${name}${extra.length ? ` ${extra.join(" ")}` : ""}`);
+  const [provider, variable] = PREFLIGHT[name] ?? [];
+  if (provider && process.env[variable]) {
+    const check = spawnSync(process.execPath, [join(SCRIPTS, "check-credentials.js"), "--provider", provider], { stdio: "inherit" });
+    const checked = check.status ?? 1;
+    if (checked !== 0) {
+      const outcome = checked === 3 ? "unknown" : "failed";
+      console.log(`${name}: not run, because the ${variable} check did not pass.`);
+      outcomes.push({ name, outcome, status: checked });
+      return outcome;
+    }
+  }
   const result = spawnSync(process.execPath, [join(SCRIPTS, script), ...extra], { stdio: "inherit" });
   const status = result.status ?? 1;
   const outcome = status === 0 ? "ok" : status === 3 ? "unknown" : "failed";

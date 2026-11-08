@@ -39,20 +39,34 @@ const runImport = async (dates) => {
   return { rows, stdout: result };
 };
 
-test("the in-progress day is held back, so a row is always a whole day", async () => {
-  const yesterday = dayIn(-1);
-  const today = dayIn(0);
-  const { rows, stdout } = await runImport([[yesterday, 1000], [today, 7]]);
-  assert.deepEqual(rows.map((row) => row.date), [yesterday]);
-  assert.match(stdout, /Held back 1 receipt\(s\) for /);
+// The importer holds back the whole Sunday-to-Saturday week in progress by
+// default (import_weeks "complete"), so these dates are derived from the
+// current week rather than from yesterday, which on most weekdays is still in
+// the week being held back.
+const { weekStartOf } = await import("../scripts/lib/import-policy.js");
+const shift = (day, days) => {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+const today = dayIn(0);
+const thisSunday = weekStartOf(today);
+const lastSaturday = shift(thisSunday, -1);
+const lastSunday = shift(thisSunday, -7);
+
+test("the week in progress is held back, so the record only gains whole weeks", async () => {
+  const inProgress = [...new Set([thisSunday, today])];
+  const { rows, stdout } = await runImport([[lastSaturday, 1000], ...inProgress.map((date) => [date, 7])]);
+  assert.deepEqual(rows.map((row) => row.date), [lastSaturday]);
+  assert.match(stdout, new RegExp(`Held back ${inProgress.length} receipt\\(s\\) for `));
+  assert.match(stdout, /not yet a complete Sunday-to-Saturday week/);
   assert.match(stdout, new RegExp(today));
 });
 
-test("a complete day imports in full once it has elapsed", async () => {
-  const yesterday = dayIn(-1);
-  const { rows, stdout } = await runImport([[yesterday, 1000]]);
-  assert.deepEqual(rows.map((row) => row.date), [yesterday]);
-  assert.equal(rows[0].total, 1000);
+test("a complete week imports in full once it has elapsed", async () => {
+  const { rows, stdout } = await runImport([[lastSunday, 500], [lastSaturday, 1000]]);
+  assert.deepEqual(rows.map((row) => row.date), [lastSunday, lastSaturday]);
+  assert.equal(rows[1].total, 1000);
   assert.doesNotMatch(stdout, /Held back/);
 });
 

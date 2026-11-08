@@ -13,6 +13,7 @@
     "build": "node scripts/build-landing.js && node scripts/build.js",
     "build:demo": "node scripts/build.js",
     "build:landing": "node scripts/build-landing.js",
+    "check:credentials": "node scripts/check-credentials.js",
     "check:runtime": "node scripts/check-runtime.js",
     "coverage": "node scripts/coverage-report.js",
     "demo:data": "node scripts/synthetic-dataset.js",

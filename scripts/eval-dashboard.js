@@ -261,6 +261,39 @@ check(
   syntax?.status === 0 ? "" : (syntax?.stderr || "module script not found").trim().split("\n")[0]
 );
 
+// The 7-day tile, computed from the page's own data as a reader sees it after
+// the last import. A whole-week record ends on a Saturday and is read days
+// later, so a window ending on the viewer's yesterday would hold unscanned
+// days and read Unavailable for most of every week. The tile must cover the
+// Sunday-to-Saturday week holding the newest row, viewed four days after
+// that Saturday, and resolve. A daily record is read the next day, and its
+// window must end on the newest row.
+const { summarizeDashboardRows } = await import("../src/dashboard-model.js");
+const inlinedRows = extractInline("__DAILY_BURN__");
+const importWeeks = extractInline("__PROFILE__")?.importWeeks ?? "complete";
+const newest = inlinedRows?.at(-1)?.date;
+if (newest) {
+  const noon = (date) => new Date(`${date}T12:00:00`);
+  const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const lastScanned = noon(newest);
+  if (importWeeks !== "daily") lastScanned.setDate(lastScanned.getDate() + 6 - lastScanned.getDay());
+  const viewed = new Date(lastScanned);
+  viewed.setDate(viewed.getDate() + (importWeeks === "daily" ? 1 : 4));
+  const summary = summarizeDashboardRows(inlinedRows, noon(inlinedRows[0].date), viewed, { importWeeks });
+  const through = iso(lastScanned);
+  const covers = summary.recentWindow.through === through;
+  const resolves = importWeeks === "daily" || summary.recentAverage !== null;
+  check(
+    "7-day tile covers the last scanned days",
+    covers && resolves ? "ok" : "FAIL",
+    covers && resolves
+      ? `${importWeeks}: ${summary.recentWindow.from} to ${summary.recentWindow.through}, viewed ${iso(viewed)}`
+      : `${importWeeks}: window ${summary.recentWindow.from} to ${summary.recentWindow.through}, average ${summary.recentAverage}; expected through ${through}`
+  );
+} else {
+  check("7-day tile covers the last scanned days", built ? "FAIL" : "ok", built ? "no inlined daily rows" : "");
+}
+
 const width = Math.max(...results.map((result) => result.name.length));
 for (const { name, verdict, detail } of results) {
   console.log(`${verdict.padEnd(5)} ${name.padEnd(width)}${detail ? "  " + detail : ""}`);

@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
+## [Unreleased]
+### Added
+- `npm run check:credentials` proves each usage-API admin key that is set is accepted, with one small usage read per provider at the extractors' endpoints. It prints the provider's error type and code, never the key or the provider's message, and flags a rejected key of exactly 128 characters as probably truncated by the macOS Keychain prompt. An unset key is skipped, since its extractor skips too. Exit 0 accepted, 1 rejected, 3 unreachable.
+- `npm run refresh` runs that check before `extract:claude-api` and `extract:openai-api` when their key is set. A rejected key fails only that step, and an unreachable provider makes it unknown; the rest of the run continues and the record is still rebuilt.
+- `import_weeks` in `config/profile.json`: `"complete"` (the default when absent) or `"daily"`. The importer and the dashboard both read it.
+- A regression test that `extract:goose` reads a WAL database that goose closed cleanly, with no `-wal` or `-shm` file beside it.
+### Changed
+- The importer now holds back the whole Sunday-to-Saturday week in progress by default, so the record ends on the last complete Saturday and only ever gains whole weeks. `import_weeks: "daily"` restores the previous hold-back of only the current day. `--complete-weeks` still forces whole weeks for one run; there is no per-run daily flag, because the dashboard reads the profile to decide which days were scanned.
+- The dashboard's 7-day tile, for a whole-week record, averages the latest scanned Sunday-to-Saturday week: its total over seven days, compared with the week before. A day in that week with no row was scanned and nothing was found; the record still holds no row for it. If the newest row sits in a week that has not finished, that week was not scanned in full and the week before is used. A daily record keeps the seven days ending on the last elapsed day. `eval:dashboard` checks the tile covers the last scanned days.
 ## [0.4.0] - 2026-10-18
 ### Added
 - Provider-reported cost on receipts. `provider_reported_cost` records a charge the provider itself computed, verbatim: Perplexity `usage.cost.total_cost` from both capture paths, and the Anthropic Admin Cost Report and OpenAI Costs API per UTC day from the two organization extractors (`--no-cost-report` skips the extra read). No price table, no computed cost, no conversion or rounding; absent where the provider reports nothing. Never summed into tokens and rejected in daily rows. This supersedes the 0.3.0 statement that the Perplexity capture never records cost.
