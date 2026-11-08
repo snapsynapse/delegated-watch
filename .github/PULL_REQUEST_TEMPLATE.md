@@ -4,6 +4,7 @@
 
 ## Checklist
 
+- [ ] CI ran on this PR's head commit: both `verify` checks show and pass. Zero checks means CI did not run; do not merge
 - [ ] `npm test` passes
 - [ ] `npm run validate` passes
 - [ ] Every configured `eval:*` command passes

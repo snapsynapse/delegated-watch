@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0",
+  "repository": "snapsynapse/delegated-watch",
+  "profile": [
+    "public",
+    "hosted",
+    "agent-facing"
+  ],
+  "visibility": "public",
+  "default_branch": "main",
+  "delete_branch_on_merge": true,
+  "merge_methods": {
+    "merge_commit": true,
+    "squash": true,
+    "rebase": true,
+    "auto_merge": false
+  },
+  "features": {
+    "issues": true,
+    "discussions": false,
+    "wiki": false,
+    "projects": false
+  },
+  "security": {
+    "advanced_security": null,
+    "secret_scanning": true,
+    "secret_scanning_push_protection": true,
+    "dependabot_alerts": null,
+    "dependabot_security_updates": false
+  },
+  "actions": {
+    "enabled": true,
+    "allowed_actions": "all",
+    "sha_pinning_required": true,
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": false
+  },
+  "pages": {
+    "enabled": true,
+    "build_type": "legacy",
+    "source_branch": "main",
+    "source_path": "/docs",
+    "https_enforced": true,
+    "custom_domain": "delegated.watch"
+  },
+  "rulesets": [
+    {
+      "id": 23860524,
+      "name": "main: PR and CI required, no force push or deletion",
+      "target": "branch",
+      "enforcement": "active",
+      "bypass_actors": [],
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "~DEFAULT_BRANCH"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": true,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "verify (24.x, ubuntu-latest)",
+                "integration_id": 15368
+              },
+              {
+                "context": "verify (26.x, ubuntu-latest)",
+                "integration_id": 15368
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 23860534,
+      "name": "release tags: no move or deletion",
+      "target": "tag",
+      "enforcement": "active",
+      "bypass_actors": [],
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "refs/tags/v*"
+          ]
+        }
+      },
+      "rules": [
+        {
+          "type": "update"
+        },
+        {
+          "type": "deletion"
+        }
+      ]
+    }
+  ],
+  "environments": [
+    "github-pages"
+  ],
+  "custom_properties": {},
+  "exceptions": []
+}
