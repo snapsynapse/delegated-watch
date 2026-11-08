@@ -6,6 +6,8 @@ An October 2026 audit identified eight bounded OpenAI accounting risks. Findings
 The remaining accounting action is validation against explicitly authorized, redacted real evidence. Synthetic fixtures establish code behavior, not rollout frequency, account completeness, or provider behavior in a person's live account. Route-level request identity is still needed before any partial organization overlap can be reconciled automatically; daily aggregate similarity is not enough.
 
 The deterministic OpenAI reporting-change watcher is deferred until the known accounting risks above are fixed or safely quarantined. Its detection path must work without a model, retain immutable public-source evidence, and remain outside refresh, import, and dashboard totals. Scheduling, durable state-branch writes, notifications, and optional provider analysis each require a separate owner decision before activation.
+`npm run demo:import` reports each scenario's outcome on its own line, but exits 0 even when a scenario does not behave as expected, so its exit status proves nothing; the README tells readers to read the lines. Making it exit non-zero on an unexpected outcome changes `scripts/demo-import.js`, which the assistant guide pins by hash, so the change waits for the next guide rotation.
+
 ## First: every surface, from one command
 The repository's central claim is that a person can install it and recover their own record from every surface they use. `SURFACES.md` keeps the one list of every surface and where each stands. As of 2026-09-28 the tested extractors are all ported, and extractors for Gemini CLI, Qwen Code, GitHub Copilot CLI, Zed, and Cursor have been added from those tools' own code. What remains, in order:
 
