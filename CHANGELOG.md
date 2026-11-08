@@ -2,6 +2,17 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+### Added
+- `verify:candidate --reference-data PATH` names the real aggregate dataset to compare against; `--private-data` stays as an older name for it. `--require-reference-data` fails when no comparison ran.
+- `eval:code` refuses a realistic token count in a comment or embedded example in shipped code unless the line marks it synthetic, an example, or a documented limit. A finding names the file and line, never the number.
+### Changed
+- `verify:candidate` always reports the reference comparison as passed, failed, or not evaluated, in text and in `--json` (`reference_comparison`). Previously an omitted comparison vanished from the output. Its summary line now counts not-evaluated checks separately.
+- `eval:served`, for a live site in `public_mode` `synthetic`, checks that the mode is a declared option, that `config/site.json` declares a synthetic dataset, that the rows inlined in the built page equal `public/data/daily-burn.json`, and that every one passes the synthetic-data rules. It previously reported a dataset check as ok while skipping it. Another declared mode is reported as not evaluated.
+- The verifier and the served-tree eval share one synthetic-data check (`scripts/lib/synthetic-check.js`), which now requires the `synthetic:` evidence prefix on every row.
+### Fixed
+- A reference dataset that parses but is not an array, or holds a row without a date and sources, now fails closed with the overlap unknown. Previously a non-array reference passed as having no shared triples.
+- The synthetic generator no longer claims its 2025 calendar year keeps it from colliding with a real record; independence comes from its fixed seed, and overlap is measured by the reference comparison.
+- The importer's example receipt in its header comment is synthetic and says so.
 ## [0.5.0] - 2026-11-08
 ### Added
 - `npm run check:credentials` proves each usage-API admin key that is set is accepted, with one small usage read per provider at the extractors' endpoints. It prints the provider's error type and code, never the key or the provider's message, and flags a rejected key of exactly 128 characters as probably truncated by the macOS Keychain prompt. An unset key is skipped, since its extractor skips too. Exit 0 accepted, 1 rejected, 3 unreachable.

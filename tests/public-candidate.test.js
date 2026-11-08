@@ -105,7 +105,7 @@ test("a minimal well-formed candidate passes", async (t) => {
   const fixture = await buildCandidate(t);
   const result = run(fixture);
   assert.equal(result.status, 0, output(result));
-  assert.match(result.stdout, /0 fail\./);
+  assert.match(result.stdout, /0 fail, 1 not evaluated\./);
   // No pins recorded yet, so the run is clean but explicitly unreviewed.
   assert.match(result.stdout, /WARN.*pinned hashes match.*unpinned/);
 });
@@ -300,7 +300,7 @@ test("an overlapping private triple fails, reporting only the count", async (t) 
   ]) + "\n");
   const result = run(fixture, "--private-data", privatePath);
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /FAIL.*no overlap with the private dataset/);
+  assert.match(result.stdout, /FAIL.*no overlap with the reference dataset/);
   assert.match(result.stdout, /1 \(date, source, tokens\) triples/);
   assert.doesNotMatch(output(result), /secret_tool|987654321|2025-03-05/);
 });
@@ -313,7 +313,82 @@ test("a non-overlapping private dataset passes", async (t) => {
   ]) + "\n");
   const result = run(fixture, "--private-data", privatePath);
   assert.equal(result.status, 0, output(result));
-  assert.match(result.stdout, /ok.*no overlap with the private dataset/);
+  assert.match(result.stdout, /ok.*no overlap with the reference dataset/);
+});
+
+test("an omitted reference comparison is reported as not evaluated, in text and JSON", async (t) => {
+  const fixture = await buildCandidate(t);
+  const jsonPath = join(fixture.root, "report.json");
+  const result = run(fixture, "--json", jsonPath);
+  assert.equal(result.status, 0, output(result));
+  assert.match(result.stdout, /n\/a\s+no overlap with the reference dataset\s+not evaluated/);
+  assert.match(result.stdout, /1 not evaluated\./);
+  const report = JSON.parse(await readFile(jsonPath, "utf8"));
+  assert.equal(report.reference_comparison, "not evaluated");
+  assert.equal(report.verdict, "pass");
+});
+
+test("--require-reference-data fails when no reference dataset is given", async (t) => {
+  const fixture = await buildCandidate(t);
+  const jsonPath = join(fixture.root, "report.json");
+  const result = run(fixture, "--require-reference-data", "--json", jsonPath);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /FAIL.*no overlap with the reference dataset.*--require-reference-data/);
+  assert.equal(JSON.parse(await readFile(jsonPath, "utf8")).reference_comparison, "failed");
+});
+
+test("--require-reference-data passes with a readable, non-overlapping reference", async (t) => {
+  const fixture = await buildCandidate(t);
+  const referencePath = join(fixture.root, "reference.json");
+  await writeFile(referencePath, JSON.stringify([
+    { date: "2025-03-04", sources: { example_tool: { tokens: 999, fidelity: "exact" } } }
+  ]) + "\n");
+  const jsonPath = join(fixture.root, "report.json");
+  const result = run(fixture, "--require-reference-data", "--reference-data", referencePath, "--json", jsonPath);
+  assert.equal(result.status, 0, output(result));
+  assert.equal(JSON.parse(await readFile(jsonPath, "utf8")).reference_comparison, "passed");
+});
+
+test("a missing, malformed, non-array, or row-malformed reference fails closed without echoing it", async (t) => {
+  const fixture = await buildCandidate(t);
+  const cases = {
+    missing: null,
+    malformed: "{ not json 987654321",
+    "not an array": JSON.stringify({ rows: [{ date: "2025-03-05", sources: { secret_tool: { tokens: 987654321 } } }] }),
+    "row without sources": JSON.stringify([{ date: "2025-03-05", secret_tool: 987654321 }])
+  };
+  for (const [name, body] of Object.entries(cases)) {
+    const referencePath = join(fixture.root, `reference-${name.replace(/ /g, "-")}.json`);
+    if (body !== null) await writeFile(referencePath, body);
+    const result = run(fixture, "--reference-data", referencePath);
+    assert.equal(result.status, 1, `${name}: ${output(result)}`);
+    assert.match(result.stdout, /FAIL.*no overlap with the reference dataset.*overlap unknown/, name);
+    assert.doesNotMatch(output(result), /secret_tool|987654321|2025-03-05/, name);
+  }
+});
+
+test("--private-data still works as the older name for --reference-data", async (t) => {
+  const fixture = await buildCandidate(t);
+  const referencePath = join(fixture.root, "reference.json");
+  await writeFile(referencePath, JSON.stringify([
+    { date: "2025-03-04", sources: { example_tool: { tokens: 1200, fidelity: "exact" } } }
+  ]) + "\n");
+  const result = run(fixture, "--private-data", referencePath);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /1 \(date, source, tokens\) triples also appear in the reference dataset/);
+});
+
+test("--reference-data and --private-data together, or either given twice, is a usage error", async (t) => {
+  const fixture = await buildCandidate(t);
+  const referencePath = join(fixture.root, "reference.json");
+  await writeFile(referencePath, "[]\n");
+  for (const extra of [
+    ["--reference-data", referencePath, "--private-data", referencePath],
+    ["--reference-data", referencePath, "--reference-data", referencePath]
+  ]) {
+    const result = run(fixture, ...extra);
+    assert.equal(result.status, 2, output(result));
+  }
 });
 
 test("a pinned hash mismatch fails, and --pin records hashes that then match", async (t) => {
@@ -492,7 +567,7 @@ test("--self skips the producer-checkout refusal and still verifies in place", a
     { encoding: "utf8" }
   );
   assert.equal(result.status, 0, output(result));
-  assert.match(result.stdout, /0 fail\./);
+  assert.match(result.stdout, /0 fail, 1 not evaluated\./);
 });
 
 test("a scan-exempt file is checked structurally instead of being scanned", async (t) => {
@@ -585,7 +660,7 @@ test("--self verifies the tree that holds the script, as the shipped copy does i
   // plain paths there and the inventory itself is checked structurally.
   const inventory = {
     ...INVENTORY,
-    producer_files: ["scripts/build.js", "scripts/verify-public-candidate.js", "scripts/lib/receipt-privacy.js", "scripts/lib/receipt-schema.js"],
+    producer_files: ["scripts/build.js", "scripts/verify-public-candidate.js", "scripts/lib/receipt-privacy.js", "scripts/lib/receipt-schema.js", "scripts/lib/synthetic-check.js"],
     overlay_files: { ...INVENTORY.overlay_files, "config/public-candidate.json": "candidate/config/public-candidate.json" },
     scan_exempt_files: ["config/public-candidate.json"]
   };
@@ -596,6 +671,8 @@ test("--self verifies the tree that holds the script, as the shipped copy does i
   await cp(join(repo, "scripts/lib/receipt-privacy.js"), join(fixture.candidate, "scripts/lib/receipt-privacy.js"));
   // receipt-privacy.js validates the provider-reported cost through receipt-schema.js.
   await cp(join(repo, "scripts/lib/receipt-schema.js"), join(fixture.candidate, "scripts/lib/receipt-schema.js"));
+  // The dataset and reference checks live in synthetic-check.js.
+  await cp(join(repo, "scripts/lib/synthetic-check.js"), join(fixture.candidate, "scripts/lib/synthetic-check.js"));
   const { forbidden_terms, forbidden_script_fragments, source_revision, ...projected } = inventory;
   projected.note_projection = "projected";
   await writeFile(join(fixture.candidate, "config/public-candidate.json"), JSON.stringify(projected, null, 2) + "\n");

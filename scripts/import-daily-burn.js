@@ -2,8 +2,8 @@
 // public/data/daily-burn.json.
 //
 // Receipt line shape:
-//   {"date":"2026-07-25","timezone":TIMEZONE,"source":"qwen_local",
-//    "tokens":52149,"calls":3,"fidelity":"exact","provenance":"goose usage_ledger"}
+//   {"date":"2025-01-04","timezone":TIMEZONE,"source":"codex",
+//    "tokens":4200,"calls":6,"fidelity":"exact","provenance":"synthetic: example receipt"}
 //
 // Rules:
 // - Receipts are aggregated by date + source across all input files

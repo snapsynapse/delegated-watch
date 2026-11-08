@@ -26,7 +26,7 @@ Every edit to an inventoried file changes its pinned hash. After reviewing the d
 node scripts/verify-public-candidate.js --self --pin
 npm run verify:candidate -- --self
 ```
-A new file must also be added to the inventory, or the second command reports it as outside the inventory. When a rebase conflicts in `config/public-candidate.json`, keep both sides' list entries before re-pinning: re-pinning hashes only what is listed.
+A new file must also be added to the inventory, or the second command reports it as outside the inventory. The second command reports the comparison against a real aggregate dataset as not evaluated; that is expected for this repository, whose CI is offline. A comparison against a real record belongs to the release process of whoever holds that record, run as `--require-reference-data --reference-data PATH`, reporting only the verdict and the overlap count. When a rebase conflicts in `config/public-candidate.json`, keep both sides' list entries before re-pinning: re-pinning hashes only what is listed.
 
 ## 4. Gates
 Run every step of `.github/workflows/ci.yml` locally before opening the pull request, and judge each by its own exit status, not by the last line of a pipeline:
