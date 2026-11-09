@@ -453,6 +453,7 @@ h2 {
 
 .heatmap:focus-visible,
 .drivers:focus-visible,
+.sources:focus-visible,
 .table-wrap:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;
@@ -1054,6 +1055,13 @@ td {
   background: var(--rose);
 }
 
+.tag.authority {
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  font-weight: 700;
+}
+
 .tag.incomplete {
   color: #281604;
   background: var(--amber);
@@ -1336,7 +1344,9 @@ td {
 .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 
 .mix-layout .source-row {
-  grid-template-columns: 10px minmax(0, 1fr) auto minmax(58px, auto);
+  /* The tag column is capped so a fidelity tag and an authority tag stack
+     instead of taking width from the source name. */
+  grid-template-columns: 10px minmax(0, 1fr) auto minmax(58px, 7rem);
   gap: 8px;
   min-height: 40px;
   padding: 5px 8px 5px 0;
@@ -1361,6 +1371,7 @@ td {
 }
 
 .mix-layout .source-row .tag {
+  white-space: nowrap;
   min-height: 17px;
   margin-left: 0;
   padding: 0 5px;

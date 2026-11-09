@@ -23,7 +23,8 @@ import {
   reconcileTokenComponents,
   sameAuthorityScope,
   snapshotKeyOf,
-  validateTokenComponents
+  validateTokenComponents,
+  weakestAuthority
 } from "./receipt-schema.js";
 
 // Local-store receipts (Claude Code, Codex) carry no provider or account
@@ -891,6 +892,9 @@ const rebuildSourceEntry = (current, entries) => {
   const components = aggregateTokenComponents(entries);
   if (components) rebuilt.token_components = components;
   else delete rebuilt.token_components;
+  const authority = weakestAuthority(entries);
+  if (authority) rebuilt.authority = authority;
+  else delete rebuilt.authority;
   if (entries.every((entry) => entry.origin)) {
     const origins = new Map();
     for (const entry of entries) {

@@ -115,6 +115,37 @@ export const sourceTotal = (row) =>
     0
   );
 
+// Where each counted token came from, strongest first. An entry without an
+// authority was imported from receipts that predate the field; it is counted
+// as not recorded, never folded into a guess.
+export const AUTHORITY_ORDER = ["provider", "tool", "reconstructed", "estimated"];
+export const AUTHORITY_LABELS = {
+  provider: "provider counter",
+  tool: "tool counter",
+  reconstructed: "reconstructed",
+  estimated: "estimator",
+  unrecorded: "authority not recorded"
+};
+
+const emptyAuthoritySplit = () => ({ provider: 0, tool: 0, reconstructed: 0, estimated: 0, unrecorded: 0 });
+
+export const summarizeAuthority = (rows) => {
+  const bySource = {};
+  const overall = emptyAuthoritySplit();
+  let total = 0;
+  for (const row of rows) {
+    for (const [source, entry] of Object.entries(row.sources || {})) {
+      const tokens = Number(entry.tokens || 0);
+      const key = AUTHORITY_ORDER.includes(entry.authority) ? entry.authority : "unrecorded";
+      bySource[source] = bySource[source] || emptyAuthoritySplit();
+      bySource[source][key] += tokens;
+      overall[key] += tokens;
+      total += tokens;
+    }
+  }
+  return { bySource, overall, total };
+};
+
 const sourceHasMeasuredActivity = (source) =>
   Number(source?.calls || 0) > 0 ||
   Object.entries(source?.token_components || {}).some(

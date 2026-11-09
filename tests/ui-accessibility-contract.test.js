@@ -18,8 +18,12 @@ test("keyboard-scroll regions have names, landmarks, and visible focus treatment
   // so it needs the same treatment. A live axe scan caught this one in 2026-09
   // after the contract test had asserted only the heatmap and the tables.
   assert.match(index, /id="drivers"[^>]*role="region"[^>]*aria-label="Burn drivers list\. Use arrow keys to scroll\."[^>]*tabindex="0"/);
+  // The source list scrolls under the same rule. It fit the demo's six sources
+  // until the authority tags made its rows taller; a live axe scan at 1280px
+  // caught it on 2026-11-08, and a record with more sources needed it anyway.
+  assert.match(index, /id="sources"[^>]*role="region"[^>]*aria-label="Source mix list\. Use arrow keys to scroll\."[^>]*tabindex="0"/);
   assert.match(records, /class="table-wrap records-table-wrap"[^>]*role="region"[^>]*aria-label="Latest active days table\. Use arrow keys to scroll\."[^>]*tabindex="0"/);
-  assert.match(styles, /\.heatmap:focus-visible,\s*\.drivers:focus-visible,\s*\.table-wrap:focus-visible\s*\{[\s\S]*outline: 2px solid var\(--cyan\)/);
+  assert.match(styles, /\.heatmap:focus-visible,\s*\.drivers:focus-visible,\s*\.sources:focus-visible,\s*\.table-wrap:focus-visible\s*\{[\s\S]*outline: 2px solid var\(--cyan\)/);
 
   // A labelled div needs a role for the label to be exposed; axe flags the
   // bare aria-label as prohibited otherwise.

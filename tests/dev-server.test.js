@@ -98,6 +98,27 @@ test("dev server exposes only the generated dashboard and rejects hostile Host h
   });
 });
 
+test("dev server serves the three linked static files from docs/, and nothing else there", async () => {
+  const root = await makeServerRoot();
+  await mkdir(join(root, "docs", "imgs"), { recursive: true });
+  await writeFile(join(root, "docs", "favicon.svg"), "<svg/>");
+  await writeFile(join(root, "docs", "site.webmanifest"), "{}");
+  await writeFile(join(root, "docs", "secret.txt"), "private");
+  await writeFile(join(root, "outside.svg"), "<svg>outside</svg>");
+  await symlink("../outside.svg", join(root, "docs", "imgs", "og.png"));
+  await withServer(root, async (port) => {
+    assert.deepEqual(await requestPage(port, "/favicon.svg"), { status: 200, body: "<svg/>" });
+    assert.deepEqual(await requestPage(port, "/site.webmanifest"), { status: 200, body: "{}" });
+    // Symlinked: refused, never followed out of docs/.
+    const linked = await requestPage(port, "/imgs/og.png");
+    assert.equal(linked.status, 500);
+    assert.doesNotMatch(linked.body, /outside/);
+    for (const path of ["/secret.txt", "/docs/favicon.svg", "/favicon.svg/", "/FAVICON.SVG", "/imgs/"]) {
+      assert.equal((await requestPage(port, path)).status, 404, path);
+    }
+  });
+});
+
 test("dev server contains broken, unreadable, directory, and symlink artifacts without terminating", async () => {
   for (const mode of ["symlink", "directory", "unreadable", "broken"]) {
     const root = await makeServerRoot(mode);

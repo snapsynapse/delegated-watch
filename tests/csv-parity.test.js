@@ -12,6 +12,7 @@ const records = [{ date: "2026-01-02", timezone: "UTC", sources: {
     tokens: 600,
     calls: 2,
     fidelity: "exact",
+    authority: "tool",
     by_origin: { "machine/a": 240, "machine/b": 360 },
     token_components: {
       schema_version: 1,
@@ -35,10 +36,10 @@ test("CSV check detects field drift even when grand totals still agree", async (
   assert.match(wideBefore, /"synthetic, ""quoted""\nsecond line"/);
   assert.match(
     detailBefore,
-    /input_tokens,cached_input_tokens,cache_write_tokens,output_tokens,reasoning_tokens,component_scope/
+    /fidelity,authority,input_tokens,cached_input_tokens,cache_write_tokens,output_tokens,reasoning_tokens,component_scope/
   );
-  assert.match(detailBefore, /machine\/a,240,,exact,1000,600,0,200,,source,/);
-  assert.match(detailBefore, /machine\/b,360,,exact,,,,,,,/);
+  assert.match(detailBefore, /machine\/a,240,,exact,tool,1000,600,0,200,,source,/);
+  assert.match(detailBefore, /machine\/b,360,,exact,tool,,,,,,/);
   assert.equal(run(cwd, ["--check"]).status, 0);
   for (const [file, before, after] of [
     [detail, detailBefore, detailBefore.replace("machine/a", "machine/c")],
@@ -95,5 +96,6 @@ test("CSV export preserves standalone measured-zero activity and its evidence", 
   const wide = await readFile(join(cwd, "public/data/daily-burn.csv"), "utf8");
   const detail = await readFile(join(cwd, "public/data/daily-burn-detail.csv"), "utf8");
   assert.match(wide, /2026-01-02,UTC,0,research,measured cached-only activity,openai_api,exact/);
-  assert.match(detail, /openai_api,account\/openai,0,5,exact,750,750,,0,,source,0/);
+  // No authority on this entry, so its column is empty rather than guessed.
+  assert.match(detail, /openai_api,account\/openai,0,5,exact,,750,750,,0,,source,0/);
 });

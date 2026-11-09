@@ -172,3 +172,20 @@ test("driver attribution separates named, reviewed unknown, and unreviewed token
     groups: { shipping: 100 }
   });
 });
+
+test("summarizeAuthority splits every token by where its counter came from", async () => {
+  const { AUTHORITY_ORDER, summarizeAuthority } = await import("../src/dashboard-model.js");
+  assert.deepEqual(AUTHORITY_ORDER, ["provider", "tool", "reconstructed", "estimated"]);
+  const rows = [
+    { date: "2025-03-01", total: 150, sources: { openai_api: { tokens: 100, authority: "provider" }, claude_chat: { tokens: 50, authority: "estimated" } } },
+    { date: "2025-03-02", total: 70, sources: { openai_api: { tokens: 30, authority: "provider" }, codex: { tokens: 40 } } }
+  ];
+  const { bySource, overall, total } = summarizeAuthority(rows);
+  assert.equal(total, 220);
+  assert.deepEqual(overall, { provider: 130, tool: 0, reconstructed: 0, estimated: 50, unrecorded: 40 });
+  assert.equal(bySource.openai_api.provider, 130);
+  assert.equal(bySource.codex.unrecorded, 40, "an entry with no authority is counted as not recorded, never guessed");
+  assert.equal(Object.values(overall).reduce((sum, value) => sum + value, 0), total);
+  // An unknown value is not trusted either.
+  assert.equal(summarizeAuthority([{ sources: { x: { tokens: 5, authority: "self_reported" } } }]).overall.unrecorded, 5);
+});

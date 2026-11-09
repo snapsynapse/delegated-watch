@@ -35,6 +35,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { accountAlias } from "./lib/openai-integrity.js";
 import { providerReportedCost } from "./lib/provider-cost.js";
 import { RECEIPT_SCHEMA_VERSION, validateReceiptSchema } from "./lib/receipt-schema.js";
+import { addAnthropicCounters, anthropicComponents, newAnthropicTally } from "./lib/anthropic-components.js";
 
 const { dayOf, finalizedThrough, timezone, windowStart } = await import("./lib/profile.js");
 const { accountOrigin } = await import("./lib/origin.js");
@@ -205,6 +206,7 @@ do {
         date,
         tokens: 0,
         cacheRead: 0,
+        components: newAnthropicTally(),
         models: new Set()
       };
       const cacheCreation =
@@ -214,6 +216,17 @@ do {
       entry.tokens +=
         (result.uncached_input_tokens ?? 0) + cacheCreation + (result.output_tokens ?? 0);
       entry.cacheRead += result.cache_read_input_tokens ?? 0;
+      // A cache_creation object reports the writes broken down by TTL; its
+      // absence, and the flat field's, means the writes went unreported.
+      const writesReported =
+        (typeof result.cache_creation === "object" && result.cache_creation !== null) ||
+        result.cache_creation_input_tokens != null;
+      addAnthropicCounters(entry.components, {
+        uncached: result.uncached_input_tokens,
+        cacheWrite: writesReported ? cacheCreation : null,
+        cacheRead: result.cache_read_input_tokens,
+        output: result.output_tokens
+      });
       if (result.model) entry.models.add(result.model);
       buckets.set(date, entry);
     }
@@ -340,6 +353,7 @@ const receipts = [...buckets.values()]
     authority: "provider",
     models: [...bucket.models].sort(),
     provenance: `Anthropic Admin Usage Report; cache_read ${bucket.cacheRead} excluded`,
+    ...(anthropicComponents(bucket.components) ? { token_components: anthropicComponents(bucket.components) } : {}),
     ...(costByDay.has(bucket.date) ? { provider_reported_cost: costByDay.get(bucket.date) } : {})
   }));
 for (const receipt of receipts) {

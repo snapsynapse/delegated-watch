@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { spawnSync } from "node:child_process";
+import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { generateDataset, DATE_RANGE, EVIDENCE_PREFIX, RESERVED_ORIGINS } from "../scripts/synthetic-dataset.js";
 import { validateDataset } from "../scripts/lib/dataset-validation.js";
@@ -242,4 +246,17 @@ test("exact sources carry calls; estimated sources do not", () => {
     }
   }
   assert.ok(sawExactWithCalls, "expected at least one exact source entry with calls");
+});
+
+test("the generator runs when invoked from a path with a space or through a symlink", async (t) => {
+  const repo = resolve(import.meta.dirname, "..");
+  // tmpdir() is behind the /var symlink on macOS, and the name has a space:
+  // the two paths the old direct-run check silently ignored.
+  const copy = await mkdtemp(join(tmpdir(), "dw synth "));
+  t.after(() => rm(copy, { recursive: true, force: true }));
+  for (const path of ["scripts", "config", "public"]) await cp(join(repo, path), join(copy, path), { recursive: true });
+  const result = spawnSync(process.execPath, [join(copy, "scripts/synthetic-dataset.js")], { cwd: copy, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Wrote observed intervals/);
+  assert.equal(await readFile(join(copy, "public/data/daily-burn.json"), "utf8"), await readFile(join(repo, "public/data/daily-burn.json"), "utf8"));
 });

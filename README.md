@@ -38,11 +38,13 @@ Literal
       "tokens": 4200,
       "fidelity": "exact",
       "calls": 6,
+      "authority": "tool",
       "by_origin": { "machine/example": 4200 }
     },
     "claude_chat": {
       "tokens": 1800,
       "fidelity": "estimated",
+      "authority": "estimated",
       "by_origin": { "account/example-provider": 1800 }
     }
   },
@@ -53,10 +55,10 @@ Literal
 ```
 | Synthetic receipt | What the row records |
 |---|---|
-| `codex`: 4,200 tokens, 6 calls, exact | `sources.codex`: 4,200 tokens, 6 calls, fidelity `exact`, attributed to `machine/example` |
-| `claude_chat`: 1,800 tokens, no call count, estimated | `sources.claude_chat`: 1,800 tokens, fidelity `estimated`, and no `calls` field at all |
+| `codex`: 4,200 tokens, 6 calls, exact, from the tool's own counter | `sources.codex`: 4,200 tokens, 6 calls, fidelity `exact`, authority `tool`, attributed to `machine/example` |
+| `claude_chat`: 1,800 tokens, no call count, estimated | `sources.claude_chat`: 1,800 tokens, fidelity `estimated`, authority `estimated`, and no `calls` field at all |
 | Both, for 2025-01-04 | `total` 6,000, and driver `unreviewed` until someone reviews what the work was |
-Each source keeps its own fidelity. An exact entry and an estimated one sit side by side, and the total is not an exact measurement because one of its parts is. A count the source never reported stays absent; it is never written as zero. Importing a row does not review it, and a token count says how much the model read and wrote, not how good or how valuable the work was.
+Each source keeps its own fidelity and records where its counter came from. An exact entry and an estimated one sit side by side, and the total is not an exact measurement because one of its parts is. A count the source never reported stays absent; it is never written as zero. Importing a row does not review it, and a token count says how much the model read and wrote, not how good or how valuable the work was.
 This example is synthetic. A real record covers only the supported sources, and only the intervals for which evidence survives.
 ## Try it on the synthetic fixtures
 Install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line. There are no runtime dependencies, so there is no install step. Clone into a fresh directory, separate from any checkout that holds a record of your own. Cloning contacts GitHub; nothing after it reads a provider, an account, or the network.
@@ -81,7 +83,7 @@ It prints one line per scenario:
 | `regression.jsonl` | Refused: an exact claim of 10,000 tokens for 2025-01-02 `codex` would lower the committed 36,327, and the dataset is left as it was |
 | `estimated.jsonl` | An estimated `claude_chat` entry joins 2025-01-09 beside two exact sources, and each keeps its own fidelity |
 | A receipt dated today, generated at run time | Held back until its Sunday-to-Saturday week is complete in the timezone set in `config/profile.json` |
-Read the lines themselves. The command exits 0 even when a scenario does not behave as expected, so the exit status alone proves nothing; a line that begins "expected" is a scenario that failed. This demonstrates the importer's behavior on fixtures, not any provider's accuracy or any record's completeness.
+A scenario that does not behave as expected says so on its line, and the command then exits 1 with a count of how many did not. Exit 0 means all four outcomes occurred. This demonstrates the importer's behavior on fixtures, not any provider's accuracy or any record's completeness.
 ## See the dashboard
 Literal
 ```bash
@@ -227,7 +229,7 @@ Every command below is documented at the top of its script.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status
-0.5.0. The importer now holds back the whole Sunday-to-Saturday week in progress by default, so the record only ever gains complete weeks; `import_weeks: "daily"` in `config/profile.json` restores the hold-back of only the current day, and the dashboard's 7-day tile reads the same setting to judge which days were scanned. `npm run check:credentials` proves each usage-API admin key that is set is accepted before `npm run refresh` uses it. A source-entry exclusion can fingerprint a source that reports no call count. CI runs on every push and pull request, and no change reaches `main` without it passing. Incomplete or ambiguous evidence stays visible rather than becoming zero. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
+0.6.0. Every daily source entry now records where its counter came from (a provider's report, a tool's own counter, a reconstruction, or an estimate), and the dashboard's source mix says how much of the shown total rests on each. The Claude Code and Claude API extractors keep their input, cache, and output components, mapped so the recorded headline is unchanged. The privacy checks report what they did not check as plainly as what they did: the comparison against a real record is passed, failed, or not evaluated, the served-tree eval checks that a synthetic site serves only synthetic rows, and the code eval refuses an unmarked token count written into shipped code. `npm run demo:import` exits 1 when a scenario does not behave as expected. The importer still holds back the whole Sunday-to-Saturday week in progress by default. Incomplete or ambiguous evidence stays visible rather than becoming zero. No real usage data is included. Publication of anyone's own real record is a separate decision that this tool does not make for you; it ships as a local, unpublished record by default.
 ## Contributing
 Ground rules, commit conventions, and what a change to a design invariant requires are in [CONTRIBUTING.md](CONTRIBUTING.md). Report a vulnerability privately as described in [SECURITY.md](SECURITY.md), not in a public issue.
 ## Attribution

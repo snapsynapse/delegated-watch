@@ -11,9 +11,15 @@ import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 const repo = resolve(import.meta.dirname, "..");
 const PRELOAD = join(repo, "tests", "support", "fixed-clock.mjs");
+// NODE_OPTIONS splits on spaces, so a checkout whose path holds one would
+// break the preload and run no nested tests at all. A file URL percent-encodes
+// the space; the assertion keeps any future change from reintroducing it.
+const PRELOAD_ARG = `--import=${pathToFileURL(PRELOAD).href}`;
+assert.doesNotMatch(PRELOAD_ARG, /\s/, "the preload argument must survive NODE_OPTIONS splitting");
 
 // Test files that read the wall clock, or spawn a command that does.
 const CLOCK_DEPENDENT = [
@@ -24,6 +30,7 @@ const CLOCK_DEPENDENT = [
   "tests/provider-cost.test.js",
   "tests/readme-worked-receipt.test.js",
   "tests/refresh-record.test.js",
+  "tests/source-authority.test.js",
   "tests/usage-api-extractors.test.js",
   "tests/whole-week-guards.test.js"
 ];
@@ -63,7 +70,7 @@ const runIn = (days, scratch) => new Promise((done) => {
       TMP: scratch,
       TEMP: scratch,
       DELEGATED_WATCH_TEST_CLOCK_DAYS: String(days),
-      NODE_OPTIONS: `${env.NODE_OPTIONS ?? ""} --import=${PRELOAD}`.trim()
+      NODE_OPTIONS: `${env.NODE_OPTIONS ?? ""} ${PRELOAD_ARG}`.trim()
     }
   });
   let output = "";

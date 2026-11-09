@@ -171,6 +171,36 @@ test("Anthropic usage becomes provider-authority v2 receipts, quarantined until 
   }
 });
 
+test("Anthropic receipts carry token components that reproduce the headline, and omit an unreported counter", async () => {
+  const api = await provider({
+    "/usage": [{ data: [
+      // Day 2: every record reports all four counters.
+      { starting_at: hour(2, 10), results: [{ model: "claude-a", uncached_input_tokens: 100, cache_creation: { ephemeral_5m_input_tokens: 30, ephemeral_1h_input_tokens: 20 }, cache_read_input_tokens: 5000, output_tokens: 40 }] },
+      { starting_at: hour(2, 11), results: [{ model: "claude-a", uncached_input_tokens: 1, cache_creation_input_tokens: 2, cache_read_input_tokens: 3, output_tokens: 4 }] },
+      // Day 3: one record leaves cache writes unreported.
+      { starting_at: hour(3, 0), results: [{ model: "claude-a", uncached_input_tokens: 11, cache_creation_input_tokens: 5, cache_read_input_tokens: 9, output_tokens: 2 }] },
+      { starting_at: hour(3, 1), results: [{ model: "claude-a", uncached_input_tokens: 7, cache_read_input_tokens: 1, output_tokens: 3 }] }
+    ], has_more: false }]
+  });
+  try {
+    const cwd = await workdir();
+    const env = { ANTHROPIC_ADMIN_KEY: KEY, ANTHROPIC_API_BASE_URL: `${api.base}/usage` };
+    const result = await run("extract-claude-api.js", ["--since", "2026-01-01", "--pace", "0", "--dry-run", "--no-cost-report"], env, cwd);
+    assert.equal(result.status, 0, result.stderr);
+    const [full, partial] = receiptsIn(result.stdout);
+    assert.deepEqual(full.token_components, {
+      schema_version: 1, input_tokens: 5156, cached_input_tokens: 5003, cache_write_tokens: 52, output_tokens: 44
+    });
+    const c = full.token_components;
+    assert.equal(Math.max(0, c.input_tokens - c.cached_input_tokens) + c.output_tokens, full.tokens);
+    assert.deepEqual(partial.token_components, { schema_version: 1, cached_input_tokens: 10, output_tokens: 5 },
+      "a counter one record left out is unavailable for the day, so input and cache writes are omitted");
+    for (const receipt of [full, partial]) assert.deepEqual(validateReceiptSchema(receipt), []);
+  } finally {
+    api.close();
+  }
+});
+
 test("OpenAI usage sums text endpoints, excludes cached input, and fails on a broken page", async () => {
   const api = await provider({
     "/org/completions": [

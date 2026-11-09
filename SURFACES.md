@@ -121,7 +121,7 @@ Recovery state says whether a figure can exist. It does not say how much to trus
 - A **cloud billing or service telemetry export**, authoritative for consumption and usually coarser than one request.
 - A **gateway or observability record**, authoritative for everything that traversed it and silent about everything that did not.
 - A **client-side reconstruction**, re-tokenizing content the surface never counted. Honest as an estimate, never as a provider figure.
-Publishing this axis in the dashboard is item 6 of `ROADMAP.md`.
+The dashboard's source mix shows this axis: each source is tagged with the authorities its tokens rest on, and one sentence gives the share of all shown tokens resting on a provider's counter, a tool's counter, a reconstruction, or an estimate.
 | Source id | Surface | Best achievable state | Status | Basis |
 |---|---|---|---|---|
 | `ollama` | Local inference relayed through the shipped capture | Exact | Shipped | `scripts/ollama-capture.mjs`; counters come from the response, one receipt per call |

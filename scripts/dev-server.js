@@ -1,6 +1,8 @@
 // Local site preview. It serves exactly the generated pages, rebuilding them
 // for each document request so the browser and the shipped artifacts share
-// bytes. Nothing else in the tree is reachable.
+// bytes, plus the three static files those pages reference by absolute path
+// (favicon, web manifest, social image), read from docs/ exactly as Pages
+// serves them. Nothing else in the tree is reachable.
 //
 // Routes follow config/site.json, so local paths match the served ones: the
 // dashboard answers at demo_path and, when that is not "/", the home page
@@ -107,6 +109,14 @@ if (demoPath !== "/") {
 }
 addRoute(demoPath, { script: "build.js", file: BUILT, directory: BUILD_DIR });
 
+// The static files the pages link to, by exact path. An allowlist, not a
+// directory: a path not named here is a 404 however it is spelled.
+const STATIC_FILES = new Map([
+  ["/favicon.svg", { file: join(LANDING_DIR, "favicon.svg"), type: "image/svg+xml" }],
+  ["/site.webmanifest", { file: join(LANDING_DIR, "site.webmanifest"), type: "application/manifest+json" }],
+  ["/imgs/og.png", { file: join(LANDING_DIR, "imgs", "og.png"), type: "image/png" }]
+]);
+
 const server = createServer(async (request, response) => {
   const hostHeader = requestHost(request.headers.host);
   if (hostHeader !== expectedHost) {
@@ -126,6 +136,21 @@ const server = createServer(async (request, response) => {
   } catch {
     response.writeHead(400, { "content-type": "text/plain; charset=utf-8" });
     response.end("Invalid request target.");
+    return;
+  }
+  const asset = STATIC_FILES.get(url.pathname);
+  if (asset) {
+    try {
+      // Same refusal as a built page: a symlink or a non-file is not served.
+      const body = await readBuilt(asset.file, dirname(asset.file));
+      response.writeHead(200, { "content-type": asset.type, "cache-control": "no-store", "content-length": body.length });
+      response.end(request.method === "HEAD" ? undefined : body);
+    } catch (error) {
+      const missing = error?.code === "ENOENT";
+      if (!missing) console.error(`Static file refused: ${url.pathname}: ${error instanceof Error ? error.message : String(error)}`);
+      response.writeHead(missing ? 404 : 500, { "content-type": "text/plain; charset=utf-8" });
+      response.end(missing ? "Not found." : "Static file refused.");
+    }
     return;
   }
   const route = routes.get(url.pathname);
@@ -163,4 +188,5 @@ server.listen(port, host, () => {
   const listeningPort = typeof address === "object" && address ? address.port : port;
   console.log(`Delegated.watch dev server on http://${expectedHost}:${listeningPort}`);
   console.log(`Serving only the generated pages (${[...new Set(routes.keys())].filter((path) => !path.endsWith("index.html")).join(", ")}); every document request rebuilds one.`);
+  console.log(`Static files: ${[...STATIC_FILES.keys()].join(", ")}.`);
 });

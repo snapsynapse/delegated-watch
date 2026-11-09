@@ -35,7 +35,8 @@ import { join } from "node:path";
 import {
   aggregateTokenComponents,
   reconcileReceipts,
-  validateReceiptSchema
+  validateReceiptSchema,
+  weakestAuthority
 } from "./lib/receipt-schema.js";
 import {
   applySourceEntryExclusions,
@@ -218,6 +219,10 @@ for (const bucket of buckets.values()) {
   if (bucket.hasCalls) entry.calls = bucket.calls;
   const tokenComponents = aggregateTokenComponents(bucket.componentReceipts);
   if (tokenComponents) entry.token_components = tokenComponents;
+  // Where the counter came from, weakest contributor first; absent when any
+  // contributing receipt predates the authority field.
+  const authority = weakestAuthority(bucket.componentReceipts);
+  if (authority) entry.authority = authority;
   // Always recorded once origin is known, so the dataset is self-describing and
   // the dashboard can attribute a day without re-reading receipts. An empty map
   // means the receipts predate origin tagging.

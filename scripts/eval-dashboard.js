@@ -179,7 +179,8 @@ const requiredIds = [
   "pipelineHeadline",
   "pipelineHealth",
   "driverDonut",
-  "sourceDonut"
+  "sourceDonut",
+  "authoritySummary"
 ];
 const missingIds = requiredIds.filter((id) => !template.includes(`id="${id}"`));
 check("dashboard interpretation controls exist", missingIds.length ? "FAIL" : "ok", missingIds.join(", "));
@@ -268,7 +269,7 @@ check(
 // Sunday-to-Saturday week holding the newest row, viewed four days after
 // that Saturday, and resolve. A daily record is read the next day, and its
 // window must end on the newest row.
-const { summarizeDashboardRows } = await import("../src/dashboard-model.js");
+const { summarizeAuthority, summarizeDashboardRows } = await import("../src/dashboard-model.js");
 const inlinedRows = extractInline("__DAILY_BURN__");
 // The page must carry the profile's import mode, or its tile would judge
 // which days were scanned by a rule the importer did not follow.
@@ -304,6 +305,21 @@ if (newest) {
   );
 } else {
   check("7-day tile covers the last scanned days", built ? "FAIL" : "ok", built ? "no inlined daily rows" : "");
+}
+
+// The source mix says how much of the total rests on whose counter. Every
+// counted token has to land in exactly one authority bucket, an unrecorded one
+// included, or the shares it prints describe a different total.
+if (inlinedRows) {
+  const { overall, total } = summarizeAuthority(inlinedRows);
+  const split = Object.values(overall).reduce((sum, tokens) => sum + tokens, 0);
+  const rowsTotal = inlinedRows.reduce((sum, row) => sum + Number(row.total || 0), 0);
+  check("authority split covers every counted token", split === total && total === rowsTotal ? "ok" : "FAIL",
+    split === total && total === rowsTotal
+      ? `${overall.unrecorded ? `${overall.unrecorded} tokens without a recorded authority; ` : ""}${total} tokens`
+      : `split ${split}, entries ${total}, row totals ${rowsTotal}`);
+} else {
+  check("authority split covers every counted token", built ? "FAIL" : "ok", built ? "no inlined daily rows" : "");
 }
 
 const width = Math.max(...results.map((result) => result.name.length));
