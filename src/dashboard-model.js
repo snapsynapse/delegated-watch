@@ -123,7 +123,7 @@ export const AUTHORITY_LABELS = {
   provider: "provider counter",
   tool: "tool counter",
   reconstructed: "reconstructed",
-  estimated: "estimate",
+  estimated: "estimator",
   unrecorded: "authority not recorded"
 };
 

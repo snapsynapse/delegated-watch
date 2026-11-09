@@ -504,6 +504,7 @@ h2 {
 
 .heatmap:focus-visible,
 .drivers:focus-visible,
+.sources:focus-visible,
 .table-wrap:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 3px;
@@ -1394,7 +1395,9 @@ td {
 .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 
 .mix-layout .source-row {
-  grid-template-columns: 10px minmax(0, 1fr) auto minmax(58px, auto);
+  /* The tag column is capped so a fidelity tag and an authority tag stack
+     instead of taking width from the source name. */
+  grid-template-columns: 10px minmax(0, 1fr) auto minmax(58px, 7rem);
   gap: 8px;
   min-height: 40px;
   padding: 5px 8px 5px 0;
@@ -1419,6 +1422,7 @@ td {
 }
 
 .mix-layout .source-row .tag {
+  white-space: nowrap;
   min-height: 17px;
   margin-left: 0;
   padding: 0 5px;
@@ -1850,7 +1854,7 @@ td {
           </div>
           <div class="mix-layout donut-wrap">
             <svg id="sourceDonut" class="donut donut-large" role="img" aria-label="Source mix donut chart"></svg>
-            <div id="sources" class="sources"></div>
+            <div id="sources" class="sources" role="region" aria-label="Source mix list. Use arrow keys to scroll." tabindex="0"></div>
           </div>
           <p class="heat-note" id="authoritySummary"></p>
         </article>
@@ -2081,7 +2085,7 @@ const AUTHORITY_LABELS = {
   provider: "provider counter",
   tool: "tool counter",
   reconstructed: "reconstructed",
-  estimated: "estimate",
+  estimated: "estimator",
   unrecorded: "authority not recorded"
 };
 
