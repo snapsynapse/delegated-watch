@@ -71,6 +71,18 @@ export const RESERVED_ORIGINS = [
 // estimated sources have neither, matching how a real estimator behaves.
 const EXACT_SOURCES = ["codex", "claude_code", "openai_api"];
 const ESTIMATED_SOURCES = ["claude_chat", "qwen_local", "perplexity_api"];
+// Where each synthetic source's counter comes from, so the demo shows all
+// three kinds the dashboard distinguishes: a provider report, a tool's own
+// counter, and an estimate. A lookup only: it draws nothing from the PRNG,
+// so every other generated value is unchanged.
+const SOURCE_AUTHORITY = {
+  codex: "tool",
+  claude_code: "tool",
+  openai_api: "provider",
+  claude_chat: "estimated",
+  qwen_local: "estimated",
+  perplexity_api: "estimated"
+};
 
 const REVIEWED_DRIVERS = [
   "building:feature",
@@ -150,6 +162,7 @@ function generateRow(rng, date, dayOfWeek, alwaysActive = false) {
     const tokens = isExact ? rng.randInt(1500, 42000) : rng.randInt(300, 9000);
     const entry = { tokens, fidelity: isExact ? "exact" : "estimated" };
     if (isExact) entry.calls = rng.randInt(1, 40);
+    entry.authority = SOURCE_AUTHORITY[source];
     const originPool = isExact
       ? [RESERVED_ORIGINS[0], RESERVED_ORIGINS[1]]
       : [RESERVED_ORIGINS[2], RESERVED_ORIGINS[0]];

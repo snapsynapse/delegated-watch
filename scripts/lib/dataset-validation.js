@@ -1,5 +1,5 @@
 import { validateLabelProvenance } from "./driver-evidence.js";
-import { PROVIDER_COST_FIELD, validateTokenComponents } from "./receipt-schema.js";
+import { AUTHORITY_LEVELS, PROVIDER_COST_FIELD, validateTokenComponents } from "./receipt-schema.js";
 
 const SOURCE_PATTERN = /^[a-z0-9_]+$/;
 const ORIGIN_PATTERN = /^[a-z0-9][a-z0-9._/-]*$/;
@@ -149,6 +149,9 @@ export function validateDataset(rows, options = {}) {
           if (entry.coverage !== "incomplete") {
             errors.push(`${label} source ${source} coverage_reasons require incomplete coverage`);
           }
+        }
+        if (Object.hasOwn(entry, "authority") && !AUTHORITY_LEVELS.includes(entry.authority)) {
+          errors.push(`${label} source ${source} authority must be ${AUTHORITY_LEVELS.join(", ")} when present`);
         }
         if (entry.coverage === "incomplete" && !entry.coverage_reasons?.length) {
           errors.push(`${label} source ${source} incomplete coverage requires coverage_reasons`);

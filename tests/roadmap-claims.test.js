@@ -36,17 +36,16 @@ test("the roadmap lists no delivered work", () => {
     "a delivered item belongs in CHANGELOG.md, not ROADMAP.md");
 });
 
-test("numbered sections run 1 to 7, and every cross-reference resolves", () => {
+test("numbered sections run 1 to 6, and every cross-reference resolves", () => {
   const numbers = [...roadmap.matchAll(/^## (\d+)\. /gm)].map((match) => Number(match[1]));
-  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6]);
   assert.match(roadmap, /Item 5 below records why a gateway/);
   assert.match(section(5), /^## 5\. Gateway/);
-  assert.match(roadmap, /Item 7 is the version of this that fits/);
-  assert.match(section(7), /^## 7\. Self-reported acceptance/);
-  assert.match(roadmap, /Unranked against items 1 through 6/);
-  // SURFACES.md points at the dashboard authority item by number.
-  assert.match(surfaces, /is item 6 of `ROADMAP\.md`/);
-  assert.match(section(6), /^## 6\. Show counter authority on the dashboard/);
+  assert.match(roadmap, /Item 6 is the version of this that fits/);
+  assert.match(section(6), /^## 6\. Self-reported acceptance/);
+  assert.match(roadmap, /Unranked against items 1 through 5/);
+  // Nothing elsewhere still cites a roadmap item by a number that moved.
+  assert.doesNotMatch(surfaces, /item \d+ of `ROADMAP\.md`/);
 });
 
 test("item 1: exactly the extractors it names emit token components", async () => {
@@ -68,15 +67,8 @@ test("item 4: the receipt schema has only a sorted models array, not a requested
   assert.match(schema, /must be sorted and unique/);
 });
 
-test("item 6: the register publishes authority and the dashboard does not show it yet", async () => {
-  assert.match(surfaces, /### The second axis: where the counter comes from/);
-  for (const path of ["src/app.js", "src/dashboard-model.js"]) {
-    assert.doesNotMatch(await read(path), /\bauthority\b/, `${path} renders authority: update ROADMAP.md item 6`);
-  }
-});
-
-test("item 7: no self_reported authority exists yet", async () => {
-  assert.deepEqual(await scriptsMatching(/self_reported/), [], "self_reported exists: update ROADMAP.md item 7");
+test("item 6: no self_reported authority exists yet", async () => {
+  assert.deepEqual(await scriptsMatching(/self_reported/), [], "self_reported exists: update ROADMAP.md item 6");
   assert.doesNotMatch(await read("scripts/lib/receipt-schema.js"), /self_reported/);
 });
 

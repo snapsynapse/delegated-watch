@@ -1054,6 +1054,13 @@ td {
   background: var(--rose);
 }
 
+.tag.authority {
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  font-weight: 700;
+}
+
 .tag.incomplete {
   color: #281604;
   background: var(--amber);

@@ -74,6 +74,24 @@ const AUTHORITIES = new Map([
 
 export const authorityRankOf = (receipt) => AUTHORITIES.get(receipt?.authority) ?? 0;
 
+// Authority values, weakest first.
+export const AUTHORITY_LEVELS = [...AUTHORITIES.keys()];
+
+// The authority a merged entry can claim: the weakest of the receipts that
+// formed it, as fidelity falls to estimated when any part is estimated. An
+// entry with any contributor that carries no authority claims none, so an
+// unlabelled part is never presented under a stronger part's label.
+export const weakestAuthority = (items) => {
+  if (!items.length) return null;
+  let weakest = null;
+  for (const item of items) {
+    const rank = authorityRankOf(item);
+    if (!rank) return null;
+    if (!weakest || rank < authorityRankOf(weakest)) weakest = item;
+  }
+  return weakest.authority;
+};
+
 export const sameAuthorityScope = (left, right) =>
   left?.date === right?.date &&
   typeof left?.provider === "string" &&

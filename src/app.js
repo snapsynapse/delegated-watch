@@ -1,9 +1,12 @@
 import {
+  AUTHORITY_LABELS,
+  AUTHORITY_ORDER,
   filterDashboardRows,
   filtersAreActive,
   sourceTotal,
   summarizeDashboardRows,
   summarizeDriverAttribution,
+  summarizeAuthority,
   summarizeCalendarWindows,
   escapeHtml,
   weeklySeries,
@@ -762,6 +765,29 @@ const share = (value, total) => {
   return pct < 0.5 ? "<1%" : `${Math.round(pct)}%`;
 };
 
+// One sentence under the source mix, in shares of the tokens shown, so a
+// reader can see how much of the total rests on a provider's own counter.
+const AUTHORITY_PHRASES = {
+  provider: "rest on a provider's own counter",
+  tool: "rest on a tool's own counter",
+  reconstructed: "are reconstructed",
+  estimated: "are estimates",
+  unrecorded: "have no recorded authority"
+};
+const renderAuthoritySummary = ({ overall, total }) => {
+  const note = document.querySelector("#authoritySummary");
+  if (!note) return;
+  if (!total) {
+    note.textContent = "";
+    return;
+  }
+  const parts = [...AUTHORITY_ORDER, "unrecorded"]
+    .filter((key) => overall[key] > 0)
+    .map((key) => `${share(overall[key], total)} ${AUTHORITY_PHRASES[key]}`);
+  const sentence = parts.length > 1 ? `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1)}` : parts[0];
+  note.textContent = `Of these tokens, ${sentence}.`;
+};
+
 const renderSources = (rows) => {
   const sources = document.querySelector("#sources");
   const total = sum(rows);
@@ -779,6 +805,14 @@ const renderSources = (rows) => {
   const slices = donutSlices(ranked.map(([key, value]) => [labelSource(key), value.tokens]), total);
   const colorFor = new Map(ranked.map(([key], index) => [key, slices[index].color]));
   renderDonut(document.querySelector("#sourceDonut"), slices, formatTokens(total), `${ranked.length} sources`);
+  // Which totals rest on whose counter: the second axis beside fidelity.
+  const authority = summarizeAuthority(rows);
+  const authorityKeys = [...AUTHORITY_ORDER, "unrecorded"];
+  const authorityTags = (split) => authorityKeys
+    .filter((key) => split?.[key] > 0)
+    .map((key) => `<span class="tag authority">${text(AUTHORITY_LABELS[key])}</span>`)
+    .join("");
+  renderAuthoritySummary(authority);
 
   sources.innerHTML = ranked
     .map(([source, value]) => {
@@ -796,7 +830,7 @@ const renderSources = (rows) => {
             <span>${formatTokens(value.tokens)} tokens${value.calls ? `, ${Number(value.calls)} calls` : ""}</span>
           </div>
           <b>${pctLabel}</b>
-          <div>${fidelity}${coverageTag(value)}</div>
+          <div>${fidelity}${coverageTag(value)}${authorityTags(authority.bySource[source])}</div>
         </div>`;
     }).join("");
 };

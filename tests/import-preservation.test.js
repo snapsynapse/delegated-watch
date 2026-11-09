@@ -682,6 +682,7 @@ test("import persists a standalone cached-only measured day instead of treating 
           output_tokens: 0,
           cached_input_tokens: 750
         },
+        authority: "provider",
         by_origin: { "account/openai": 0 }
       }
     },
@@ -759,7 +760,34 @@ test("partial authority replacement rebuilds caveats from only the surviving acc
     assert.equal(row.sources.codex.tokens, 100);
     assert.equal(row.sources.codex.coverage === "incomplete", incompleteRemaining);
     assert.equal(Object.hasOwn(row.sources.openai_capture, "coverage"), false);
+    // Authority is rebuilt from the surviving evidence too: the replaced half
+    // is provider evidence under its own source, and the remaining codex half
+    // is still a tool counter.
+    assert.equal(row.sources.codex.authority, "tool");
+    assert.equal(row.sources.openai_capture.authority, "provider");
   }
+});
+
+test("a partial replacement rebuilds the remaining entry's authority from the surviving evidence", async () => {
+  // codex starts as one estimated and one tool receipt, so its entry is
+  // estimated. A provider receipt then retires the estimated half; what
+  // remains is a tool counter, and the rebuilt entry must say so rather than
+  // keep the label of evidence it no longer holds.
+  const cwd = await makeAuthorityFixture();
+  const keys = ["sha256:" + "c".repeat(64), "sha256:" + "d".repeat(64)];
+  const estimated = { ...authorityReceipt({ authority: "estimated", source: "codex", keys: [keys[0]] }), fidelity: "estimated", snapshot_key: "synthetic-estimated" };
+  const tool = { ...authorityReceipt({ authority: "tool", source: "codex", keys: [keys[1]] }), snapshot_key: "synthetic-tool" };
+  const initial = await runImport(cwd, [estimated, tool]);
+  assert.equal(initial.status, 0, initial.stderr);
+  let [row] = JSON.parse(await readFile(join(cwd, "public/data/daily-burn.json"), "utf8"));
+  assert.equal(row.sources.codex.authority, "estimated");
+  const provider = authorityReceipt({ authority: "provider", source: "openai_capture", keys: [keys[0]] });
+  const replacement = await runImport(cwd, [provider]);
+  assert.equal(replacement.status, 0, replacement.stderr);
+  [row] = JSON.parse(await readFile(join(cwd, "public/data/daily-burn.json"), "utf8"));
+  assert.equal(row.sources.codex.tokens, 100);
+  assert.equal(row.sources.codex.authority, "tool");
+  assert.equal(row.sources.openai_capture.authority, "provider");
 });
 
 // These fixtures own their configuration as well as their data. Exclusion and

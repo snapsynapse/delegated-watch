@@ -6,6 +6,7 @@
       "qwen_local": {
         "tokens": 4749,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4749
         }
@@ -14,6 +15,7 @@
         "tokens": 36327,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 23613,
           "machine/example-laptop": 12714
@@ -22,6 +24,7 @@
       "claude_chat": {
         "tokens": 6200,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4030,
           "machine/example": 2170
@@ -39,6 +42,7 @@
       "claude_chat": {
         "tokens": 7221,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4694,
           "machine/example": 2527
@@ -48,6 +52,7 @@
         "tokens": 1919,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 1919
         }
@@ -64,6 +69,7 @@
       "perplexity_api": {
         "tokens": 3405,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2213,
           "machine/example": 1192
@@ -73,6 +79,7 @@
         "tokens": 20642,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 13417,
           "machine/example-laptop": 7225
@@ -91,6 +98,7 @@
         "tokens": 14784,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9610,
           "machine/example-laptop": 5174
@@ -100,6 +108,7 @@
         "tokens": 2516,
         "fidelity": "exact",
         "calls": 39,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 2516
         }
@@ -117,6 +126,7 @@
         "tokens": 23348,
         "fidelity": "exact",
         "calls": 19,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 15176,
           "machine/example-laptop": 8172
@@ -126,6 +136,7 @@
         "tokens": 23172,
         "fidelity": "exact",
         "calls": 16,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 15062,
           "machine/example-laptop": 8110
@@ -134,6 +145,7 @@
       "perplexity_api": {
         "tokens": 1920,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1248,
           "machine/example": 672
@@ -152,6 +164,7 @@
         "tokens": 15499,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 10074,
           "machine/example-laptop": 5425
@@ -160,6 +173,7 @@
       "perplexity_api": {
         "tokens": 4766,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3098,
           "machine/example": 1668
@@ -169,6 +183,7 @@
         "tokens": 11443,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 11443
         }
@@ -185,6 +200,7 @@
       "perplexity_api": {
         "tokens": 1274,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1274
         }
@@ -193,6 +209,7 @@
         "tokens": 20275,
         "fidelity": "exact",
         "calls": 18,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20275
         }
@@ -210,6 +227,7 @@
         "tokens": 8402,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 5461,
           "machine/example-laptop": 2941
@@ -218,6 +236,7 @@
       "qwen_local": {
         "tokens": 8711,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5662,
           "machine/example": 3049
@@ -235,6 +254,7 @@
       "claude_chat": {
         "tokens": 7862,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5110,
           "machine/example": 2752
@@ -244,6 +264,7 @@
         "tokens": 2576,
         "fidelity": "exact",
         "calls": 27,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 1674,
           "machine/example-laptop": 902
@@ -262,6 +283,7 @@
         "tokens": 29145,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 29145
         }
@@ -269,6 +291,7 @@
       "qwen_local": {
         "tokens": 3625,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2356,
           "machine/example": 1269
@@ -286,6 +309,7 @@
       "perplexity_api": {
         "tokens": 8338,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5420,
           "machine/example": 2918
@@ -304,6 +328,7 @@
         "tokens": 31575,
         "fidelity": "exact",
         "calls": 8,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20524,
           "machine/example-laptop": 11051
@@ -312,6 +337,7 @@
       "claude_chat": {
         "tokens": 5892,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3830,
           "machine/example": 2062
@@ -320,6 +346,7 @@
       "perplexity_api": {
         "tokens": 7135,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4638,
           "machine/example": 2497
@@ -337,6 +364,7 @@
       "perplexity_api": {
         "tokens": 3416,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3416
         }
@@ -344,6 +372,7 @@
       "claude_chat": {
         "tokens": 6563,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6563
         }
@@ -360,6 +389,7 @@
       "qwen_local": {
         "tokens": 3191,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2074,
           "machine/example": 1117
@@ -378,6 +408,7 @@
         "tokens": 35071,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 22796,
           "machine/example-laptop": 12275
@@ -396,6 +427,7 @@
         "tokens": 41350,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 26878,
           "machine/example-laptop": 14472
@@ -405,6 +437,7 @@
         "tokens": 10982,
         "fidelity": "exact",
         "calls": 29,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 7138,
           "machine/example-laptop": 3844
@@ -423,6 +456,7 @@
         "tokens": 27534,
         "fidelity": "exact",
         "calls": 37,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 17897,
           "machine/example-laptop": 9637
@@ -441,6 +475,7 @@
         "tokens": 29664,
         "fidelity": "exact",
         "calls": 24,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19282,
           "machine/example-laptop": 10382
@@ -450,6 +485,7 @@
         "tokens": 12717,
         "fidelity": "exact",
         "calls": 5,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 8266,
           "machine/example-laptop": 4451
@@ -459,6 +495,7 @@
         "tokens": 35966,
         "fidelity": "exact",
         "calls": 24,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 23378,
           "machine/example-laptop": 12588
@@ -477,6 +514,7 @@
         "tokens": 29273,
         "fidelity": "exact",
         "calls": 5,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19027,
           "machine/example-laptop": 10246
@@ -485,6 +523,7 @@
       "qwen_local": {
         "tokens": 3353,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3353
         }
@@ -493,6 +532,7 @@
         "tokens": 30503,
         "fidelity": "exact",
         "calls": 34,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 19827,
           "machine/example-laptop": 10676
@@ -511,6 +551,7 @@
         "tokens": 7425,
         "fidelity": "exact",
         "calls": 18,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 7425
         }
@@ -528,6 +569,7 @@
         "tokens": 24903,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 24903
         }
@@ -536,6 +578,7 @@
         "tokens": 21540,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 21540
         }
@@ -544,6 +587,7 @@
         "tokens": 29027,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 18868,
           "machine/example-laptop": 10159
@@ -561,6 +605,7 @@
       "claude_chat": {
         "tokens": 718,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 467,
           "machine/example": 251
@@ -578,6 +623,7 @@
       "perplexity_api": {
         "tokens": 7613,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4948,
           "machine/example": 2665
@@ -587,6 +633,7 @@
         "tokens": 15627,
         "fidelity": "exact",
         "calls": 34,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 10158,
           "machine/example-laptop": 5469
@@ -595,6 +642,7 @@
       "claude_chat": {
         "tokens": 4992,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3245,
           "machine/example": 1747
@@ -612,6 +660,7 @@
       "claude_chat": {
         "tokens": 1412,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1412
         }
@@ -620,6 +669,7 @@
         "tokens": 24866,
         "fidelity": "exact",
         "calls": 28,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16163,
           "machine/example-laptop": 8703
@@ -638,6 +688,7 @@
         "tokens": 13603,
         "fidelity": "exact",
         "calls": 17,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 8842,
           "machine/example-laptop": 4761
@@ -646,6 +697,7 @@
       "perplexity_api": {
         "tokens": 6515,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4235,
           "machine/example": 2280
@@ -663,6 +715,7 @@
       "qwen_local": {
         "tokens": 7717,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5016,
           "machine/example": 2701
@@ -671,6 +724,7 @@
       "claude_chat": {
         "tokens": 8097,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8097
         }
@@ -688,6 +742,7 @@
         "tokens": 31732,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 31732
         }
@@ -696,6 +751,7 @@
         "tokens": 40549,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 26357,
           "machine/example-laptop": 14192
@@ -714,6 +770,7 @@
         "tokens": 31927,
         "fidelity": "exact",
         "calls": 9,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20753,
           "machine/example-laptop": 11174
@@ -723,6 +780,7 @@
         "tokens": 8910,
         "fidelity": "exact",
         "calls": 34,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 8910
         }
@@ -730,6 +788,7 @@
       "claude_chat": {
         "tokens": 6666,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4333,
           "machine/example": 2333
@@ -747,6 +806,7 @@
       "qwen_local": {
         "tokens": 917,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 596,
           "machine/example": 321
@@ -756,6 +816,7 @@
         "tokens": 15934,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 10357,
           "machine/example-laptop": 5577
@@ -764,6 +825,7 @@
       "perplexity_api": {
         "tokens": 8292,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8292
         }
@@ -780,6 +842,7 @@
       "qwen_local": {
         "tokens": 5849,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3802,
           "machine/example": 2047
@@ -797,6 +860,7 @@
       "claude_chat": {
         "tokens": 3391,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2204,
           "machine/example": 1187
@@ -815,6 +879,7 @@
         "tokens": 11963,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 7776,
           "machine/example-laptop": 4187
@@ -823,6 +888,7 @@
       "perplexity_api": {
         "tokens": 5485,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5485
         }
@@ -839,6 +905,7 @@
       "qwen_local": {
         "tokens": 1034,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 672,
           "machine/example": 362
@@ -856,6 +923,7 @@
       "claude_chat": {
         "tokens": 8855,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8855
         }
@@ -863,6 +931,7 @@
       "perplexity_api": {
         "tokens": 1026,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1026
         }
@@ -880,6 +949,7 @@
         "tokens": 27105,
         "fidelity": "exact",
         "calls": 14,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 17618,
           "machine/example-laptop": 9487
@@ -889,6 +959,7 @@
         "tokens": 22831,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14840,
           "machine/example-laptop": 7991
@@ -906,6 +977,7 @@
       "claude_chat": {
         "tokens": 5121,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3329,
           "machine/example": 1792
@@ -924,6 +996,7 @@
         "tokens": 17676,
         "fidelity": "exact",
         "calls": 32,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 17676
         }
@@ -932,6 +1005,7 @@
         "tokens": 2411,
         "fidelity": "exact",
         "calls": 25,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 1567,
           "machine/example-laptop": 844
@@ -940,6 +1014,7 @@
       "claude_chat": {
         "tokens": 8628,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5608,
           "machine/example": 3020
@@ -958,6 +1033,7 @@
         "tokens": 22025,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14316,
           "machine/example-laptop": 7709
@@ -966,6 +1042,7 @@
       "perplexity_api": {
         "tokens": 7770,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7770
         }
@@ -983,6 +1060,7 @@
         "tokens": 18877,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 12270,
           "machine/example-laptop": 6607
@@ -1001,6 +1079,7 @@
         "tokens": 14397,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 14397
         }
@@ -1018,6 +1097,7 @@
         "tokens": 5464,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 3552,
           "machine/example-laptop": 1912
@@ -1035,6 +1115,7 @@
       "claude_chat": {
         "tokens": 2941,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2941
         }
@@ -1042,6 +1123,7 @@
       "perplexity_api": {
         "tokens": 6111,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3972,
           "machine/example": 2139
@@ -1060,6 +1142,7 @@
         "tokens": 10913,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 10913
         }
@@ -1068,6 +1151,7 @@
         "tokens": 28457,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 28457
         }
@@ -1075,6 +1159,7 @@
       "claude_chat": {
         "tokens": 1416,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 920,
           "machine/example": 496
@@ -1093,6 +1178,7 @@
         "tokens": 32188,
         "fidelity": "exact",
         "calls": 2,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 32188
         }
@@ -1100,6 +1186,7 @@
       "qwen_local": {
         "tokens": 565,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 565
         }
@@ -1108,6 +1195,7 @@
         "tokens": 22556,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 22556
         }
@@ -1125,6 +1213,7 @@
         "tokens": 30477,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 19810,
           "machine/example-laptop": 10667
@@ -1134,6 +1223,7 @@
         "tokens": 4498,
         "fidelity": "exact",
         "calls": 24,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 2924,
           "machine/example-laptop": 1574
@@ -1142,6 +1232,7 @@
       "claude_chat": {
         "tokens": 2578,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1676,
           "machine/example": 902
@@ -1160,6 +1251,7 @@
         "tokens": 12964,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 12964
         }
@@ -1168,6 +1260,7 @@
         "tokens": 29359,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19083,
           "machine/example-laptop": 10276
@@ -1176,6 +1269,7 @@
       "claude_chat": {
         "tokens": 5869,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5869
         }
@@ -1193,6 +1287,7 @@
         "tokens": 13524,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 8791,
           "machine/example-laptop": 4733
@@ -1201,6 +1296,7 @@
       "perplexity_api": {
         "tokens": 3541,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3541
         }
@@ -1218,6 +1314,7 @@
         "tokens": 20000,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 13000,
           "machine/example-laptop": 7000
@@ -1236,6 +1333,7 @@
         "tokens": 14537,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9449,
           "machine/example-laptop": 5088
@@ -1244,6 +1342,7 @@
       "claude_chat": {
         "tokens": 2944,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1914,
           "machine/example": 1030
@@ -1253,6 +1352,7 @@
         "tokens": 7731,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 7731
         }
@@ -1269,6 +1369,7 @@
       "qwen_local": {
         "tokens": 7095,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4612,
           "machine/example": 2483
@@ -1278,6 +1379,7 @@
         "tokens": 39692,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 25800,
           "machine/example-laptop": 13892
@@ -1295,6 +1397,7 @@
       "claude_chat": {
         "tokens": 728,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 473,
           "machine/example": 255
@@ -1303,6 +1406,7 @@
       "qwen_local": {
         "tokens": 3041,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1977,
           "machine/example": 1064
@@ -1311,6 +1415,7 @@
       "perplexity_api": {
         "tokens": 5139,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3340,
           "machine/example": 1799
@@ -1329,6 +1434,7 @@
         "tokens": 41926,
         "fidelity": "exact",
         "calls": 33,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 41926
         }
@@ -1346,6 +1452,7 @@
         "tokens": 15725,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 10221,
           "machine/example-laptop": 5504
@@ -1355,6 +1462,7 @@
         "tokens": 15923,
         "fidelity": "exact",
         "calls": 22,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 15923
         }
@@ -1371,6 +1479,7 @@
       "qwen_local": {
         "tokens": 3116,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2025,
           "machine/example": 1091
@@ -1379,6 +1488,7 @@
       "perplexity_api": {
         "tokens": 7849,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5102,
           "machine/example": 2747
@@ -1397,6 +1507,7 @@
         "tokens": 19962,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 19962
         }
@@ -1404,6 +1515,7 @@
       "claude_chat": {
         "tokens": 5171,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3361,
           "machine/example": 1810
@@ -1413,6 +1525,7 @@
         "tokens": 14068,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9144,
           "machine/example-laptop": 4924
@@ -1431,6 +1544,7 @@
         "tokens": 20338,
         "fidelity": "exact",
         "calls": 22,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20338
         }
@@ -1447,6 +1561,7 @@
       "claude_chat": {
         "tokens": 5578,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5578
         }
@@ -1454,6 +1569,7 @@
       "qwen_local": {
         "tokens": 7183,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4669,
           "machine/example": 2514
@@ -1471,6 +1587,7 @@
       "perplexity_api": {
         "tokens": 5675,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3689,
           "machine/example": 1986
@@ -1479,6 +1596,7 @@
       "qwen_local": {
         "tokens": 7997,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7997
         }
@@ -1496,6 +1614,7 @@
         "tokens": 33636,
         "fidelity": "exact",
         "calls": 40,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 21863,
           "machine/example-laptop": 11773
@@ -1504,6 +1623,7 @@
       "claude_chat": {
         "tokens": 5311,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5311
         }
@@ -1520,6 +1640,7 @@
       "qwen_local": {
         "tokens": 6935,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6935
         }
@@ -1528,6 +1649,7 @@
         "tokens": 41397,
         "fidelity": "exact",
         "calls": 32,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 41397
         }
@@ -1544,6 +1666,7 @@
       "perplexity_api": {
         "tokens": 5944,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3864,
           "machine/example": 2080
@@ -1562,6 +1685,7 @@
         "tokens": 38345,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 38345
         }
@@ -1569,6 +1693,7 @@
       "qwen_local": {
         "tokens": 8396,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5457,
           "machine/example": 2939
@@ -1578,6 +1703,7 @@
         "tokens": 39190,
         "fidelity": "exact",
         "calls": 27,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 39190
         }
@@ -1595,6 +1721,7 @@
         "tokens": 17410,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 11317,
           "machine/example-laptop": 6093
@@ -1612,6 +1739,7 @@
       "claude_chat": {
         "tokens": 8724,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8724
         }
@@ -1629,6 +1757,7 @@
         "tokens": 41308,
         "fidelity": "exact",
         "calls": 25,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 26850,
           "machine/example-laptop": 14458
@@ -1647,6 +1776,7 @@
         "tokens": 28162,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 18305,
           "machine/example-laptop": 9857
@@ -1664,6 +1794,7 @@
       "claude_chat": {
         "tokens": 4323,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4323
         }
@@ -1672,6 +1803,7 @@
         "tokens": 41132,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 41132
         }
@@ -1679,6 +1811,7 @@
       "qwen_local": {
         "tokens": 6641,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6641
         }
@@ -1696,6 +1829,7 @@
         "tokens": 17595,
         "fidelity": "exact",
         "calls": 29,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 11437,
           "machine/example-laptop": 6158
@@ -1705,6 +1839,7 @@
         "tokens": 3297,
         "fidelity": "exact",
         "calls": 8,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 3297
         }
@@ -1713,6 +1848,7 @@
         "tokens": 29698,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19304,
           "machine/example-laptop": 10394
@@ -1731,6 +1867,7 @@
         "tokens": 40136,
         "fidelity": "exact",
         "calls": 25,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 26088,
           "machine/example-laptop": 14048
@@ -1739,6 +1876,7 @@
       "perplexity_api": {
         "tokens": 8584,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8584
         }
@@ -1755,6 +1893,7 @@
       "perplexity_api": {
         "tokens": 8536,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5548,
           "machine/example": 2988
@@ -1763,6 +1902,7 @@
       "claude_chat": {
         "tokens": 1741,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1132,
           "machine/example": 609
@@ -1781,6 +1921,7 @@
         "tokens": 35081,
         "fidelity": "exact",
         "calls": 14,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 22803,
           "machine/example-laptop": 12278
@@ -1790,6 +1931,7 @@
         "tokens": 41507,
         "fidelity": "exact",
         "calls": 18,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 41507
         }
@@ -1807,6 +1949,7 @@
         "tokens": 24725,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16071,
           "machine/example-laptop": 8654
@@ -1824,6 +1967,7 @@
       "perplexity_api": {
         "tokens": 1003,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 652,
           "machine/example": 351
@@ -1842,6 +1986,7 @@
         "tokens": 17989,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 17989
         }
@@ -1850,6 +1995,7 @@
         "tokens": 26962,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 26962
         }
@@ -1866,6 +2012,7 @@
       "qwen_local": {
         "tokens": 2650,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1723,
           "machine/example": 927
@@ -1875,6 +2022,7 @@
         "tokens": 24505,
         "fidelity": "exact",
         "calls": 14,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 24505
         }
@@ -1891,6 +2039,7 @@
       "claude_chat": {
         "tokens": 2487,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1617,
           "machine/example": 870
@@ -1909,6 +2058,7 @@
         "tokens": 26255,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 26255
         }
@@ -1925,6 +2075,7 @@
       "perplexity_api": {
         "tokens": 3910,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3910
         }
@@ -1942,6 +2093,7 @@
         "tokens": 16998,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16998
         }
@@ -1950,6 +2102,7 @@
         "tokens": 20378,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20378
         }
@@ -1957,6 +2110,7 @@
       "claude_chat": {
         "tokens": 3270,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2126,
           "machine/example": 1144
@@ -1974,6 +2128,7 @@
       "qwen_local": {
         "tokens": 5337,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3469,
           "machine/example": 1868
@@ -1983,6 +2138,7 @@
         "tokens": 2516,
         "fidelity": "exact",
         "calls": 20,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 1635,
           "machine/example-laptop": 881
@@ -2000,6 +2156,7 @@
       "qwen_local": {
         "tokens": 3817,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2481,
           "machine/example": 1336
@@ -2008,6 +2165,7 @@
       "claude_chat": {
         "tokens": 358,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 233,
           "machine/example": 125
@@ -2017,6 +2175,7 @@
         "tokens": 32191,
         "fidelity": "exact",
         "calls": 15,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 20924,
           "machine/example-laptop": 11267
@@ -2035,6 +2194,7 @@
         "tokens": 9576,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 6224,
           "machine/example-laptop": 3352
@@ -2053,6 +2213,7 @@
         "tokens": 33953,
         "fidelity": "exact",
         "calls": 36,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 22069,
           "machine/example-laptop": 11884
@@ -2062,6 +2223,7 @@
         "tokens": 12941,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 8412,
           "machine/example-laptop": 4529
@@ -2070,6 +2232,7 @@
       "qwen_local": {
         "tokens": 3701,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3701
         }
@@ -2086,6 +2249,7 @@
       "qwen_local": {
         "tokens": 5847,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5847
         }
@@ -2094,6 +2258,7 @@
         "tokens": 39034,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 25372,
           "machine/example-laptop": 13662
@@ -2112,6 +2277,7 @@
         "tokens": 16975,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 11034,
           "machine/example-laptop": 5941
@@ -2121,6 +2287,7 @@
         "tokens": 34367,
         "fidelity": "exact",
         "calls": 18,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 22339,
           "machine/example-laptop": 12028
@@ -2138,6 +2305,7 @@
       "qwen_local": {
         "tokens": 5745,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3734,
           "machine/example": 2011
@@ -2147,6 +2315,7 @@
         "tokens": 30173,
         "fidelity": "exact",
         "calls": 8,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19612,
           "machine/example-laptop": 10561
@@ -2155,6 +2324,7 @@
       "claude_chat": {
         "tokens": 2577,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1675,
           "machine/example": 902
@@ -2172,6 +2342,7 @@
       "perplexity_api": {
         "tokens": 7274,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7274
         }
@@ -2179,6 +2350,7 @@
       "qwen_local": {
         "tokens": 6694,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4351,
           "machine/example": 2343
@@ -2187,6 +2359,7 @@
       "claude_chat": {
         "tokens": 8268,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5374,
           "machine/example": 2894
@@ -2205,6 +2378,7 @@
         "tokens": 24219,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 24219
         }
@@ -2222,6 +2396,7 @@
         "tokens": 37608,
         "fidelity": "exact",
         "calls": 9,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 37608
         }
@@ -2230,6 +2405,7 @@
         "tokens": 14149,
         "fidelity": "exact",
         "calls": 36,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14149
         }
@@ -2237,6 +2413,7 @@
       "qwen_local": {
         "tokens": 3401,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2211,
           "machine/example": 1190
@@ -2255,6 +2432,7 @@
         "tokens": 25720,
         "fidelity": "exact",
         "calls": 17,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 16718,
           "machine/example-laptop": 9002
@@ -2273,6 +2451,7 @@
         "tokens": 9323,
         "fidelity": "exact",
         "calls": 26,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 6060,
           "machine/example-laptop": 3263
@@ -2281,6 +2460,7 @@
       "claude_chat": {
         "tokens": 5525,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5525
         }
@@ -2288,6 +2468,7 @@
       "qwen_local": {
         "tokens": 858,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 858
         }
@@ -2305,6 +2486,7 @@
         "tokens": 1915,
         "fidelity": "exact",
         "calls": 26,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 1245,
           "machine/example-laptop": 670
@@ -2313,6 +2495,7 @@
       "claude_chat": {
         "tokens": 7216,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7216
         }
@@ -2321,6 +2504,7 @@
         "tokens": 40278,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 26181,
           "machine/example-laptop": 14097
@@ -2339,6 +2523,7 @@
         "tokens": 25982,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 25982
         }
@@ -2346,6 +2531,7 @@
       "claude_chat": {
         "tokens": 2441,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2441
         }
@@ -2363,6 +2549,7 @@
         "tokens": 3094,
         "fidelity": "exact",
         "calls": 25,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 2011,
           "machine/example-laptop": 1083
@@ -2371,6 +2558,7 @@
       "qwen_local": {
         "tokens": 8511,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5532,
           "machine/example": 2979
@@ -2388,6 +2576,7 @@
       "claude_chat": {
         "tokens": 7470,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7470
         }
@@ -2405,6 +2594,7 @@
         "tokens": 24732,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16076,
           "machine/example-laptop": 8656
@@ -2414,6 +2604,7 @@
         "tokens": 16847,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 16847
         }
@@ -2431,6 +2622,7 @@
         "tokens": 9836,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 6393,
           "machine/example-laptop": 3443
@@ -2439,6 +2631,7 @@
       "claude_chat": {
         "tokens": 5354,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3480,
           "machine/example": 1874
@@ -2456,6 +2649,7 @@
       "qwen_local": {
         "tokens": 5436,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3533,
           "machine/example": 1903
@@ -2474,6 +2668,7 @@
         "tokens": 14196,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14196
         }
@@ -2491,6 +2686,7 @@
         "tokens": 22745,
         "fidelity": "exact",
         "calls": 35,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 22745
         }
@@ -2508,6 +2704,7 @@
         "tokens": 12586,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 12586
         }
@@ -2516,6 +2713,7 @@
         "tokens": 24122,
         "fidelity": "exact",
         "calls": 26,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 24122
         }
@@ -2523,6 +2721,7 @@
       "perplexity_api": {
         "tokens": 1787,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1162,
           "machine/example": 625
@@ -2540,6 +2739,7 @@
       "qwen_local": {
         "tokens": 5292,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3440,
           "machine/example": 1852
@@ -2548,6 +2748,7 @@
       "perplexity_api": {
         "tokens": 7267,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4724,
           "machine/example": 2543
@@ -2566,6 +2767,7 @@
         "tokens": 28971,
         "fidelity": "exact",
         "calls": 26,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 18831,
           "machine/example-laptop": 10140
@@ -2583,6 +2785,7 @@
       "perplexity_api": {
         "tokens": 1652,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1652
         }
@@ -2600,6 +2803,7 @@
         "tokens": 2523,
         "fidelity": "exact",
         "calls": 20,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 1640,
           "machine/example-laptop": 883
@@ -2617,6 +2821,7 @@
       "perplexity_api": {
         "tokens": 5346,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3475,
           "machine/example": 1871
@@ -2626,6 +2831,7 @@
         "tokens": 14215,
         "fidelity": "exact",
         "calls": 34,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14215
         }
@@ -2643,6 +2849,7 @@
         "tokens": 41194,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 41194
         }
@@ -2660,6 +2867,7 @@
         "tokens": 32103,
         "fidelity": "exact",
         "calls": 5,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 32103
         }
@@ -2676,6 +2884,7 @@
       "qwen_local": {
         "tokens": 2735,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1778,
           "machine/example": 957
@@ -2694,6 +2903,7 @@
         "tokens": 2890,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 1879,
           "machine/example-laptop": 1011
@@ -2711,6 +2921,7 @@
       "claude_chat": {
         "tokens": 2351,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1528,
           "machine/example": 823
@@ -2719,6 +2930,7 @@
       "perplexity_api": {
         "tokens": 4366,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2838,
           "machine/example": 1528
@@ -2736,6 +2948,7 @@
       "claude_chat": {
         "tokens": 3929,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2554,
           "machine/example": 1375
@@ -2745,6 +2958,7 @@
         "tokens": 25949,
         "fidelity": "exact",
         "calls": 25,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16867,
           "machine/example-laptop": 9082
@@ -2763,6 +2977,7 @@
         "tokens": 7911,
         "fidelity": "exact",
         "calls": 27,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 5142,
           "machine/example-laptop": 2769
@@ -2771,6 +2986,7 @@
       "claude_chat": {
         "tokens": 4748,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3086,
           "machine/example": 1662
@@ -2779,6 +2995,7 @@
       "perplexity_api": {
         "tokens": 3117,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2026,
           "machine/example": 1091
@@ -2797,6 +3014,7 @@
         "tokens": 29438,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 29438
         }
@@ -2804,6 +3022,7 @@
       "qwen_local": {
         "tokens": 1820,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1183,
           "machine/example": 637
@@ -2812,6 +3031,7 @@
       "perplexity_api": {
         "tokens": 6624,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4306,
           "machine/example": 2318
@@ -2829,6 +3049,7 @@
       "claude_chat": {
         "tokens": 7342,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4772,
           "machine/example": 2570
@@ -2837,6 +3058,7 @@
       "qwen_local": {
         "tokens": 1921,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1249,
           "machine/example": 672
@@ -2855,6 +3077,7 @@
         "tokens": 41750,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 41750
         }
@@ -2871,6 +3094,7 @@
       "perplexity_api": {
         "tokens": 2843,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2843
         }
@@ -2879,6 +3103,7 @@
         "tokens": 16035,
         "fidelity": "exact",
         "calls": 20,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 10423,
           "machine/example-laptop": 5612
@@ -2896,6 +3121,7 @@
       "perplexity_api": {
         "tokens": 6605,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6605
         }
@@ -2912,6 +3138,7 @@
       "claude_chat": {
         "tokens": 7787,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5062,
           "machine/example": 2725
@@ -2930,6 +3157,7 @@
         "tokens": 5825,
         "fidelity": "exact",
         "calls": 34,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 3786,
           "machine/example-laptop": 2039
@@ -2939,6 +3167,7 @@
         "tokens": 8468,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 5504,
           "machine/example-laptop": 2964
@@ -2947,6 +3176,7 @@
       "qwen_local": {
         "tokens": 8238,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5355,
           "machine/example": 2883
@@ -2964,6 +3194,7 @@
       "perplexity_api": {
         "tokens": 5730,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3725,
           "machine/example": 2005
@@ -2982,6 +3213,7 @@
         "tokens": 2626,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 1707,
           "machine/example-laptop": 919
@@ -2991,6 +3223,7 @@
         "tokens": 4178,
         "fidelity": "exact",
         "calls": 29,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 4178
         }
@@ -2998,6 +3231,7 @@
       "perplexity_api": {
         "tokens": 5328,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5328
         }
@@ -3014,6 +3248,7 @@
       "perplexity_api": {
         "tokens": 6406,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4164,
           "machine/example": 2242
@@ -3031,6 +3266,7 @@
       "perplexity_api": {
         "tokens": 6568,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4269,
           "machine/example": 2299
@@ -3039,6 +3275,7 @@
       "claude_chat": {
         "tokens": 7406,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4814,
           "machine/example": 2592
@@ -3048,6 +3285,7 @@
         "tokens": 20932,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 13606,
           "machine/example-laptop": 7326
@@ -3065,6 +3303,7 @@
       "claude_chat": {
         "tokens": 2309,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2309
         }
@@ -3072,6 +3311,7 @@
       "perplexity_api": {
         "tokens": 2141,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1392,
           "machine/example": 749
@@ -3080,6 +3320,7 @@
       "qwen_local": {
         "tokens": 540,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 351,
           "machine/example": 189
@@ -3097,6 +3338,7 @@
       "perplexity_api": {
         "tokens": 4557,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4557
         }
@@ -3105,6 +3347,7 @@
         "tokens": 27561,
         "fidelity": "exact",
         "calls": 28,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 17915,
           "machine/example-laptop": 9646
@@ -3122,6 +3365,7 @@
       "perplexity_api": {
         "tokens": 4387,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4387
         }
@@ -3129,6 +3373,7 @@
       "claude_chat": {
         "tokens": 6337,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4119,
           "machine/example": 2218
@@ -3138,6 +3383,7 @@
         "tokens": 17724,
         "fidelity": "exact",
         "calls": 28,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 11521,
           "machine/example-laptop": 6203
@@ -3155,6 +3401,7 @@
       "claude_chat": {
         "tokens": 6032,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6032
         }
@@ -3162,6 +3409,7 @@
       "qwen_local": {
         "tokens": 4477,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4477
         }
@@ -3170,6 +3418,7 @@
         "tokens": 39792,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 25865,
           "machine/example-laptop": 13927
@@ -3187,6 +3436,7 @@
       "qwen_local": {
         "tokens": 3529,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2294,
           "machine/example": 1235
@@ -3205,6 +3455,7 @@
         "tokens": 16212,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 10538,
           "machine/example-laptop": 5674
@@ -3213,6 +3464,7 @@
       "qwen_local": {
         "tokens": 7775,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7775
         }
@@ -3220,6 +3472,7 @@
       "perplexity_api": {
         "tokens": 5129,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5129
         }
@@ -3236,6 +3489,7 @@
       "qwen_local": {
         "tokens": 3923,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2550,
           "machine/example": 1373
@@ -3244,6 +3498,7 @@
       "claude_chat": {
         "tokens": 5705,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3708,
           "machine/example": 1997
@@ -3262,6 +3517,7 @@
         "tokens": 30094,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 30094
         }
@@ -3279,6 +3535,7 @@
         "tokens": 11523,
         "fidelity": "exact",
         "calls": 40,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 11523
         }
@@ -3286,6 +3543,7 @@
       "qwen_local": {
         "tokens": 8510,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8510
         }
@@ -3302,6 +3560,7 @@
       "claude_chat": {
         "tokens": 7827,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7827
         }
@@ -3310,6 +3569,7 @@
         "tokens": 38287,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 38287
         }
@@ -3318,6 +3578,7 @@
         "tokens": 24901,
         "fidelity": "exact",
         "calls": 4,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16186,
           "machine/example-laptop": 8715
@@ -3335,6 +3596,7 @@
       "qwen_local": {
         "tokens": 6775,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6775
         }
@@ -3342,6 +3604,7 @@
       "claude_chat": {
         "tokens": 6172,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4012,
           "machine/example": 2160
@@ -3360,6 +3623,7 @@
         "tokens": 6777,
         "fidelity": "exact",
         "calls": 4,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 4405,
           "machine/example-laptop": 2372
@@ -3368,6 +3632,7 @@
       "qwen_local": {
         "tokens": 2175,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2175
         }
@@ -3385,6 +3650,7 @@
         "tokens": 32256,
         "fidelity": "exact",
         "calls": 19,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20966,
           "machine/example-laptop": 11290
@@ -3394,6 +3660,7 @@
         "tokens": 31236,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 31236
         }
@@ -3401,6 +3668,7 @@
       "qwen_local": {
         "tokens": 8997,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5848,
           "machine/example": 3149
@@ -3418,6 +3686,7 @@
       "claude_chat": {
         "tokens": 4410,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2867,
           "machine/example": 1543
@@ -3435,6 +3704,7 @@
       "perplexity_api": {
         "tokens": 5085,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3305,
           "machine/example": 1780
@@ -3444,6 +3714,7 @@
         "tokens": 28950,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 18818,
           "machine/example-laptop": 10132
@@ -3461,6 +3732,7 @@
       "claude_chat": {
         "tokens": 5958,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3873,
           "machine/example": 2085
@@ -3469,6 +3741,7 @@
       "perplexity_api": {
         "tokens": 7758,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7758
         }
@@ -3486,6 +3759,7 @@
         "tokens": 5427,
         "fidelity": "exact",
         "calls": 35,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 3528,
           "machine/example-laptop": 1899
@@ -3504,6 +3778,7 @@
         "tokens": 29418,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 19122,
           "machine/example-laptop": 10296
@@ -3512,6 +3787,7 @@
       "qwen_local": {
         "tokens": 6293,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4090,
           "machine/example": 2203
@@ -3521,6 +3797,7 @@
         "tokens": 10867,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 7064,
           "machine/example-laptop": 3803
@@ -3538,6 +3815,7 @@
       "claude_chat": {
         "tokens": 4961,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3225,
           "machine/example": 1736
@@ -3547,6 +3825,7 @@
         "tokens": 15137,
         "fidelity": "exact",
         "calls": 22,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9839,
           "machine/example-laptop": 5298
@@ -3555,6 +3834,7 @@
       "qwen_local": {
         "tokens": 4154,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2700,
           "machine/example": 1454
@@ -3572,6 +3852,7 @@
       "claude_chat": {
         "tokens": 6694,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6694
         }
@@ -3580,6 +3861,7 @@
         "tokens": 35398,
         "fidelity": "exact",
         "calls": 9,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 23009,
           "machine/example-laptop": 12389
@@ -3597,6 +3879,7 @@
       "claude_chat": {
         "tokens": 6128,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6128
         }
@@ -3613,6 +3896,7 @@
       "claude_chat": {
         "tokens": 5500,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3575,
           "machine/example": 1925
@@ -3621,6 +3905,7 @@
       "qwen_local": {
         "tokens": 4368,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2839,
           "machine/example": 1529
@@ -3629,6 +3914,7 @@
       "perplexity_api": {
         "tokens": 722,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 469,
           "machine/example": 253
@@ -3646,6 +3932,7 @@
       "claude_chat": {
         "tokens": 8075,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5249,
           "machine/example": 2826
@@ -3655,6 +3942,7 @@
         "tokens": 30701,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 30701
         }
@@ -3671,6 +3959,7 @@
       "claude_chat": {
         "tokens": 531,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 345,
           "machine/example": 186
@@ -3688,6 +3977,7 @@
       "qwen_local": {
         "tokens": 8175,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5314,
           "machine/example": 2861
@@ -3696,6 +3986,7 @@
       "perplexity_api": {
         "tokens": 6214,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4039,
           "machine/example": 2175
@@ -3705,6 +3996,7 @@
         "tokens": 37059,
         "fidelity": "exact",
         "calls": 16,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 37059
         }
@@ -3721,6 +4013,7 @@
       "perplexity_api": {
         "tokens": 6631,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6631
         }
@@ -3728,6 +4021,7 @@
       "qwen_local": {
         "tokens": 7852,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7852
         }
@@ -3735,6 +4029,7 @@
       "claude_chat": {
         "tokens": 7594,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4936,
           "machine/example": 2658
@@ -3752,6 +4047,7 @@
       "qwen_local": {
         "tokens": 6939,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6939
         }
@@ -3768,6 +4064,7 @@
       "qwen_local": {
         "tokens": 3621,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3621
         }
@@ -3785,6 +4082,7 @@
         "tokens": 28159,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 18303,
           "machine/example-laptop": 9856
@@ -3794,6 +4092,7 @@
         "tokens": 5913,
         "fidelity": "exact",
         "calls": 16,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 3843,
           "machine/example-laptop": 2070
@@ -3811,6 +4110,7 @@
       "perplexity_api": {
         "tokens": 4025,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4025
         }
@@ -3818,6 +4118,7 @@
       "qwen_local": {
         "tokens": 2808,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2808
         }
@@ -3826,6 +4127,7 @@
         "tokens": 14607,
         "fidelity": "exact",
         "calls": 22,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14607
         }
@@ -3842,6 +4144,7 @@
       "qwen_local": {
         "tokens": 4336,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2818,
           "machine/example": 1518
@@ -3851,6 +4154,7 @@
         "tokens": 29970,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19481,
           "machine/example-laptop": 10489
@@ -3869,6 +4173,7 @@
         "tokens": 38542,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 25052,
           "machine/example-laptop": 13490
@@ -3878,6 +4183,7 @@
         "tokens": 20735,
         "fidelity": "exact",
         "calls": 39,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20735
         }
@@ -3885,6 +4191,7 @@
       "qwen_local": {
         "tokens": 3316,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3316
         }
@@ -3901,6 +4208,7 @@
       "perplexity_api": {
         "tokens": 4654,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4654
         }
@@ -3909,6 +4217,7 @@
         "tokens": 24322,
         "fidelity": "exact",
         "calls": 16,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 24322
         }
@@ -3925,6 +4234,7 @@
       "qwen_local": {
         "tokens": 3874,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3874
         }
@@ -3941,6 +4251,7 @@
       "perplexity_api": {
         "tokens": 3645,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2369,
           "machine/example": 1276
@@ -3950,6 +4261,7 @@
         "tokens": 31145,
         "fidelity": "exact",
         "calls": 29,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 31145
         }
@@ -3957,6 +4269,7 @@
       "qwen_local": {
         "tokens": 8113,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8113
         }
@@ -3974,6 +4287,7 @@
         "tokens": 1803,
         "fidelity": "exact",
         "calls": 26,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 1172,
           "machine/example-laptop": 631
@@ -3983,6 +4297,7 @@
         "tokens": 3638,
         "fidelity": "exact",
         "calls": 4,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 2365,
           "machine/example-laptop": 1273
@@ -3992,6 +4307,7 @@
         "tokens": 41683,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 27094,
           "machine/example-laptop": 14589
@@ -4010,6 +4326,7 @@
         "tokens": 35122,
         "fidelity": "exact",
         "calls": 22,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 22829,
           "machine/example-laptop": 12293
@@ -4028,6 +4345,7 @@
         "tokens": 4396,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 2857,
           "machine/example-laptop": 1539
@@ -4036,6 +4354,7 @@
       "claude_chat": {
         "tokens": 2580,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2580
         }
@@ -4043,6 +4362,7 @@
       "qwen_local": {
         "tokens": 2452,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1594,
           "machine/example": 858
@@ -4060,6 +4380,7 @@
       "perplexity_api": {
         "tokens": 8678,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5641,
           "machine/example": 3037
@@ -4068,6 +4389,7 @@
       "claude_chat": {
         "tokens": 6469,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4205,
           "machine/example": 2264
@@ -4077,6 +4399,7 @@
         "tokens": 29927,
         "fidelity": "exact",
         "calls": 36,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 19453,
           "machine/example-laptop": 10474
@@ -4095,6 +4418,7 @@
         "tokens": 25567,
         "fidelity": "exact",
         "calls": 40,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16619,
           "machine/example-laptop": 8948
@@ -4113,6 +4437,7 @@
         "tokens": 20923,
         "fidelity": "exact",
         "calls": 26,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 13600,
           "machine/example-laptop": 7323
@@ -4131,6 +4456,7 @@
         "tokens": 26049,
         "fidelity": "exact",
         "calls": 3,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 26049
         }
@@ -4147,6 +4473,7 @@
       "claude_chat": {
         "tokens": 8710,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5662,
           "machine/example": 3048
@@ -4155,6 +4482,7 @@
       "qwen_local": {
         "tokens": 3161,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3161
         }
@@ -4163,6 +4491,7 @@
         "tokens": 29928,
         "fidelity": "exact",
         "calls": 38,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 19453,
           "machine/example-laptop": 10475
@@ -4180,6 +4509,7 @@
       "perplexity_api": {
         "tokens": 1366,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1366
         }
@@ -4196,6 +4526,7 @@
       "claude_chat": {
         "tokens": 7046,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4580,
           "machine/example": 2466
@@ -4205,6 +4536,7 @@
         "tokens": 37443,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 37443
         }
@@ -4222,6 +4554,7 @@
         "tokens": 39473,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 39473
         }
@@ -4229,6 +4562,7 @@
       "claude_chat": {
         "tokens": 1292,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 840,
           "machine/example": 452
@@ -4246,6 +4580,7 @@
       "claude_chat": {
         "tokens": 4955,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3221,
           "machine/example": 1734
@@ -4255,6 +4590,7 @@
         "tokens": 20181,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20181
         }
@@ -4263,6 +4599,7 @@
         "tokens": 14087,
         "fidelity": "exact",
         "calls": 4,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9157,
           "machine/example-laptop": 4930
@@ -4281,6 +4618,7 @@
         "tokens": 31274,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 31274
         }
@@ -4288,6 +4626,7 @@
       "claude_chat": {
         "tokens": 4654,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4654
         }
@@ -4305,6 +4644,7 @@
         "tokens": 28385,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 28385
         }
@@ -4322,6 +4662,7 @@
         "tokens": 21511,
         "fidelity": "exact",
         "calls": 20,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 21511
         }
@@ -4338,6 +4679,7 @@
       "qwen_local": {
         "tokens": 3937,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3937
         }
@@ -4355,6 +4697,7 @@
         "tokens": 37515,
         "fidelity": "exact",
         "calls": 4,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 24385,
           "machine/example-laptop": 13130
@@ -4364,6 +4707,7 @@
         "tokens": 38294,
         "fidelity": "exact",
         "calls": 2,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 24891,
           "machine/example-laptop": 13403
@@ -4381,6 +4725,7 @@
       "qwen_local": {
         "tokens": 6092,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6092
         }
@@ -4388,6 +4733,7 @@
       "claude_chat": {
         "tokens": 3935,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2558,
           "machine/example": 1377
@@ -4405,6 +4751,7 @@
       "qwen_local": {
         "tokens": 1788,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1162,
           "machine/example": 626
@@ -4414,6 +4761,7 @@
         "tokens": 26987,
         "fidelity": "exact",
         "calls": 29,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 26987
         }
@@ -4430,6 +4778,7 @@
       "perplexity_api": {
         "tokens": 7645,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4969,
           "machine/example": 2676
@@ -4439,6 +4788,7 @@
         "tokens": 20347,
         "fidelity": "exact",
         "calls": 24,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20347
         }
@@ -4455,6 +4805,7 @@
       "perplexity_api": {
         "tokens": 808,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 808
         }
@@ -4463,6 +4814,7 @@
         "tokens": 28021,
         "fidelity": "exact",
         "calls": 27,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 18214,
           "machine/example-laptop": 9807
@@ -4471,6 +4823,7 @@
       "qwen_local": {
         "tokens": 7233,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7233
         }
@@ -4488,6 +4841,7 @@
         "tokens": 9954,
         "fidelity": "exact",
         "calls": 35,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 6470,
           "machine/example-laptop": 3484
@@ -4496,6 +4850,7 @@
       "claude_chat": {
         "tokens": 8006,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5204,
           "machine/example": 2802
@@ -4505,6 +4860,7 @@
         "tokens": 36473,
         "fidelity": "exact",
         "calls": 18,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 36473
         }
@@ -4521,6 +4877,7 @@
       "qwen_local": {
         "tokens": 3844,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2499,
           "machine/example": 1345
@@ -4530,6 +4887,7 @@
         "tokens": 28766,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 28766
         }
@@ -4546,6 +4904,7 @@
       "qwen_local": {
         "tokens": 5035,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5035
         }
@@ -4553,6 +4912,7 @@
       "perplexity_api": {
         "tokens": 6733,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4376,
           "machine/example": 2357
@@ -4570,6 +4930,7 @@
       "perplexity_api": {
         "tokens": 5018,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5018
         }
@@ -4586,6 +4947,7 @@
       "claude_chat": {
         "tokens": 3408,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3408
         }
@@ -4594,6 +4956,7 @@
         "tokens": 22901,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 14886,
           "machine/example-laptop": 8015
@@ -4603,6 +4966,7 @@
         "tokens": 40897,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 40897
         }
@@ -4620,6 +4984,7 @@
         "tokens": 34869,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 34869
         }
@@ -4627,6 +4992,7 @@
       "claude_chat": {
         "tokens": 7947,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7947
         }
@@ -4635,6 +5001,7 @@
         "tokens": 5076,
         "fidelity": "exact",
         "calls": 27,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 3299,
           "machine/example-laptop": 1777
@@ -4652,6 +5019,7 @@
       "qwen_local": {
         "tokens": 3758,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3758
         }
@@ -4668,6 +5036,7 @@
       "perplexity_api": {
         "tokens": 4394,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4394
         }
@@ -4676,6 +5045,7 @@
         "tokens": 2502,
         "fidelity": "exact",
         "calls": 15,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 1626,
           "machine/example-laptop": 876
@@ -4684,6 +5054,7 @@
       "claude_chat": {
         "tokens": 4407,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2865,
           "machine/example": 1542
@@ -4701,6 +5072,7 @@
       "claude_chat": {
         "tokens": 4496,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2922,
           "machine/example": 1574
@@ -4719,6 +5091,7 @@
         "tokens": 29107,
         "fidelity": "exact",
         "calls": 28,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 18920,
           "machine/example-laptop": 10187
@@ -4728,6 +5101,7 @@
         "tokens": 7919,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 5147,
           "machine/example-laptop": 2772
@@ -4737,6 +5111,7 @@
         "tokens": 40471,
         "fidelity": "exact",
         "calls": 22,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 40471
         }
@@ -4754,6 +5129,7 @@
         "tokens": 2709,
         "fidelity": "exact",
         "calls": 1,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 2709
         }
@@ -4762,6 +5138,7 @@
         "tokens": 21203,
         "fidelity": "exact",
         "calls": 37,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 21203
         }
@@ -4770,6 +5147,7 @@
         "tokens": 40085,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 26055,
           "machine/example-laptop": 14030
@@ -4788,6 +5166,7 @@
         "tokens": 25397,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 16508,
           "machine/example-laptop": 8889
@@ -4797,6 +5176,7 @@
         "tokens": 12678,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 8241,
           "machine/example-laptop": 4437
@@ -4805,6 +5185,7 @@
       "perplexity_api": {
         "tokens": 3652,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2374,
           "machine/example": 1278
@@ -4822,6 +5203,7 @@
       "qwen_local": {
         "tokens": 2227,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1448,
           "machine/example": 779
@@ -4831,6 +5213,7 @@
         "tokens": 37840,
         "fidelity": "exact",
         "calls": 16,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 24596,
           "machine/example-laptop": 13244
@@ -4848,6 +5231,7 @@
       "qwen_local": {
         "tokens": 6725,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4371,
           "machine/example": 2354
@@ -4857,6 +5241,7 @@
         "tokens": 30466,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 30466
         }
@@ -4864,6 +5249,7 @@
       "claude_chat": {
         "tokens": 5889,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5889
         }
@@ -4881,6 +5267,7 @@
         "tokens": 33637,
         "fidelity": "exact",
         "calls": 28,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 21864,
           "machine/example-laptop": 11773
@@ -4890,6 +5277,7 @@
         "tokens": 12440,
         "fidelity": "exact",
         "calls": 15,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 8086,
           "machine/example-laptop": 4354
@@ -4898,6 +5286,7 @@
       "claude_chat": {
         "tokens": 8203,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 8203
         }
@@ -4914,6 +5303,7 @@
       "claude_chat": {
         "tokens": 7291,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4739,
           "machine/example": 2552
@@ -4922,6 +5312,7 @@
       "perplexity_api": {
         "tokens": 2219,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1442,
           "machine/example": 777
@@ -4931,6 +5322,7 @@
         "tokens": 27569,
         "fidelity": "exact",
         "calls": 6,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 27569
         }
@@ -4948,6 +5340,7 @@
         "tokens": 34746,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 34746
         }
@@ -4955,6 +5348,7 @@
       "claude_chat": {
         "tokens": 6150,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3998,
           "machine/example": 2152
@@ -4964,6 +5358,7 @@
         "tokens": 12538,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 12538
         }
@@ -4981,6 +5376,7 @@
         "tokens": 21356,
         "fidelity": "exact",
         "calls": 34,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 13881,
           "machine/example-laptop": 7475
@@ -4989,6 +5385,7 @@
       "claude_chat": {
         "tokens": 7296,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 7296
         }
@@ -4997,6 +5394,7 @@
         "tokens": 34055,
         "fidelity": "exact",
         "calls": 39,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 22136,
           "machine/example-laptop": 11919
@@ -5015,6 +5413,7 @@
         "tokens": 1847,
         "fidelity": "exact",
         "calls": 35,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 1201,
           "machine/example-laptop": 646
@@ -5023,6 +5422,7 @@
       "claude_chat": {
         "tokens": 6704,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6704
         }
@@ -5039,6 +5439,7 @@
       "perplexity_api": {
         "tokens": 2654,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2654
         }
@@ -5055,6 +5456,7 @@
       "claude_chat": {
         "tokens": 1744,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1134,
           "machine/example": 610
@@ -5063,6 +5465,7 @@
       "qwen_local": {
         "tokens": 8719,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5667,
           "machine/example": 3052
@@ -5080,6 +5483,7 @@
       "qwen_local": {
         "tokens": 4671,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3036,
           "machine/example": 1635
@@ -5089,6 +5493,7 @@
         "tokens": 39179,
         "fidelity": "exact",
         "calls": 13,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 39179
         }
@@ -5097,6 +5502,7 @@
         "tokens": 21794,
         "fidelity": "exact",
         "calls": 19,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 21794
         }
@@ -5113,6 +5519,7 @@
       "qwen_local": {
         "tokens": 2835,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1843,
           "machine/example": 992
@@ -5122,6 +5529,7 @@
         "tokens": 33885,
         "fidelity": "exact",
         "calls": 14,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 22025,
           "machine/example-laptop": 11860
@@ -5140,6 +5548,7 @@
         "tokens": 25675,
         "fidelity": "exact",
         "calls": 5,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 25675
         }
@@ -5147,6 +5556,7 @@
       "claude_chat": {
         "tokens": 1198,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1198
         }
@@ -5155,6 +5565,7 @@
         "tokens": 22229,
         "fidelity": "exact",
         "calls": 15,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 14449,
           "machine/example-laptop": 7780
@@ -5172,6 +5583,7 @@
       "qwen_local": {
         "tokens": 6565,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6565
         }
@@ -5180,6 +5592,7 @@
         "tokens": 12937,
         "fidelity": "exact",
         "calls": 19,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 8409,
           "machine/example-laptop": 4528
@@ -5198,6 +5611,7 @@
         "tokens": 20799,
         "fidelity": "exact",
         "calls": 37,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20799
         }
@@ -5206,6 +5620,7 @@
         "tokens": 2638,
         "fidelity": "exact",
         "calls": 39,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 2638
         }
@@ -5222,6 +5637,7 @@
       "claude_chat": {
         "tokens": 1237,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 804,
           "machine/example": 433
@@ -5231,6 +5647,7 @@
         "tokens": 9864,
         "fidelity": "exact",
         "calls": 24,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 6412,
           "machine/example-laptop": 3452
@@ -5249,6 +5666,7 @@
         "tokens": 20714,
         "fidelity": "exact",
         "calls": 5,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20714
         }
@@ -5257,6 +5675,7 @@
         "tokens": 22066,
         "fidelity": "exact",
         "calls": 2,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 22066
         }
@@ -5274,6 +5693,7 @@
         "tokens": 15133,
         "fidelity": "exact",
         "calls": 23,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9836,
           "machine/example-laptop": 5297
@@ -5282,6 +5702,7 @@
       "qwen_local": {
         "tokens": 6376,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4144,
           "machine/example": 2232
@@ -5291,6 +5712,7 @@
         "tokens": 2684,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 2684
         }
@@ -5308,6 +5730,7 @@
         "tokens": 39537,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 25699,
           "machine/example-laptop": 13838
@@ -5317,6 +5740,7 @@
         "tokens": 31577,
         "fidelity": "exact",
         "calls": 19,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 20525,
           "machine/example-laptop": 11052
@@ -5325,6 +5749,7 @@
       "qwen_local": {
         "tokens": 7810,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5077,
           "machine/example": 2733
@@ -5342,6 +5767,7 @@
       "qwen_local": {
         "tokens": 1371,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 891,
           "machine/example": 480
@@ -5350,6 +5776,7 @@
       "claude_chat": {
         "tokens": 6251,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4063,
           "machine/example": 2188
@@ -5359,6 +5786,7 @@
         "tokens": 5893,
         "fidelity": "exact",
         "calls": 36,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 5893
         }
@@ -5376,6 +5804,7 @@
         "tokens": 30821,
         "fidelity": "exact",
         "calls": 5,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 20034,
           "machine/example-laptop": 10787
@@ -5394,6 +5823,7 @@
         "tokens": 27845,
         "fidelity": "exact",
         "calls": 31,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 18099,
           "machine/example-laptop": 9746
@@ -5411,6 +5841,7 @@
       "perplexity_api": {
         "tokens": 7137,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4639,
           "machine/example": 2498
@@ -5428,6 +5859,7 @@
       "claude_chat": {
         "tokens": 3070,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3070
         }
@@ -5436,6 +5868,7 @@
         "tokens": 14697,
         "fidelity": "exact",
         "calls": 30,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 9553,
           "machine/example-laptop": 5144
@@ -5444,6 +5877,7 @@
       "qwen_local": {
         "tokens": 5438,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3535,
           "machine/example": 1903
@@ -5462,6 +5896,7 @@
         "tokens": 4197,
         "fidelity": "exact",
         "calls": 12,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 2728,
           "machine/example-laptop": 1469
@@ -5480,6 +5915,7 @@
         "tokens": 12466,
         "fidelity": "exact",
         "calls": 7,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 8103,
           "machine/example-laptop": 4363
@@ -5488,6 +5924,7 @@
       "perplexity_api": {
         "tokens": 4834,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4834
         }
@@ -5505,6 +5942,7 @@
         "tokens": 26959,
         "fidelity": "exact",
         "calls": 21,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 26959
         }
@@ -5512,6 +5950,7 @@
       "qwen_local": {
         "tokens": 7514,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4884,
           "machine/example": 2630
@@ -5530,6 +5969,7 @@
         "tokens": 16838,
         "fidelity": "exact",
         "calls": 10,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 10945,
           "machine/example-laptop": 5893
@@ -5547,6 +5987,7 @@
       "qwen_local": {
         "tokens": 6973,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 6973
         }
@@ -5554,6 +5995,7 @@
       "claude_chat": {
         "tokens": 8350,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 5428,
           "machine/example": 2922
@@ -5563,6 +6005,7 @@
         "tokens": 9633,
         "fidelity": "exact",
         "calls": 11,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 6261,
           "machine/example-laptop": 3372
@@ -5581,6 +6024,7 @@
         "tokens": 39013,
         "fidelity": "exact",
         "calls": 27,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 25358,
           "machine/example-laptop": 13655
@@ -5590,6 +6034,7 @@
         "tokens": 19756,
         "fidelity": "exact",
         "calls": 8,
+        "authority": "tool",
         "by_origin": {
           "machine/example": 12841,
           "machine/example-laptop": 6915
@@ -5598,6 +6043,7 @@
       "perplexity_api": {
         "tokens": 1105,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 1105
         }
@@ -5614,6 +6060,7 @@
       "qwen_local": {
         "tokens": 446,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 290,
           "machine/example": 156
@@ -5631,6 +6078,7 @@
       "perplexity_api": {
         "tokens": 497,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 323,
           "machine/example": 174
@@ -5649,6 +6097,7 @@
         "tokens": 12939,
         "fidelity": "exact",
         "calls": 16,
+        "authority": "provider",
         "by_origin": {
           "machine/example": 8410,
           "machine/example-laptop": 4529
@@ -5657,6 +6106,7 @@
       "qwen_local": {
         "tokens": 3862,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2510,
           "machine/example": 1352
@@ -5665,6 +6115,7 @@
       "perplexity_api": {
         "tokens": 550,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 358,
           "machine/example": 192
@@ -5682,6 +6133,7 @@
       "perplexity_api": {
         "tokens": 2216,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 2216
         }
@@ -5689,6 +6141,7 @@
       "qwen_local": {
         "tokens": 7317,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 4756,
           "machine/example": 2561
@@ -5697,6 +6150,7 @@
       "claude_chat": {
         "tokens": 5502,
         "fidelity": "estimated",
+        "authority": "estimated",
         "by_origin": {
           "account/example-provider": 3576,
           "machine/example": 1926

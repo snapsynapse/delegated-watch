@@ -24,6 +24,7 @@ const CLOCK_DEPENDENT = [
   "tests/provider-cost.test.js",
   "tests/readme-worked-receipt.test.js",
   "tests/refresh-record.test.js",
+  "tests/source-authority.test.js",
   "tests/usage-api-extractors.test.js",
   "tests/whole-week-guards.test.js"
 ];

@@ -38,11 +38,13 @@ Literal
       "tokens": 4200,
       "fidelity": "exact",
       "calls": 6,
+      "authority": "tool",
       "by_origin": { "machine/example": 4200 }
     },
     "claude_chat": {
       "tokens": 1800,
       "fidelity": "estimated",
+      "authority": "estimated",
       "by_origin": { "account/example-provider": 1800 }
     }
   },
@@ -53,10 +55,10 @@ Literal
 ```
 | Synthetic receipt | What the row records |
 |---|---|
-| `codex`: 4,200 tokens, 6 calls, exact | `sources.codex`: 4,200 tokens, 6 calls, fidelity `exact`, attributed to `machine/example` |
-| `claude_chat`: 1,800 tokens, no call count, estimated | `sources.claude_chat`: 1,800 tokens, fidelity `estimated`, and no `calls` field at all |
+| `codex`: 4,200 tokens, 6 calls, exact, from the tool's own counter | `sources.codex`: 4,200 tokens, 6 calls, fidelity `exact`, authority `tool`, attributed to `machine/example` |
+| `claude_chat`: 1,800 tokens, no call count, estimated | `sources.claude_chat`: 1,800 tokens, fidelity `estimated`, authority `estimated`, and no `calls` field at all |
 | Both, for 2025-01-04 | `total` 6,000, and driver `unreviewed` until someone reviews what the work was |
-Each source keeps its own fidelity. An exact entry and an estimated one sit side by side, and the total is not an exact measurement because one of its parts is. A count the source never reported stays absent; it is never written as zero. Importing a row does not review it, and a token count says how much the model read and wrote, not how good or how valuable the work was.
+Each source keeps its own fidelity and records where its counter came from. An exact entry and an estimated one sit side by side, and the total is not an exact measurement because one of its parts is. A count the source never reported stays absent; it is never written as zero. Importing a row does not review it, and a token count says how much the model read and wrote, not how good or how valuable the work was.
 This example is synthetic. A real record covers only the supported sources, and only the intervals for which evidence survives.
 ## Try it on the synthetic fixtures
 Install Node 24 (the pinned LTS line) or the verified-compatible Node 26 line. There are no runtime dependencies, so there is no install step. Clone into a fresh directory, separate from any checkout that holds a record of your own. Cloning contacts GitHub; nothing after it reads a provider, an account, or the network.
