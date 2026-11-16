@@ -1413,7 +1413,7 @@ for (const [script, keyName, host] of [
   ["extract-openai-api.js", "OPENAI_ADMIN_KEY", /api\.openai\.com/]
 ]) {
   test(`${script} classifies transport failures without leaking the key or the query`, async () => {
-    for (const [code, status] of [["ENOTFOUND", 3], ["UND_ERR_CONNECT_TIMEOUT", 3], ["SOME_OTHER_ERROR", 1]]) {
+    for (const [code, status] of [["ENOTFOUND", 3], ["UND_ERR_CONNECT_TIMEOUT", 3], ["EBADF", 3], ["ENETUNREACH", 3], ["EHOSTUNREACH", 3], ["SOME_OTHER_ERROR", 1]]) {
       const cwd = await workdir("additive");
       const result = await run(script, ["--dry-run"], { [keyName]: KEY }, cwd, await stubbedFetch(cwd, code));
       assert.equal(result.status, status, `${code}: ${result.stderr}`);
