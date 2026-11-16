@@ -614,6 +614,24 @@ const addAcceptedEntry = (entries, incoming, correction, exactSources, fidelity)
     );
     if (prior) {
       if (exactVersion(prior, incoming)) return { kind: "replay", entry: prior };
+      // Equal tokens and calls with a breakdown that only adds detail is the
+      // same measurement described more fully, as on the snapshot path. A
+      // conflicting breakdown still throws inside the reconciliation.
+      if (equivalentVersionCounters(prior, incoming)) {
+        const merged = withReconciledTokenComponents(
+          prior,
+          incoming,
+          `${incoming.date}/${incoming.source} token_components`
+        );
+        const enriched = normalizedEntry({
+          ...prior,
+          ...merged,
+          acceptance: "accepted",
+          acceptance_basis: prior.acceptance_basis ?? "matched-final-dataset"
+        });
+        entries[entries.indexOf(prior)] = enriched;
+        return { kind: "updated", entry: enriched };
+      }
       if (!correction) {
         throw new Error(
           `Identity-free receipt for ${incoming.date}/${incoming.source} cannot be ` +

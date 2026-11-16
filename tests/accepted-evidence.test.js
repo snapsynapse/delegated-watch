@@ -519,6 +519,70 @@ test("an identity-free figure changes only under a recorded correction, and supe
   assert.deepEqual(entry.superseded_snapshots.map((version) => version.tokens), [10]);
 });
 
+test("an identity-free receipt with equal counters may add a breakdown, but not contradict one", async (t) => {
+  const identityFree = (tokens, components) => {
+    const base = receipt({
+      source: "claude_api",
+      tokens,
+      calls: null,
+      snapshot: null,
+      keys: []
+    });
+    delete base.snapshot_key;
+    delete base.token_components;
+    if (components) {
+      base.token_components = { schema_version: 1, ...components };
+    }
+    return base;
+  };
+  const root = await makeFixture({
+    rows: [row("2026-01-01", "claude_api", 10, null)]
+  });
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const rows = await readJson(root, "public/data/daily-burn.json");
+  await acceptDataset({ beforeRows: rows, rows, receipts: [identityFree(10)], root });
+
+  const detailed = { input_tokens: 7, output_tokens: 3 };
+  const withBreakdown = (components) => {
+    const next = structuredClone(rows);
+    next[0].sources.claude_api.token_components = { schema_version: 1, ...components };
+    return next;
+  };
+  const detailedRows = withBreakdown(detailed);
+  await acceptDataset({
+    beforeRows: rows,
+    rows: detailedRows,
+    receipts: [identityFree(10, detailed)],
+    root
+  });
+  const manifest = await readJson(root, ACCEPTED_MANIFEST_PATH);
+  const entry = manifest.entries.find((item) => item.source === "claude_api");
+  assert.equal(entry.tokens, 10);
+  assert.equal(entry.acceptance, "accepted");
+  assert.equal(entry.token_components.input_tokens, 7);
+  assert.equal(entry.token_components.output_tokens, 3);
+  assert.equal(entry.correction, undefined);
+  assert.equal(entry.superseded_snapshots, undefined);
+
+  await acceptDataset({
+    beforeRows: detailedRows,
+    rows: detailedRows,
+    receipts: [identityFree(10, detailed)],
+    root
+  });
+
+  const contradicting = { input_tokens: 6, output_tokens: 4 };
+  await assert.rejects(
+    acceptDataset({
+      beforeRows: detailedRows,
+      rows: withBreakdown(contradicting),
+      receipts: [identityFree(10, contradicting)],
+      root
+    }),
+    /conflicts between equivalent measurements/
+  );
+});
+
 for (const decrease of ["tokens", "calls", "missing calls"]) {
   test(`direct acceptance cannot bypass reviewed correction for same-snapshot ${decrease}`, async (t) => {
     const root = await makeFixture({ rows: [] });
