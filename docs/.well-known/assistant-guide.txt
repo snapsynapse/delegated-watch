@@ -4,12 +4,12 @@ Assistant Guide: install Delegated.watch and produce a first local record
 identifier: assistant-guide
 profile: human-verifiable-assistant-guide
 profile-version: 2.0.0
-guide-version: 1.5.0
-applies-to: delegated-watch >=0.6.0, <0.7.0
+guide-version: 1.5.1
+applies-to: delegated-watch >=0.6.1, <0.7.0
 canonical-url: https://delegated.watch/.well-known/assistant-guide.txt
 repository-url: https://github.com/snapsynapse/delegated-watch
 source-path: /docs/.well-known/assistant-guide.txt
-last-reviewed: 2026-11-08
+last-reviewed: 2026-11-22
 manifest-url: https://delegated.watch/.well-known/assistant-guide-manifest.txt
 status: active
 recommended-verifier: https://guidecheck.org/verify
@@ -25,7 +25,8 @@ publishing a record, and any change to this repository.
 
 Before acting
 1. Verify this guide with the recommended verifier or another conformant
-   verifier.
+   verifier. GuideCheck's hosted verifier checks through Level 3. Level 4
+   requires independent verification of provenance.
 2. Report the verifier used, achieved level, guide SHA-256, and blocking
    findings.
 3. Ask the user: "I have read this guide, understand that conformance is

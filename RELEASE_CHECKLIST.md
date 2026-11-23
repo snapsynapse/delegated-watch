@@ -13,12 +13,13 @@ Set the new version and the release date in every file below, in one change:
 `npm run build` regenerates `docs/index.html` and `docs/sitemap.xml` from these. Do not edit those two files by hand.
 
 ## 2. Assistant guide rotation
-`docs/.well-known/assistant-guide.txt` declares `manifest-url`, so it is graded at Level 4 and its hash is published three ways that must agree: the guide's bytes, the manifest, and the DNS TXT record at `_assistant-guide.delegated.watch`.
+`docs/.well-known/assistant-guide.txt` targets Level 4 provenance under profile 2.0.0. The served bytes, sidecar manifest, and DNS TXT record at `_assistant-guide.delegated.watch` must agree. The repository-root `assistant-guide.txt` is a byte-identical review copy.
 - In the guide: raise `guide-version`, set `applies-to` to the new release range, set `last-reviewed`, and update every `exec-sha256` pin whose script changed (`scripts/check-runtime.js`, `scripts/demo-import.js`, `scripts/validate-data.js`).
+- Copy the rotated served guide to `assistant-guide.txt` at the repository root.
 - In `docs/.well-known/assistant-guide-manifest.txt`: set `guide-version`, `guide-sha256`, `guide-bytes`, `immutable-release-url`, `changelog-url`, and `released-at`.
-- `tests/assistant-guide.test.js` checks the pins and the manifest against the guide's actual bytes.
+- `tests/assistant-guide.test.js` checks the root copy, pins, and manifest against the guide's actual bytes.
 - The DNS record is changed after the release pull request merges, never before: until the site serves the new guide, a new record value would not match it. Set a TTL of 3600 or less. Some DNS providers publish edits without changing the zone's SOA serial, so poll the record value on each authoritative nameserver, and allow up to an hour.
-- Between the merge and DNS catching up, verifiers report the guide as not safe to follow. Keep that window short: change the record immediately after the merge.
+- Between the merge and DNS catching up, the provenance check sees a hash mismatch. Change the record immediately after the merge.
 
 ## 3. Inventory
 Every edit to an inventoried file changes its pinned hash. After reviewing the diff, re-pin and confirm:
@@ -61,5 +62,6 @@ Tags are SSH-signed and annotated. Create the GitHub Release titled with the bar
 ## 7. Verify
 - The tag resolves to the merge commit, and CI on that commit is green.
 - https://delegated.watch/ shows the new version. The root, `/demo/`, `/llms.txt`, `/sitemap.xml`, the assistant guide, and its manifest return 200; an unknown path returns 404.
-- The live guide's sha256 equals the manifest's `guide-sha256` and the DNS record value on every authoritative nameserver.
-- The hosted GuideCheck verifier reports Level 4, one qualifying anchor, and no blocking findings.
+- The live guide's SHA-256 equals the manifest's `guide-sha256`, the tagged review copy's SHA-256, and the DNS record value on every authoritative nameserver. The manifest byte count and canonical URL match the served artifact.
+- Capture the hosted GuideCheck result for the released guide hash. Expect Level 3 with zero blocking findings. The hosted verifier caps results at Level 3 and reports declared anchors as unverified.
+- Record the independent DNS and artifact comparisons as provenance evidence. Claim achieved Level 4 only with a conformant verifier report for the exact guide hash, including its qualifying anchor and findings.
