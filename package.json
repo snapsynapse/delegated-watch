@@ -10,7 +10,7 @@
   "scripts": {
     "apply:exclusions": "node scripts/apply-source-entry-exclusions.js",
     "assemble:candidate": "node scripts/assemble-public-candidate.js",
-    "build": "node scripts/build-landing.js && node scripts/build.js",
+    "build": "node scripts/build-landing.js && node scripts/build.js && node -e \"require('node:fs').copyFileSync('docs/.well-known/assistant-guide.txt', 'assistant-guide.txt')\"",
     "build:demo": "node scripts/build.js",
     "build:landing": "node scripts/build-landing.js",
     "check:credentials": "node scripts/check-credentials.js",

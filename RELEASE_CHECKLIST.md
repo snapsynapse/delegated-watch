@@ -10,12 +10,12 @@ Set the new version and the release date in every file below, in one change:
 - `README.md`: the Status paragraph.
 - `INTENT.md`: a changelog line for the release.
 - `CHANGELOG.md`: rename the `[Unreleased]` entries into `## [X.Y.Z] - YYYY-MM-DD`, and leave an empty `## [Unreleased]` heading above it.
-`npm run build` regenerates `docs/index.html` and `docs/sitemap.xml` from these. Do not edit those two files by hand.
+`npm run build` regenerates `docs/index.html` and `docs/sitemap.xml` from these. Edit the build inputs for changes to those outputs.
 
 ## 2. Assistant guide rotation
 `docs/.well-known/assistant-guide.txt` targets Level 4 provenance under profile 2.0.0. The served bytes, sidecar manifest, and DNS TXT record at `_assistant-guide.delegated.watch` must agree. The repository-root `assistant-guide.txt` is a byte-identical review copy.
 - In the guide: raise `guide-version`, set `applies-to` to the new release range, set `last-reviewed`, and update every `exec-sha256` pin whose script changed (`scripts/check-runtime.js`, `scripts/demo-import.js`, `scripts/validate-data.js`).
-- Copy the rotated served guide to `assistant-guide.txt` at the repository root.
+- Run `npm run build` to regenerate the repository-root `assistant-guide.txt` from the rotated served guide.
 - In `docs/.well-known/assistant-guide-manifest.txt`: set `guide-version`, `guide-sha256`, `guide-bytes`, `immutable-release-url`, `changelog-url`, and `released-at`.
 - `tests/assistant-guide.test.js` checks the root copy, pins, and manifest against the guide's actual bytes.
 - The DNS record is changed after the release pull request merges, never before: until the site serves the new guide, a new record value would not match it. Set a TTL of 3600 or less. Some DNS providers publish edits without changing the zone's SOA serial, so poll the record value on each authoritative nameserver, and allow up to an hour.

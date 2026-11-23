@@ -78,26 +78,26 @@ jobs:
           # A config change that only one of the generated files consumed is the
           # exact drift this is here for, and the sitemap counts: its lastmod is
           # built from the same date the home page states.
-          hash_pages() {
+          hash_outputs() {
             if command -v sha256sum >/dev/null 2>&1; then
-              sha256sum docs/index.html docs/demo/index.html docs/sitemap.xml | awk '{print $1}'
+              sha256sum docs/index.html docs/demo/index.html docs/sitemap.xml assistant-guide.txt | awk '{print $1}'
             else
-              shasum -a 256 docs/index.html docs/demo/index.html docs/sitemap.xml | awk '{print $1}'
+              shasum -a 256 docs/index.html docs/demo/index.html docs/sitemap.xml assistant-guide.txt | awk '{print $1}'
             fi
           }
 
-          committed="$(hash_pages)"
+          committed="$(hash_outputs)"
           npm run build
-          first="$(hash_pages)"
+          first="$(hash_outputs)"
 
           if [ "$committed" != "$first" ]; then
-            echo "A committed page is not what the build produces. Run npm run build and commit the result."
-            git --no-pager diff --stat -- docs/
+            echo "A committed file differs from the build output. Run npm run build and commit the result."
+            git --no-pager diff --stat -- docs/ assistant-guide.txt
             exit 1
           fi
 
           npm run build
-          second="$(hash_pages)"
+          second="$(hash_outputs)"
 
           if [ "$first" != "$second" ]; then
             echo "Build is not reproducible:"
@@ -105,7 +105,7 @@ jobs:
             exit 1
           fi
 
-          echo "Committed pages match a fresh build, and the build is reproducible:"
+          echo "Committed outputs match a fresh build, and the build is reproducible:"
           echo "$second"
 
       - name: Verify public candidate (self)
