@@ -16,7 +16,7 @@ consumption.
 This is also not delegated.to, a different company in the AI-agent workforce
 category.
 
-Updated: 2026-11-08
+Updated: 2026-11-22
 
 ## What this is
 
@@ -40,17 +40,16 @@ subject. There is no backend.
 
 ## Installing this, as an agent
 
-Read https://delegated.watch/.well-known/assistant-guide.txt and follow it
-rather than this file. That guide conforms to the GuideCheck Human-Verifiable
-Assistant Guide profile 2.0.0 at Level 4, the highest level a guide file can
-reach: strict ASCII under 8 KiB, an explicit task scope and non-goals, one
-structured action block per step with an approval gate on every networked and
-code-executing command, a sidecar manifest at
-https://delegated.watch/.well-known/assistant-guide-manifest.txt pinning the
-guide's exact bytes, and that same hash published as a DNS TXT record at
-_assistant-guide.delegated.watch. Verify it first, report the achieved level,
-and ask the operator before running a gated action. Conformance is a claim
-about form, not safety.
+Verify https://delegated.watch/.well-known/assistant-guide.txt before acting.
+The guide uses GuideCheck's Human-Verifiable Assistant Guide profile 2.0.0
+and states the task scope and approval gates for its structured actions.
+The hosted verifier at https://guidecheck.org/verify checks through Level 3.
+The sidecar manifest at
+https://delegated.watch/.well-known/assistant-guide-manifest.txt and the DNS
+TXT record at _assistant-guide.delegated.watch publish the guide's SHA-256
+for independent provenance verification. Report the verifier, guide hash,
+achieved level, and blocking findings, and ask the operator before running
+a gated action.
 
 ## Design invariants
 

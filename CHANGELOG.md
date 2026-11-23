@@ -2,6 +2,14 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+## [0.6.1] - 2026-11-22
+### Added
+- Add a byte-identical `assistant-guide.txt` review copy at the repository root. CI checks that it matches the served guide.
+### Changed
+- Rotate the assistant guide to 1.5.1 and its manifest to v0.6.1. The guide stays on profile 2.0.0. GuideCheck's hosted verifier now reports up to Level 3, so the release checklist records hosted form checks separately from independent provenance verification.
+### Fixed
+- Allow receipts without request identities to add token components when token and call counters match. Conflicting breakdowns still fail reconciliation.
+- Classify `EBADF`, `ENETUNREACH`, and `EHOSTUNREACH` as provider-unreachable in credential preflight and the Anthropic and OpenAI usage extractors.
 ## [0.6.0] - 2026-11-08
 ### Added
 - Daily source entries record `authority`, where the counter came from: the weakest of the contributing receipts' `provider`, `tool`, `reconstructed`, or `estimated`, the way fidelity falls to `estimated` when any part is. An entry with any contributor that carries no authority records none. The importer and the accepted-evidence ledger both set it, a partial replacement rebuilds it from the surviving evidence, and the detail CSV carries it in its own column.

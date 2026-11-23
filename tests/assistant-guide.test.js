@@ -19,6 +19,11 @@ const MAX_BYTES = 8192;
 const MAX_LINE_BYTES = 120;
 const MAX_LINES = 400;
 
+test("the repository-root review copy matches the served guide byte for byte", async () => {
+  const reviewCopy = await readFile("assistant-guide.txt");
+  assert.ok(reviewCopy.equals(source), "copy the served guide to assistant-guide.txt after rotation");
+});
+
 test("guide stays inside the profile byte and size limits", () => {
   assert.ok(source.length <= MAX_BYTES, `${source.length} bytes, limit ${MAX_BYTES}`);
   const lines = text.split("\n");
@@ -111,8 +116,7 @@ test("the compact verification instruction precedes the first action block", () 
 // The manifest is the Level 4 provenance artifact: it asserts the guide's exact
 // bytes, and the same hash is cross-published as a DNS TXT record at
 // _assistant-guide.delegated.watch. A manifest that has drifted from the guide
-// is the cross-channel control failing silently, which is worse than publishing
-// no manifest at all, so this fails rather than warns.
+// would leave the served hash inconsistent, so a mismatch fails this test.
 test("the manifest pins the guide's actual bytes", async () => {
   const manifest = await readFile("docs/.well-known/assistant-guide-manifest.txt", "utf8");
   const field = (name) => manifest.match(new RegExp(`^${name}: (.+)$`, "m"))?.[1];

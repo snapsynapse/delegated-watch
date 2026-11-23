@@ -1,6 +1,6 @@
 {
   "name": "delegated-watch",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A local-first, static-site record of tokens delegated to AI models, aggregated to one scrubbed row per day per source.",
   "license": "MIT",
   "type": "module",
@@ -10,7 +10,7 @@
   "scripts": {
     "apply:exclusions": "node scripts/apply-source-entry-exclusions.js",
     "assemble:candidate": "node scripts/assemble-public-candidate.js",
-    "build": "node scripts/build-landing.js && node scripts/build.js",
+    "build": "node scripts/build-landing.js && node scripts/build.js && node scripts/copy-assistant-guide.js",
     "build:demo": "node scripts/build.js",
     "build:landing": "node scripts/build-landing.js",
     "check:credentials": "node scripts/check-credentials.js",
