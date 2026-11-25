@@ -1,0 +1,43 @@
+# Commands
+Every `npm run` script in `package.json`, one line each. Each is also documented at the top of its script. Task-level instructions are in the [other guides](README.md).
+- `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
+- `npm run assemble:candidate`: assemble a public candidate tree from the producer and overlay file lists.
+- `npm run build:demo`: build only the static dashboard page from the current dataset.
+- `npm run build:landing`: build only the home page and `sitemap.xml` from `src/landing.html` and `config/site.json`.
+- `npm run build`: build both served pages, the home page and the dashboard.
+- `npm run check:credentials`: prove each usage-API admin key that is set is accepted, with one small read per provider; exits 3 when a provider is unreachable, which says nothing about the key.
+- `npm run check:runtime`: verify the running Node version is supported.
+- `npm run coverage`: report real-versus-missing days against the recovery window.
+- `npm run demo:data`: regenerate the synthetic demonstration dataset shipped with this candidate.
+- `npm run demo:import`: walk the import gates against the synthetic fixture receipts.
+- `npm run dev`: run the local dev server, rebuilding on every request, bound to loopback only.
+- `npm run estimate:chatgpt`: estimate daily ChatGPT usage from an OpenAI account export, at four characters per token.
+- `npm run estimate:claude-chat`: estimate daily claude.ai and Claude Design usage from an account export, at four characters per token, as a floor.
+- `npm run eval:code`: statically check that a failed read is never treated as no evidence.
+- `npm run eval:dashboard`: check the built dashboard's interpretation controls and its privacy-reduced projections.
+- `npm run eval:served`: check that no dataset content has reached the served tree.
+- `npm run eval`: check dataset invariants such as evidence-backed zero-total rows, placeholder fidelity, and cross-footed totals.
+- `npm run export:csv`: export the dataset as two CSV files, one row per day and one row per day, source, and origin.
+- `npm run extract:claude-api`: extract exact daily usage from the Anthropic Admin Usage Report, quarantined until a reconciliation verdict is recorded. Needs `ANTHROPIC_ADMIN_KEY`.
+- `npm run extract:claude-code`: extract exact daily usage from Claude Code transcripts and the Claude desktop app's agent sessions, excluding cache reads from the headline.
+- `npm run extract:codex`: extract exact daily usage from Codex rollout files, excluding cached input from the headline.
+- `npm run extract:copilot-cli`: extract exact daily usage from GitHub Copilot CLI session state, counting each session's increase at every shutdown.
+- `npm run extract:cursor`: extract daily usage from Cursor's chat and agent history, as Cursor reports each message's token count.
+- `npm run extract:gemini-cli`: extract exact daily usage from Gemini CLI and Qwen Code chat sessions, excluding cached input from the headline.
+- `npm run extract:goose`: extract exact daily usage from goose's usage ledger, local models by family and hosted providers labeled as goose traffic.
+- `npm run extract:openai-api`: extract reported daily token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`, `OPENAI_ORGANIZATION_SCOPE`, and a matching account binding in `config/openai-reconciliation.json`.
+- `npm run extract:vscode-agents`: extract exact daily usage from Cline, Roo Code, Kilo Code, and Snapdev task counters in every VS Code-family editor.
+- `npm run extract:zed-agent`: extract exact usage from Zed's agent threads, each thread dated by the day it was created.
+- `npm run import`: merge receipt JSONL into the dataset, enforcing the cutoff, no-decrease, and reconciliation gates.
+- `npm run install:perplexity-hook`: register the Perplexity capture hook in Claude Code settings, with a private backup; `-- --check` reports what is registered.
+- `npm run manifest`: validate and report the accepted-evidence ledger; exits nonzero until an import has accepted evidence, because there is nothing to report before that.
+- `npm run ollama:capture`: capture exact token counts from a local Ollama call without persisting the prompt or the response.
+- `npm run openai-compatible:capture`: relay one chat completions request to an OpenAI-compatible endpoint, a local runner or a hosted API, and capture its usage counters, never the messages or the answer.
+- `npm run perplexity:capture`: relay one Perplexity request from stdin and capture its usage counters, never the query or answer.
+- `npm run privacy:receipts`: scan retained receipts and labels for private-shaped content.
+- `npm run reconcile:claude`: compare Anthropic API-reported usage against transcript-derived usage and recommend additive or overlapping.
+- `npm run refresh`: extract every surface this machine has, import, export, build, and evaluate your own record in `record/`, starting it on the first run.
+- `npm run test`: run the test suite against synthetic fixtures.
+- `npm run typesafe:capture`: relay one TypeSafe request from stdin and capture its usage counters, never the state, questions, or answers.
+- `npm run validate`: validate the dataset file against the schema.
+- `npm run verify:candidate`: check an assembled candidate directory against the inventory file. Add `--reference-data PATH` to compare against a real aggregate dataset, and `--require-reference-data` to fail when that comparison did not run; without it the comparison is reported as not evaluated.

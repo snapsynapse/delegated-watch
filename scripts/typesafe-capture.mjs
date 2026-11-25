@@ -2,7 +2,8 @@
 
 // TypeSafe System One (Jev) usage capture, state-free.
 //
-// TypeSafe publishes no usage or billing endpoint. The only authoritative
+// TypeSafe publishes no usage or billing endpoint (checked 2026-11-24 against
+// https://docs.typesafe.ai/llms.txt). The only authoritative
 // token counts are the `usage` object each /v1/systemone response carries:
 // `input_tokens` and `output_tokens`, in flight, gone when the response is
 // discarded. Both modes below persist those counters and nothing else. The
@@ -18,7 +19,8 @@
 //            request body on stdin, relays the response to stdout byte for
 //            byte, and captures on the way past.
 //
-// Identity. A TypeSafe response carries no request id and no timestamp, so
+// Identity. A TypeSafe response carries no request id and no timestamp
+// (checked 2026-11-24 against https://docs.typesafe.ai/api/system-one.md), so
 // the receipt keys on a SHA-256 of the canonical response document (model,
 // answers, usage; keys sorted). Hook and relay captures of the same call
 // therefore reconcile instead of double counting. The known cost: two calls on

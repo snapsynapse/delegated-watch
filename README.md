@@ -118,114 +118,22 @@ Receipt JSONL, written by an extractor or a capture tool, is merged by `npm run 
 The dataset shipped with this candidate is synthetic demonstration data, not anyone's real usage. Regenerate it with `npm run demo:data`, and walk the same importer gates a real receipt would face with `npm run demo:import`.
 ## Running it on your own record
 The goal is that you install this, point it at your own machine and accounts, and see all of your own delegated work: every surface, every provider, as far back as the evidence survives. [SURFACES.md](SURFACES.md#supported-services) keeps the one list of every surface: what ships, how each was verified, what is planned, and what cannot be counted.
-
 One command finds every surface this machine has, imports it, and builds your dashboard:
-
 Literal
 ```bash
 npm run refresh
 ```
-
 The first run switches this checkout to a record of your own: it creates `config/record.json` and a `record/` directory, both git-ignored, so a clone holding your record cannot publish it by being committed. From then on every command works on your record instead of the shipped synthetic demo; delete `config/record.json` to go back. Your dashboard is `record/index.html`; open it directly, or run `npm run dev` and visit the address it prints. Run `npm run refresh` again whenever you want it current. `npm run validate` still checks the shipped demo dataset; the import validates your record every time it writes it.
-
-Each extractor reports every store it looks for as read, not found, or unreadable. A store that is not there writes nothing. One that cannot be read, or whose records cannot be counted without a decision from you, is reported as unknown and leaves its previous receipts alone; the rest of the run carries on and the summary says which. Decisions you make once, such as which counting convention an editor extension's ambiguous records follow, go in `config/record.json` as arguments per step:
-
-Literal
-```json
-{ "dir": "record", "options": { "extract:vscode-agents": ["--token-convention", "snapdev=inclusive"] } }
-```
-
-Every extractor can also be run on its own, as the commands below list. The Claude Code extractor reads the transcript store read-only (`$CLAUDE_CONFIG_DIR/projects`, or `~/.claude/projects`) and the desktop app's session stores, writes one receipt file per source under `scratch/receipts/`, and reports each store as read, not found, or unreadable. Unreadable exits 3, because that usage is unknown rather than zero. Point `--root` at a backup of the transcript store to recover days the CLI has since pruned. The Codex extractor reads `$CODEX_HOME` (or `~/.codex`) the same way, counting non-cached input plus output; to read a backup or a store copied from another machine, pass `--sessions DIR` with `--local-store` for your own store or `--tag ORIGIN` for someone else's. A malformed interior JSONL record or an incomplete final append exits 3 and preserves the last known-good receipt set, because a partial exact result would turn missing evidence into a lower count. The goose extractor opens goose's `sessions.db` read-only through Node's built-in SQLite, so no `sqlite3` program is needed; it maps local models to their family (`qwen_local`, `gemma_local`) and labels calls goose routed to a hosted provider as `goose_<provider>`. Ledger rows with cache reads need `--cache-convention`, because whether goose's input count includes them varies by provider. The VS Code agents extractor reads Cline, Roo Code, Kilo Code, and Snapdev task stores in VS Code, VS Code Insiders, VSCodium, Cursor, and Windsurf; records whose cache counters fit both counting conventions need `--token-convention legacy` or `inclusive`, which depends on the provider the extension was pointed at, and can be given per source as `SOURCE=legacy` or `SOURCE=inclusive`.
-
-For a local runner or a hosted API that speaks the OpenAI chat completions shape, relay each scripted call through one capture. It passes the request and response through unchanged and keeps only the model and the counters. Presets cover LM Studio, llama.cpp, vLLM, and MLX locally, and xAI, Mistral, DeepSeek, Groq, OpenRouter, and Together hosted, each reading its key from its own environment variable, such as `XAI_API_KEY`:
-
-Literal
-```bash
-npm run openai-compatible:capture -- --provider lmstudio < request.json
-```
-
-For any other endpoint, pass `--base-url` with `--source`, and `--key-env` naming the variable that holds its key. Direct OpenAI calls are excluded from this capture and are measured through the organization usage report. That report remains quarantined until its configured scope decision establishes whether it is additive, so exclusion from this capture alone is not a universal no-double-count guarantee.
-
-For any other source, write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. For local inference through Ollama, relay calls through the capture: it relays a request to a local Ollama endpoint unchanged and persists only the model identity and the authoritative counters from the response, never the prompt or the generated text.
-Literal
-```bash
-npm run ollama:capture -- --endpoint generate < request.json
-```
-For API usage, the organization usage reports are the provider's own count of every call made with the organization's keys. Each extractor reads an admin key from its environment variable and skips cleanly without one. Never commit a key, paste it into a chat, or type it on a command line, where shell history keeps it. Reading it without echo avoids all three. After this command starts, the shell waits silently: paste the Anthropic admin key, which is not shown, and press Return.
-
-Literal
-```bash
-read -rs ANTHROPIC_ADMIN_KEY && export ANTHROPIC_ADMIN_KEY && npm run extract:claude-api
-```
-
-OpenAI also requires a stable, non-secret organization scope because a display alias alone cannot distinguish two organizations. Before running the extractor, add exactly one matching account entry to `config/openai-reconciliation.json`. The entry must provide `account_alias`, `organization_scope`, and `mode`; a non-`unset` mode also requires `decided_on` and human-reviewed `evidence`. Each organization scope may appear in only one entry, although separate scopes may share a display alias. Set `OPENAI_ACCOUNT_ALIAS` to the configured alias, or leave it unset for `primary`. After this command starts, the shell first prompts `OpenAI organization scope: `; enter the configured non-secret scope and press Return. It then waits silently; paste the organization admin key, which is not shown, and press Return.
-
-Literal
-```bash
-read -rp "OpenAI organization scope: " OPENAI_ORGANIZATION_SCOPE && export OPENAI_ORGANIZATION_SCOPE && read -rs OPENAI_ADMIN_KEY && export OPENAI_ADMIN_KEY && npm run extract:openai-api
-```
-
-An organization report covers every client that used its keys, so it can overlap a local extractor that counted the same calls: Claude Code or Codex signed in with an API key, or an editor extension or agent pointed at the same organization. Anthropic receipts are held in `scratch/reconcile/` until `npm run reconcile:claude` compares them with your Claude Code record and you record a verdict in `config/claude-reconciliation.json`. OpenAI organization receipts also default to `scratch/reconcile/`; `config/openai-reconciliation.json` must record account-specific human scope evidence before an `additive` decision makes them importer-visible. Equal daily totals do not prove overlap, subscription Codex is not presumed to use an organization's API keys, and an `overlapping` decision keeps the full organization report as non-additive evidence rather than subtracting an estimated portion.
-
-Consumer chat products report no token counts, but their account data exports hold the conversations, so usage can be estimated at about four characters per token. Request an export from claude.ai (Settings, Privacy, Export data) or ChatGPT (Settings, Data controls, Export data), unzip a claude.ai export into `raw/claude-export-<date>/`, and place a ChatGPT export ZIP, manifest, or `conversations.json` anywhere under `raw/`, which is never committed. Then:
-
-Literal
-```bash
-npm run estimate:claude-chat; npm run estimate:chatgpt
-```
-
-The claude.ai estimate counts everything that entered or left the model, including thinking, tool calls, tool results, and attachment text, but not the context each turn re-sends, so it is a floor. Overlapping exports dedupe by message. A ChatGPT ZIP is read with the `unzip` program; where that is missing, extract it and point the estimator at the extracted files. The record starts at `window_start` in `config/profile.json`, 2022-11-30 by default, which is ChatGPT's public launch; set it earlier only if your history predates it.
-
-Perplexity and TypeSafe publish no usage endpoint: the usage object in each API response is the only count that will ever exist for a call, and it is gone once the response is discarded. If you call either from Claude Code, register the capture hook once per machine, then restart Claude Code; one hook covers both:
-
-Literal
-```bash
-npm run install:perplexity-hook
-```
-
-It edits your Claude Code `settings.json` with a private backup, preserves everything else in it, and refuses a file it cannot parse; `npm run install:perplexity-hook -- --check` reports what is registered. The hook keeps the counters and never the query or answer. It can only capture what a command printed, so a command that prints just the answer text discards the usage object first: print the raw response, or at least its `id`, `model`, `created`, and `usage` fields. For scripted calls outside Claude Code, relay a request body through `npm run perplexity:capture` or `npm run typesafe:capture`, which return the response unchanged. A TypeSafe response carries no request id, so its receipts key on a hash of the response; two byte-identical responses on one day count once. Writing an extractor for a service that is not yet supported is covered in `CONTRIBUTING.md`.
-## Commands
-Every command below is documented at the top of its script.
-- `npm run apply:exclusions`: remove every `(date, source)` pair named in `config/source-entry-exclusions.json` from the dataset, by exact fingerprint, and recompute totals.
-- `npm run assemble:candidate`: assemble a public candidate tree from the producer and overlay file lists.
-- `npm run build:demo`: build only the static dashboard page from the current dataset.
-- `npm run build:landing`: build only the home page and `sitemap.xml` from `src/landing.html` and `config/site.json`.
-- `npm run build`: build both served pages, the home page and the dashboard.
-- `npm run check:runtime`: verify the running Node version is supported.
-- `npm run coverage`: report real-versus-missing days against the recovery window.
-- `npm run demo:data`: regenerate the synthetic demonstration dataset shipped with this candidate.
-- `npm run demo:import`: walk the import gates against the synthetic fixture receipts.
-- `npm run dev`: run the local dev server, rebuilding on every request, bound to loopback only.
-- `npm run estimate:chatgpt`: estimate daily ChatGPT usage from an OpenAI account export, at four characters per token.
-- `npm run estimate:claude-chat`: estimate daily claude.ai and Claude Design usage from an account export, at four characters per token, as a floor.
-- `npm run eval:code`: statically check that a failed read is never treated as no evidence.
-- `npm run eval:dashboard`: check the built dashboard's interpretation controls and its privacy-reduced projections.
-- `npm run eval:served`: check that no dataset content has reached the served tree.
-- `npm run eval`: check dataset invariants such as evidence-backed zero-total rows, placeholder fidelity, and cross-footed totals.
-- `npm run export:csv`: export the dataset as two CSV files, one row per day and one row per day, source, and origin.
-- `npm run extract:claude-api`: extract exact daily usage from the Anthropic Admin Usage Report, quarantined until a reconciliation verdict is recorded. Needs `ANTHROPIC_ADMIN_KEY`.
-- `npm run extract:claude-code`: extract exact daily usage from Claude Code transcripts and the Claude desktop app's agent sessions, excluding cache reads from the headline.
-- `npm run extract:codex`: extract exact daily usage from Codex rollout files, excluding cached input from the headline.
-- `npm run extract:copilot-cli`: extract exact daily usage from GitHub Copilot CLI session state, counting each session's increase at every shutdown.
-- `npm run extract:cursor`: extract daily usage from Cursor's chat and agent history, as Cursor reports each message's token count.
-- `npm run extract:gemini-cli`: extract exact daily usage from Gemini CLI and Qwen Code chat sessions, excluding cached input from the headline.
-- `npm run extract:goose`: extract exact daily usage from goose's usage ledger, local models by family and hosted providers labelled as goose traffic.
-- `npm run extract:openai-api`: extract reported daily token usage from the OpenAI organization Usage API. Needs `OPENAI_ADMIN_KEY`, `OPENAI_ORGANIZATION_SCOPE`, and a matching account binding in `config/openai-reconciliation.json`.
-- `npm run extract:vscode-agents`: extract exact daily usage from Cline, Roo Code, Kilo Code, and Snapdev task counters in every VS Code-family editor.
-- `npm run extract:zed-agent`: extract exact usage from Zed's agent threads, each thread dated by the day it was created.
-- `npm run import`: merge receipt JSONL into the dataset, enforcing the cutoff, no-decrease, and reconciliation gates.
-- `npm run install:perplexity-hook`: register the Perplexity capture hook in Claude Code settings, with a private backup; `-- --check` reports what is registered.
-- `npm run manifest`: validate and report the accepted-evidence ledger; exits nonzero until an import has accepted evidence, because there is nothing to report before that.
-- `npm run ollama:capture`: capture exact token counts from a local Ollama call without persisting the prompt or the response.
-- `npm run openai-compatible:capture`: relay one chat completions request to an OpenAI-compatible endpoint, a local runner or a hosted API, and capture its usage counters, never the messages or the answer.
-- `npm run perplexity:capture`: relay one Perplexity request from stdin and capture its usage counters, never the query or answer.
-- `npm run privacy:receipts`: scan retained receipts and labels for private-shaped content.
-- `npm run reconcile:claude`: compare Anthropic API-reported usage against transcript-derived usage and recommend additive or overlapping.
-- `npm run refresh`: extract every surface this machine has, import, export, build, and evaluate your own record in `record/`, starting it on the first run.
-- `npm run test`: run the test suite against synthetic fixtures.
-- `npm run typesafe:capture`: relay one TypeSafe request from stdin and capture its usage counters, never the state, questions, or answers.
-- `npm run validate`: validate the dataset file against the schema.
-- `npm run verify:candidate`: check an assembled candidate directory against the inventory file. Add `--reference-data PATH` to compare against a real aggregate dataset, and `--require-reference-data` to fail when that comparison did not run; without it the comparison is reported as not evaluated.
+Each extractor reports every store it looks for as read, not found, or unreadable. A store that is not there writes nothing. One that cannot be read, or whose records cannot be counted without a decision from you, is reported as unknown and leaves its previous receipts alone; the rest of the run carries on and the summary says which.
+The [guides](guides/README.md) take it from there, one per kind of source:
+- [Local agent transcripts](guides/local-agent-transcripts.md): Claude Code, Codex, goose, the VS Code agent extensions, Cursor, Zed, Gemini CLI, and Copilot CLI, and the decisions some of them need from you.
+- [Local and OpenAI-compatible captures](guides/local-and-openai-compatible-captures.md): Ollama, LM Studio, llama.cpp, vLLM, MLX, and hosted APIs that speak the chat completions shape.
+- [Organization usage reports](guides/organization-usage-reports.md): the Anthropic and OpenAI admin reports, reconciling them with local extractors, and what an unreachable preflight means.
+- [Consumer chat exports](guides/consumer-chat-exports.md): claude.ai and ChatGPT usage, estimated from account exports.
+- [Perplexity and TypeSafe capture](guides/perplexity-and-typesafe-capture.md): the Claude Code hook and the scripted relays.
+- [Reading your record](guides/reading-your-record.md): the decisions the dashboard informs, shown on the synthetic dataset.
+- [Commands](guides/commands.md): every `npm run` script, one line each.
+For any other source, write receipts to the contract in `DATA_CONTRACT.md` and run `npm run import` against them. Writing an extractor for a service that is not yet supported is covered in `CONTRIBUTING.md`.
 ## Roadmap
 What is planned, in priority order, and what has been decided against permanently, is in [ROADMAP.md](ROADMAP.md).
 ## Status

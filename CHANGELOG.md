@@ -2,6 +2,13 @@
 All notable changes to this project are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `INTENT.md` carries the decision log: why choices were made. This file records what changed.
 ## [Unreleased]
+### Added
+- Add `guides/`, task-level how-to pages for each source family (local agent transcripts, local and OpenAI-compatible captures, organization usage reports, consumer chat exports, Perplexity and TypeSafe capture), a command reference, and a "Reading your record" page on the synthetic dataset. `tests/reading-your-record.test.js` recomputes that page's figures from the shipped dataset.
+- Add a troubleshooting note for a credential preflight that reports a provider unreachable while curl reaches it, the signature of a network filter bound to an older Node binary.
+### Changed
+- The README keeps the tutorial and `npm run refresh`, then links the guides. The command list and the per-source instructions moved to `guides/`.
+- Date the two TypeSafe claims, no usage endpoint and no request id, and link the TypeSafe API docs beside each.
+- Use US spelling in the README, INTENT, SURFACES, DATA_CONTRACT, and the command reference.
 ## [0.6.1] - 2026-11-22
 ### Added
 - Add a byte-identical `assistant-guide.txt` review copy at the repository root. CI checks that it matches the served guide.
